@@ -90,6 +90,10 @@ public class RequestHelper {
                 if(code == 200){
                     HttpEntity httpEntity = response.getEntity();
                     result.put("msg", EntityUtils.toString(httpEntity,"utf8"));
+                }else if(code == 401) {
+                    result.put("msg", "请求错误状态码401，可能是没有在config中配置有效的email和key，或者您的账号权限不足无法使用api进行查询。");
+                }else if(code == 502){
+                    result.put("msg", "请求错误状态码502，可能是账号限制了每次请求的最大数量，建议尝试修改config中的maxSize为100");
                 }else{
                     result.put("msg", "请求响应错误,状态码" + String.valueOf(code));
                 }
