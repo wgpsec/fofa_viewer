@@ -9,7 +9,6 @@ public class FofaBean {
     private String size = "1000";
     private final String fields = "host,title,ip,domain,port,protocol";
     private final String queryUrl = "https://fofa.so/api/v1/search/all";
-    //111.229.20.51
 
     public FofaBean(String m, String k) {
         this.email = m;
