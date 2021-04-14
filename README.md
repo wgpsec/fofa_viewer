@@ -18,7 +18,8 @@
 3. 支持查询结果导出
 4. 支持手动修改查询最大条数，方便非高级会员使用(修改`config.properties`中的`maxSize`即可)
 
-![](https://f1ashine.gitee.io/research_pic/fofa_viewer/contextMenu.png)
+<img src="https://f1ashine.gitee.io/research_pic/fofa_viewer/contextMenu.png">
+
 ## :rocket: 手动编译
 ![](https://f1ashine.gitee.io/research_pic/fofa_viewer/compile_detail.png)
 
@@ -33,6 +34,6 @@ idea打开项目，等待依赖包下载完毕后直接双击Plugins-assembly-as
 
 - 项目中配置了error.log，如果有需要提bug，希望能带上这个截图，另外也欢迎提issue帮助改进。
 
-[![Stargazers over time](https://starchart.cc/wgpsec/fofa_viewer)](https://starchart.cc/wgpsec/fofa_viewer)
+[![Stargazers over time](https://starchart.cc/wgpsec/fofa_viewer.svg)](https://starchart.cc/wgpsec/fofa_viewer)
 
 
