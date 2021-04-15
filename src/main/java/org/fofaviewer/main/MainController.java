@@ -344,7 +344,10 @@ public class MainController {
                             res = helper.getImageFavicon(url + "/favicon.ico");
                         }
                         if(res != null){
-                            query(RequestHelper.encode(res.get("msg")));
+                            if(res.get("code").equals("error")){
+                                showAlert(Alert.AlertType.ERROR, null, res.get("msg"));return;
+                            }
+                            query(res.get("msg"));
                             return;
                         }
                         showAlert(Alert.AlertType.ERROR, null, "该网站未提供favicon");

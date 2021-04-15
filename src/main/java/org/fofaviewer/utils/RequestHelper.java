@@ -39,8 +39,6 @@ public class RequestHelper {
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0",
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.41 Safari/537.36 Edg/88.0.705.22"
     };
-    private final String path = System.getProperty("user.dir") +
-            System.getProperty("file.separator") + "iconhash" + System.getProperty("file.separator");
 
     private RequestHelper() {
         this.logger = Logger.getLogger("RequestHelper");
@@ -124,17 +122,14 @@ public class RequestHelper {
     /**
      * 提取网站favicon 需要两步：
      * 1. 直接访问url根目录的favicon，若404则跳转至第2步
-     * 2. 访问网站，获取html页面，获取head头中的 link标签的ico 路径
+     * 2. 访问网站，获取html页面，获取head中的 link标签的ico 路径
      *
      * @param url
      * @return
      */
     public HashMap<String, String> getImageFavicon(String url) {
-        String filename = this.path + "favicon.ico";
-        File file = new File(filename);
         CloseableHttpResponse response = getResponse(url);
         HashMap<String, String> result = new HashMap<>();
-        int cache = 10240;
         if (response != null) {
             int code = response.getStatusLine().getStatusCode();
             result.put("code", String.valueOf(code));
@@ -144,16 +139,18 @@ public class RequestHelper {
                         logger.log(Level.FINE, url + "无响应内容");
                         return null;
                     }
-                    FileOutputStream fileout = new FileOutputStream(file);
                     InputStream is = response.getEntity().getContent();
-                    byte[] buffer = new byte[cache];
-                    int ch = 0;
-                    while ((ch = is.read(buffer)) != -1) {
-                        fileout.write(buffer, 0, ch);
+                    byte[] buffer = new byte[1024];
+                    ByteArrayOutputStream bos=new ByteArrayOutputStream();
+                    int len = 0;
+                    while((len = is.read(buffer))!=-1){
+                        bos.write(buffer,0, len);
                     }
-                    is.close();
-                    fileout.flush();
-                    fileout.close();
+                    bos.flush();
+                    String encoded = new BASE64Encoder().encode(Objects.requireNonNull(bos.toByteArray()));
+                    String hash = getIconHash(encoded);
+                    result.put("msg", "icon_hash=\"" + hash + "\"");
+                    return result;
                 } catch (Exception e) {
                     result.put("code", "error");
                     result.put("msg", e.getMessage());
@@ -165,11 +162,6 @@ public class RequestHelper {
                     } catch (IOException ex) {
                         logger.log(Level.WARNING, ex.getMessage(), ex);
                     }
-                }
-                String hash = getIconHash(filename);
-                if (hash != null) {
-                    result.put("msg", hash.replaceAll("\n", ""));
-                    return result;
                 }
             }
         }
@@ -202,18 +194,13 @@ public class RequestHelper {
     }
 
     /**
-     * 使用iconhash计算favicon hash
+     * 计算favicon hash
      *
      * @param f favicon的文件对象
      * @return favicon hash值
      */
     private String getIconHash(String f) {
-        String os = System.getProperty("os.name").toLowerCase(Locale.US);
-        String arch = System.getProperty("os.arch").toLowerCase(Locale.US);
-        StringBuilder filepath = new StringBuilder();
-        System.out.println(f);
-        String base64Str = ImageToBase64(f);
-        int murmu = Hashing.murmur3_32().hashString(base64Str.replaceAll("\r", "") + "\n", StandardCharsets.UTF_8).asInt();
+        int murmu = Hashing.murmur3_32().hashString(f.replaceAll("\r", "") + "\n", StandardCharsets.UTF_8).asInt();
         return String.valueOf(murmu);
     }
 
@@ -232,22 +219,22 @@ public class RequestHelper {
         return null;
     }
 
-    private static String ImageToBase64(String imgPath) {
-        byte[] data = null;
-        // 读取图片字节数组
-        try {
-            InputStream in = new FileInputStream(imgPath);
-            data = new byte[in.available()];
-            in.read(data);
-            in.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        // 对字节数组Base64编码
-        BASE64Encoder encoder = new BASE64Encoder();
-        // 返回Base64编码过的字节数组字符串
-        return encoder.encode(Objects.requireNonNull(data));
-    }
+//    private static String ImageToBase64(InputStream imgPath) {
+//        byte[] data = null;
+//        // 读取图片字节数组
+//        try {
+//            InputStream in = new FileInputStream(imgPath);
+//            data = new byte[in.available()];
+//            in.read(data);
+//            in.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        // 对字节数组Base64编码
+//        BASE64Encoder encoder = new BASE64Encoder();
+//        // 返回Base64编码过的字节数组字符串
+//        return encoder.encode(Objects.requireNonNull(data));
+//    }
 
     /**
      * base64编码字符串

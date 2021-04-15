@@ -12,12 +12,10 @@ import java.util.HashMap;
 
 public class CloseableTabPane extends BorderPane {
     private final TabPane tabPane;
-    private HashMap<String, Tab> tabMap;
     private HashMap<Tab, ArrayList<String>> dataMap;
 
     public CloseableTabPane() {
         this.tabPane = new TabPane();
-        this.tabMap = new HashMap<>();
         this.dataMap = new HashMap<>();
         StackPane sp = new StackPane();
         sp.getChildren().add(tabPane);
@@ -42,7 +40,6 @@ public class CloseableTabPane extends BorderPane {
             for (Tab tab:tabPane.getTabs()){
                 if(tab.selectedProperty().getValue()){
                     tabPane.getTabs().remove(tab);
-                    tabMap.remove(tab.getText());
                     dataMap.remove(tab);
                     break;
                 }
@@ -57,8 +54,6 @@ public class CloseableTabPane extends BorderPane {
                 if(tab.selectedProperty().getValue()){
                     tabPane.getTabs().clear();
                     tabPane.getTabs().add(tab);
-                    tabMap.clear();
-                    tabMap.put(tab.getText(), tab);
                     ArrayList<String> tmp = dataMap.get(tab);
                     dataMap.clear();
                     dataMap.put(tab, tmp);
@@ -70,7 +65,6 @@ public class CloseableTabPane extends BorderPane {
         MenuItem closeAll = new MenuItem("关闭所有");
         closeAll.setOnAction(e->{
             tabPane.getTabs().clear();
-            tabMap.clear();
             dataMap.clear();
         });
         menuButton.getItems().add(closeAll);
@@ -84,7 +78,6 @@ public class CloseableTabPane extends BorderPane {
     public void addTab(Tab tab, ArrayList<String> list){
         tab.setClosable(true);
         tabPane.getTabs().add(tab);
-        tabMap.put(tab.getText(),tab);
         if(list != null){
             dataMap.put(tab, list);
         }else{
@@ -100,11 +93,21 @@ public class CloseableTabPane extends BorderPane {
     }
 
     public boolean isExistTab(String name){
-        return this.tabMap.get(name) != null;
+        for(Tab tab : this.tabPane.getTabs()){
+            if(tab.getText().equals(name)){
+                return true;
+            }
+        }
+        return false;
     }
 
     public Tab getTab(String name){
-        return this.tabMap.get(name);
+        for(Tab tab : this.tabPane.getTabs()){
+            if(tab.getText().equals(name)){
+                return tab;
+            }
+        }
+        return null;
     }
 
     public ArrayList<String> getList(Tab tab){
