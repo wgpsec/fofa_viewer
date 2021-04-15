@@ -19,7 +19,8 @@ jobs:
     - name: Set up JDK 8
       uses: actions/setup-java@v2
       with:
-        java-version: '8.0.282+jx'
+        java-package: jdk+fx
+        java-version: '8.0.282'
         distribution: 'adopt'
     - name: Add openjfx
       run: sudo apt-get install openjfx
