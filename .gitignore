@@ -23,3 +23,6 @@ build/
 ### VS Code ###
 .vscode/
 /.mvn/
+config.properties
+/log
+/target
