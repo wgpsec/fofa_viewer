@@ -21,7 +21,7 @@ MAC 用户可以参考[@zhaodie 师傅的文章]([http://www.jizhao.net.cn/index
 
 **若下载速度太慢可以使用**
 
-https://hub.fastgit.org/wgpsec/fofa_viewer（推荐）
+https://hub.fastgit.org/wgpsec/fofa_viewer (推荐)
 
 https://gitee.com/wgpsec/fofa_viewer （镜像）
 
