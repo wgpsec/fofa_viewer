@@ -38,6 +38,9 @@ public class CloseableTabPane extends BorderPane {
         MenuItem closeSelected = new MenuItem("关闭选中");
         closeSelected.setOnAction(e->{
             for (Tab tab:tabPane.getTabs()){
+                if(tab.getText().equals("起始页")){ // 阻止关闭起始页
+                    continue;
+                }
                 if(tab.selectedProperty().getValue()){
                     tabPane.getTabs().remove(tab);
                     dataMap.remove(tab);
@@ -51,6 +54,9 @@ public class CloseableTabPane extends BorderPane {
         menuButton.getItems().add(closeOthers);
         closeOthers.setOnAction(e->{
             for (Tab tab:tabPane.getTabs()){
+                if(tab.getText().equals("起始页")){ // 阻止关闭起始页
+                    continue;
+                }
                 if(tab.selectedProperty().getValue()){
                     tabPane.getTabs().clear();
                     tabPane.getTabs().add(tab);
@@ -64,8 +70,10 @@ public class CloseableTabPane extends BorderPane {
         //关闭所有的Tab
         MenuItem closeAll = new MenuItem("关闭所有");
         closeAll.setOnAction(e->{
+            Tab tab = this.getTab("起始页");
             tabPane.getTabs().clear();
             dataMap.clear();
+            this.addTab(tab, null);
         });
         menuButton.getItems().add(closeAll);
         sp.getChildren().add(menuButton);

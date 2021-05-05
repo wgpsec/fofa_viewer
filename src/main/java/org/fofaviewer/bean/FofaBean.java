@@ -7,7 +7,7 @@ public class FofaBean {
     public String key;
     public  String page = "1";
     private String size = "1000";
-    private final String fields = "host,title,ip,domain,port,protocol";
+    private final String fields = "host,title,ip,domain,port,protocol,server";
     private final String queryUrl = "https://fofa.so/api/v1/search/all";
 
     public FofaBean(String m, String k) {

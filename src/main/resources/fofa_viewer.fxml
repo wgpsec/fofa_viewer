@@ -9,11 +9,11 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 <?import org.fofaviewer.controls.CloseableTabPane?>
-
-<?import javafx.scene.control.TextField?>
+<?import org.controlsfx.control.textfield.TextFields?>
+<?import javafx.scene.control.CheckBox?>
 <VBox fx:id="rootLayout" fx:controller="org.fofaviewer.main.MainController" prefHeight="674" prefWidth="1000" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
     <MenuBar prefHeight="0.0" prefWidth="106.0" VBox.vgrow="NEVER">
-        <Menu mnemonicParsing="false" text="Help">
+        <Menu mnemonicParsing="false" text="帮助">
             <MenuItem mnemonicParsing="false" text="关于" onAction="#showAbout"/>
         </Menu>
     </MenuBar>
@@ -25,9 +25,10 @@
                     <Font size="14.0"/>
                 </font>
             </Label>
+            <TextFields fx:factory="createClearableTextField" fx:id="queryTF" layoutX="85.0" layoutY="10.0" prefHeight="27.0" prefWidth="400.0"/>
             <Button layoutX="496.0" layoutY="10.0" mnemonicParsing="false" text="查询" onAction="#queryAction"/>
+            <CheckBox fx:id="checkHoneyPot" layoutX="550" layoutY="15.0" text="排除干扰" mnemonicParsing="false"/>
             <Button AnchorPane.rightAnchor="10.0" layoutY="10.0" mnemonicParsing="false" alignment="CENTER_RIGHT" text="导出当前页数据" onAction="#exportAction"/>
-            <TextField fx:id="queryTF" layoutX="85.0" layoutY="10.0" prefHeight="27.0" prefWidth="400.0" onKeyPressed="#queryEnter"/>
         </AnchorPane>
         <CloseableTabPane fx:id="tabPane" prefHeight="560" prefWidth="1000" AnchorPane.topAnchor="50" AnchorPane.rightAnchor="0.0"
                           AnchorPane.leftAnchor="0.0" AnchorPane.bottomAnchor="0.0"/>

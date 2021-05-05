@@ -34,6 +34,11 @@
             <artifactId>guava</artifactId>
             <version>30.1-jre</version>
         </dependency>
+        <dependency>
+            <groupId>org.controlsfx</groupId>
+            <artifactId>controlsfx</artifactId>
+            <version>8.40.18</version>
+        </dependency>
     </dependencies>
     <build>
         <finalName>fofaviewer</finalName>

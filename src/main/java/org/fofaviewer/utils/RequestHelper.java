@@ -1,5 +1,8 @@
 package org.fofaviewer.utils;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import javafx.scene.control.Alert;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -13,18 +16,14 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import sun.misc.BASE64Encoder;
-
-import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.*;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
+import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -204,6 +203,11 @@ public class RequestHelper {
         return String.valueOf(murmu);
     }
 
+    /**
+     * 获取证书编号
+     * @param host 域名
+     * @return 证书编号
+     */
     public String getCertSerialNum(String host) {
         try {
             URL url = new URL(host);
@@ -219,22 +223,33 @@ public class RequestHelper {
         return null;
     }
 
-//    private static String ImageToBase64(InputStream imgPath) {
-//        byte[] data = null;
-//        // 读取图片字节数组
-//        try {
-//            InputStream in = new FileInputStream(imgPath);
-//            data = new byte[in.available()];
-//            in.read(data);
-//            in.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        // 对字节数组Base64编码
-//        BASE64Encoder encoder = new BASE64Encoder();
-//        // 返回Base64编码过的字节数组字符串
-//        return encoder.encode(Objects.requireNonNull(data));
-//    }
+    public List<String> getTips(String key) {
+        try {
+            key = java.net.URLEncoder.encode(key, "UTF-8");
+            CloseableHttpResponse response = this.getResponse("https://api.fofa.so/v1/search/tip?q=" + key);
+            if(response != null){
+                if (response.getStatusLine().getStatusCode() == 200) {
+                    HttpEntity httpEntity = response.getEntity();
+                    String content = EntityUtils.toString(response.getEntity(), "utf8");
+                    JSONObject obj = JSON.parseObject(content);
+                    if(obj.getString("message").equals("ok")){
+                        List<String> data = new ArrayList<>();
+                        JSONArray objs = obj.getJSONArray("data");
+                        for (Object o : objs) {
+                            JSONObject tmp = (JSONObject) o;
+                            data.add(tmp.getString("name") + "--" + tmp.getString("company"));
+                        }
+                        return data;
+                    }
+                }
+            }
+            return null;
+        }catch (Exception e){
+            logger.log(Level.WARNING, e.getMessage(), e);
+            return null;
+        }
+
+    }
 
     /**
      * base64编码字符串
@@ -244,6 +259,6 @@ public class RequestHelper {
      */
     public static String encode(String str) {
         BASE64Encoder encoder = new BASE64Encoder();
-        return encoder.encode(str.getBytes(StandardCharsets.UTF_8));
+        return encoder.encode(str.getBytes(StandardCharsets.UTF_8)).replaceAll("\n", "");
     }
 }
