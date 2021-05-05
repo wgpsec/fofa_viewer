@@ -15,7 +15,7 @@ Fofa_Viewer 一个简单易用的fofa客户端由WgpSec狼组安全团队 [**f1a
 
 下载最新版本包，修改`config.properties` 即可开始使用
 
-MAC 用户可以参考[zhaodie 师傅的文章](http://www.jizhao.net.cn/index.php/2021/04/15/mac%e8%a7%a3%e5%86%b3fofa_viewer%e6%97%a0%e6%b3%95%e5%90%af%e5%8a%a8)来配置快速启动 
+MAC 用户可以参考[zhaodie 师傅的文章](http://www.jizhao.net.cn/index.php/2021/04/15/mac%e8%a7%a3%e5%86%b3fofa_viewer%e6%97%a0%e6%b3%95%e5%90%af%e5%8a%a8/)来配置快速启动 
 
 查询语法可参考 https://fofa.so/ 
 
@@ -31,6 +31,7 @@ https://gitee.com/wgpsec/fofa_viewer （镜像）
 3. 支持查询结果导出
 4. 支持手动修改查询最大条数，方便非高级会员使用(修改`config.properties`中的`maxSize`即可)
 5. 支持证书转换 将证书序列填写入启动页框内可转换，再使用 `cert="计算出来的值"` 语法进行查询 [具体例子](https://mp.weixin.qq.com/s/jBf9h6IQVja6WwFcSYEvKg)
+6. 支持输入智能提示
 
 ![](docs/ui.png)
 
