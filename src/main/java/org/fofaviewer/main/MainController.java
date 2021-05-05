@@ -111,7 +111,7 @@ public class MainController {
 
     @FXML
     private void showAbout(ActionEvent event){
-        showAlert(Alert.AlertType.INFORMATION, null, "项目地址：https://github.com/wgpsec/fofa_viewer");
+        showAlert(Alert.AlertType.INFORMATION, null, "WgpSec Team \n 项目地址：\n https://github.com/wgpsec/fofa_viewer");
     }
 
     /**
