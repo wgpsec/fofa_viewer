@@ -24,6 +24,10 @@ public class TableBean {
         this.server.set(server);
     }
 
+    public int getIntNum(){
+        return num.intValue();
+    }
+
     public SimpleIntegerProperty getNum() {
         return num;
     }

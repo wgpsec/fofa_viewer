@@ -5,6 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.fofaviewer.bean.FofaBean;
+import org.fofaviewer.utils.RequestHelper;
 
 public class MainApp extends Application {
     private FofaBean client;
@@ -19,7 +20,7 @@ public class MainApp extends Application {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fofa_viewer.fxml"));
         Scene scene = new Scene(loader.load());
         stage.setScene(scene);
-        stage.setTitle("Fofa_Viewer v1.0.4 By f1ashine@WgpSec");
+        stage.setTitle("Fofa_Viewer v1.0.6 By f1ashine@WgpSec");
         stage.show();
         // 设置窗口的最小宽度和高度，避免自由伸缩太小不方便看
         stage.widthProperty().addListener((o, oldValue, newValue)->{

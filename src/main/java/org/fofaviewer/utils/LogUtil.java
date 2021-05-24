@@ -14,9 +14,8 @@ public class LogUtil {
      * 得到要记录的日志的路径及文件名称
      * @return
      */
-    private static String getLogName() {
-        return System.getProperty("user.dir") + System.getProperty("file.separator") + "log" +
-                System.getProperty("file.separator") + "error.log";
+    private static String getLogPath() {
+        return System.getProperty("user.dir") + System.getProperty("file.separator") + "log";
     }
 
     /**
@@ -37,11 +36,18 @@ public class LogUtil {
     public static void setLogingProperties(Logger logger, Level level) {
         FileHandler fh;
         try {
-            fh = new FileHandler(getLogName(),true);
-            logger.addHandler(fh);//日志输出文件
-            //logger.setLevel(level);
-            fh.setFormatter(new SimpleFormatter());//文本方式  XMLFormatter
-            //logger.addHandler(new ConsoleHandler());//输出到控制台
+            // 文件不存在时自动创建
+            File logPath = new File(getLogPath());
+            if(!logPath.exists()){
+                logPath.mkdir();
+            }
+            File logFile = new File(getLogPath() + System.getProperty("file.separator") + "error.log");
+            if(!logFile.exists()){
+                logFile.createNewFile();
+            }
+            fh = new FileHandler(logFile.getAbsolutePath(),true);
+            logger.addHandler(fh); //日志输出文件
+            fh.setFormatter(new SimpleFormatter());//文本方式
         } catch (SecurityException e) {
             logger.log(Level.SEVERE, "安全性错误", e);
         } catch (IOException e) {

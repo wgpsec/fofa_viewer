@@ -15,15 +15,27 @@ public class FofaBean {
         this.key = k;
     }
 
+    public String getSize() {
+        return this.size;
+    }
     public void setSize(String size){
         this.size = size;
     }
-    public String getParam() {
-        return queryUrl + "?email=" + email
-                + "&key=" + key
-                + "&page=" + page
-                + "&size=" + size
-                + "&fields=" + fields
-                + "&qbase64=";
+    public String getParam(String page) {
+        if(page != null) {
+            return queryUrl + "?email=" + email
+                    + "&key=" + key
+                    + "&page=" + page
+                    + "&size=" + size
+                    + "&fields=" + fields
+                    + "&qbase64=";
+        }else{
+            return queryUrl + "?email=" + email
+                    + "&key=" + key
+                    + "&page=" + this.page
+                    + "&size=" + size
+                    + "&fields=" + fields
+                    + "&qbase64=";
+        }
     }
 }

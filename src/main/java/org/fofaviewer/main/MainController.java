@@ -3,31 +3,45 @@ package org.fofaviewer.main;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
 import javafx.scene.input.*;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import org.fofaviewer.bean.FofaBean;
+import org.fofaviewer.bean.TabDataBean;
 import org.fofaviewer.bean.TableBean;
 import org.fofaviewer.controls.AutoHintTextField;
 import org.fofaviewer.utils.LogUtil;
 import org.fofaviewer.utils.RequestHelper;
 import org.fofaviewer.controls.CloseableTabPane;
+import java.awt.*;
 import java.io.*;
 import java.math.BigInteger;
+import java.net.URI;
 import java.util.*;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * 处理事件
@@ -41,6 +55,7 @@ public class MainController {
     private CheckBox checkHoneyPot;
     @FXML
     private CloseableTabPane tabPane;
+    private AutoHintTextField decoratedField;
     private final RequestHelper helper = RequestHelper.getInstance();
     private FofaBean client;
     private Logger logger = null;
@@ -54,9 +69,10 @@ public class MainController {
      */
     @FXML
     private void initialize(){
-        new AutoHintTextField(queryTF);
+        decoratedField = new AutoHintTextField(queryTF);
         loadConfigure();
-        Tab tab = this.tabPane.getTab("启动页");
+        //初始化起始页tab
+        Tab tab = this.tabPane.getTab("首页");
         Button queryCert = new Button("计算");
         Label label = new Label("证书序列号计算器");
         Label resLabel = new Label("结果");
@@ -119,8 +135,8 @@ public class MainController {
      */
     @FXML
     private void exportAction(ActionEvent e) {
-        if(tabPane.getCurrentTab().getText().equals("起始页")) return;  // 起始页无数据可导出
-        ArrayList<String> list = this.tabPane.getList(tabPane.getCurrentTab());
+        if(tabPane.getCurrentTab().getText().equals("首页")) return;  // 起始页无数据可导出
+        ArrayList<String> list = this.tabPane.getTabDataBean(tabPane.getCurrentTab()).dataList;
         ArrayList<String> tmp = new ArrayList<>();
         for(String i : list){
             if(!i.startsWith("http")){
@@ -141,77 +157,55 @@ public class MainController {
                     writer.newLine();
                 }
                 writer.close();
+                showAlert(Alert.AlertType.INFORMATION, null, "导出成功！");
             }
         }catch (IOException ex){
             logger.log(Level.WARNING,ex.getMessage(), ex);
             showAlert(Alert.AlertType.ERROR, null, "导出失败，错误原因：" + ex.getMessage());
-            return;
         }
-        showAlert(Alert.AlertType.INFORMATION, null, "导出成功！");
+
     }
 
     /**
      * 处理查询结果
      */
     public void query(String text){
-        text = text.trim();
-        if(this.tabPane.isExistTab(text)){ // 若已存在同名Tab 则直接跳转，不查询
+        String tabTitle = text.trim();
+        if(checkHoneyPot.isSelected() && !text.contains("(is_honeypot=false && is_fraud=false)")){
+            text = "(" + text + ") && (is_honeypot=false && is_fraud=false)";
+        }
+        if(text.contains("(is_honeypot=false && is_fraud=false)")){
+            tabTitle = "(*)" + tabTitle; // 带有排除蜜罐的给tab设置标记
+        }
+        if(this.tabPane.isExistTab(tabTitle)){ // 若已存在同名Tab 则直接跳转，不查询
             this.tabPane.setCurrentTab(this.tabPane.getTab(text));
             return;
         }
-        String tabTitle = text;
-        if(checkHoneyPot.isSelected()){
-            text = "(" + text + ") && (is_honeypot=false && is_fraud=false)";
-            tabTitle = "(*)" + tabTitle; // 带有排除蜜罐的给tab设置标记
-        }
-        text = RequestHelper.encode(text);
-        HashMap<String,String> result = this.helper.getHTML(this.client.getParam() + text);
+        HashMap<String,String> result = this.helper.getHTML(this.client.getParam(null) + RequestHelper.encode(text));
         if(result.get("code").equals("200")){
             Tab tab = new Tab();
-            ArrayList<String> dataList = new ArrayList<>();
+            TabDataBean _tmp = new TabDataBean();
+            tab.setText(tabTitle);
             JSONObject obj = JSON.parseObject(result.get("msg"));
             if(obj.getBoolean("error")){
                 showAlert(Alert.AlertType.ERROR, null, obj.getString("errmsg"));
                 return;
             }
-            HashMap<String, TableBean> list = new HashMap<>();
-            HashMap<String, TableBean> tmp = new HashMap<>();
-            JSONArray array = obj.getJSONArray("results");
-            int count = 0;  // 默认排序
-            for(int index=0; index < array.size(); index ++){
-                JSONArray _array = array.getJSONArray(index);
-                String host = _array.getString(0);
-                String title = _array.getString(1);
-                String ip = _array.getString(2);
-                String domain = _array.getString(3);
-                int port = Integer.parseInt(_array.getString(4));
-                String protocol = _array.getString(5);
-                String server = _array.getString(6);
-                String _host = ip + ":" +port;
-                TableBean b = new TableBean(++count, host, title, ip, domain, port, protocol, server);
-                if(protocol.equals("")){
-                    dataList.add(host);
-                }
-                if(host.startsWith("http")){
-                    tmp.put(_host, b);
-                }
-                if(list.containsKey(_host) && protocol.equals("")){ //筛除http协议的端口出现两次的情况
-                    count--;
-                    b.num = list.get(_host).num;
-                    list.remove(_host);
-                }else if((list.containsKey(_host) || tmp.containsKey(_host)) && !protocol.equals("")){
-                    count--;continue;
-                }
-                list.put(host, b);
+            if(obj.getInteger("size") < Integer.parseInt(this.client.getSize())){
+                _tmp.hasMoreData = false;
             }
-            tab.setText(tabTitle);
-            this.tabPane.addTab(tab, dataList);
+            this.tabPane.addTab(tab, _tmp);
+            decoratedField.addLog(text);
             BorderPane tablePane = new BorderPane();
-            TableView<TableBean> view = new TableView<TableBean>(FXCollections.observableArrayList(list.values()));
+            TableView<TableBean> view = new TableView<TableBean>(FXCollections.observableArrayList(loadJsonData(_tmp, obj).values()));
             setTable(view);
             tablePane.setCenter(view);
             tab.setContent(tablePane);
             tabPane.setCurrentTab(tab);
+            // 设置延时任务在滚动条界面渲染结束后进行事件绑定
+            PauseTransition pause = new PauseTransition(Duration.seconds(0.5));
+            pause.setOnFinished(event -> addScrollBarListener(view));
+            pause.playFromStart();
         }else{
             showAlert(Alert.AlertType.ERROR, result.get("code"), result.get("msg"));
         }
@@ -335,16 +329,16 @@ public class MainController {
                     String url = row.getItem().host.getValue();
                     String protocol1 = row.getItem().protocol.getValue();
                     String domain1 = row.getItem().domain.getValue();
-                    if(protocol1.startsWith("http") || !domain1.equals("") || url.startsWith("http")){
+                    if(!domain1.equals("") || url.startsWith("http") || protocol1.equals("")){
                         if(!url.startsWith("http")){
                             if(url.endsWith("443")){
                                 url = "https://" + url.substring(0, url.length()-4);
                             }
                             url = "http://" + url;
                         }
-                        java.net.URI uri = java.net.URI.create(url);
-                        java.awt.Desktop dp = java.awt.Desktop.getDesktop();
-                        if (dp.isSupported(java.awt.Desktop.Action.BROWSE)) {
+                        URI uri = URI.create(url);
+                        Desktop dp = Desktop.getDesktop();
+                        if (dp.isSupported(Desktop.Action.BROWSE)) {
                             // 获取系统默认浏览器打开链接
                             try {
                                 dp.browse(uri);
@@ -358,6 +352,89 @@ public class MainController {
             return row;
         });
         view.getSortOrder().add(num);
+    }
+
+    /**
+     * 设置滚动自动加载
+     * @param view tabview
+     */
+    private void addScrollBarListener(TableView<?> view){
+        ScrollBar bar = null;
+        for(Node n : view.lookupAll(".scroll-bar")) {
+            if(n instanceof ScrollBar) {
+                ScrollBar _bar = (ScrollBar) n;
+                if(_bar.getOrientation().equals(Orientation.VERTICAL)) {
+                    bar = _bar;
+                }
+            }
+        }
+        assert bar != null;
+        bar.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if((double)newValue == 1.0D){
+                Tab tab = tabPane.getCurrentTab();
+                TabDataBean bean = tabPane.getTabDataBean(tab);
+                if(bean.hasMoreData){
+                    bean.page += 1;
+                    TableView<TableBean> tableView = (TableView<TableBean>) ((BorderPane) tab.getContent()).getCenter();
+                    String text = tab.getText();
+                    if(text.startsWith("(*)")){
+                        text = text.substring(3);
+                        text = "(" + text + ") && (is_honeypot=false && is_fraud=false)";
+                    }
+                    HashMap<String,String> result = this.helper.getHTML(this.client.getParam(String.valueOf(bean.page)) + RequestHelper.encode(text));
+                    if(result.get("code").equals("200")){
+                        JSONObject obj = JSON.parseObject(result.get("msg"));
+                        if(obj.getBoolean("error")){
+                            return;
+                        }
+                        HashMap<String, TableBean> list = loadJsonData(bean, obj);
+                        if (list.keySet().size() !=0){
+                            ObservableList<TableBean> _tmp = tableView.getItems();
+                            TableBean b = _tmp.get(_tmp.size()-5);
+                            List<TableBean> tmp = list.values().stream().sorted(Comparator.comparing(TableBean::getIntNum)).collect(Collectors.toList());
+                            tableView.getItems().addAll(FXCollections.observableArrayList(tmp));
+                            tableView.scrollTo(b);
+                        }
+                        if(bean.page * Integer.parseInt(this.client.getSize()) > obj.getInteger("size")){
+                            bean.hasMoreData = false;
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    private HashMap<String, TableBean> loadJsonData(TabDataBean bean, JSONObject obj){
+        HashMap<String, TableBean> list = new HashMap<>();
+        HashMap<String, TableBean> tmp = new HashMap<>();
+        JSONArray array = obj.getJSONArray("results");
+        for(int index=0; index < array.size(); index ++){
+            JSONArray _array = array.getJSONArray(index);
+            String host = _array.getString(0);
+            String title = _array.getString(1);
+            String ip = _array.getString(2);
+            String domain = _array.getString(3);
+            int port = Integer.parseInt(_array.getString(4));
+            String protocol = _array.getString(5);
+            String server = _array.getString(6);
+            String _host = ip + ":" +port;
+            TableBean b = new TableBean(++bean.count, host, title, ip, domain, port, protocol, server);
+            if(protocol.equals("")){
+                bean.dataList.add(host);
+            }
+            if(host.startsWith("http")){
+                tmp.put(_host, b);
+            }
+            if(list.containsKey(_host) && protocol.equals("")){ //筛除http协议的端口出现两次的情况
+                bean.count--;
+                b.num = list.get(_host).num;
+                list.remove(_host);
+            }else if((list.containsKey(_host) || tmp.containsKey(_host)) && !protocol.equals("")){
+                bean.count--;continue;
+            }
+            list.put(host, b);
+        }
+        return list;
     }
 
     /**

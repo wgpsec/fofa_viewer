@@ -8,23 +8,27 @@ import javafx.scene.Scene;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 import javafx.stage.Window;
 import javafx.util.Duration;
+import org.controlsfx.control.PopOver;
 import org.fofaviewer.utils.RequestHelper;
+import java.util.HashSet;
 import java.util.List;
-import java.util.regex.Pattern;
 
 public class AutoHintTextField {
+    private final HashSet<String> historySet;
+    private PopOver pop = new PopOver();
     private TextField textField;
     private final static int LIST_SHOW_SIZE = 7;
     private final static int LIST_CELL_HEIGHT = 24;
     private ObservableList<String> showCacheDataList = FXCollections.observableArrayList();
     private final RequestHelper helper = RequestHelper.getInstance();
     private String clickedInput = "";
+    private final ListView<String> histroyView;
     /** 输入内容后显示的提示信息列表 */
-    private ListView<String> autoTipList = new ListView<>();
-
+    private final ListView<String> autoTipList = new ListView<>();
     /** 输入内容后显示的pop */
     private final Popup popShowList = new Popup();
 
@@ -32,11 +36,24 @@ public class AutoHintTextField {
         if (null == textField) {
             throw new RuntimeException("textField 不能为空");
         }
+        //初始化查询历史界面
+        historySet = new HashSet<>();
+        pop.setAutoHide(true);
+        histroyView = new ListView<>();
+        VBox historyBox = new VBox();
+        historyBox.getChildren().add(histroyView);
+        histroyView.setItems(FXCollections.observableArrayList(historySet));
+        pop.setContentNode(historyBox);
         this.textField = textField;
         popShowList.setAutoHide(true);
         popShowList.getContent().add(autoTipList);
         autoTipList.setItems(showCacheDataList);
         confListnenr();
+    }
+
+    public void addLog(String log){
+        this.historySet.add(log);
+        this.histroyView.setItems(FXCollections.observableArrayList(historySet));
     }
 
     public final Scene getScene() {
@@ -66,6 +83,15 @@ public class AutoHintTextField {
      * 设置监听器
      */
     private void confListnenr() {
+        textField.setOnMouseClicked(event -> {
+            pop.show(textField);
+        });
+
+        histroyView.setOnMouseClicked(event -> {
+            this.textField.setText(histroyView.getSelectionModel().getSelectedItem());
+            this.pop.hide();
+        });
+
         PauseTransition pause = new PauseTransition(Duration.seconds(1)); // 延时1秒查询api
         textField.textProperty().addListener((observable, oldValue, newValue) -> {
             pause.setOnFinished(event -> updateCacheDataList(oldValue, newValue));
@@ -97,6 +123,7 @@ public class AutoHintTextField {
      * @param newValue 新值
      */
     private void updateCacheDataList(String oldValue, String newValue){
+        this.pop.hide();
         if(newValue.trim().equals("")){ // 内容为空时不查询
             showCacheDataList.clear();
             return;

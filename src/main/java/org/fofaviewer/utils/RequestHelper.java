@@ -16,6 +16,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import sun.misc.BASE64Encoder;
+import org.apache.commons.codec.binary.Base64;
 import javax.net.ssl.*;
 import java.io.*;
 import java.net.URL;
@@ -223,6 +224,11 @@ public class RequestHelper {
         return null;
     }
 
+    /**
+     * 自动提示
+     * @param key
+     * @return
+     */
     public List<String> getTips(String key) {
         try {
             key = java.net.URLEncoder.encode(key, "UTF-8");
@@ -258,7 +264,6 @@ public class RequestHelper {
      * @return 编码字符串
      */
     public static String encode(String str) {
-        BASE64Encoder encoder = new BASE64Encoder();
-        return encoder.encode(str.getBytes(StandardCharsets.UTF_8)).replaceAll("\n", "");
+        return Base64.encodeBase64String(str.getBytes(StandardCharsets.UTF_8));
     }
 }

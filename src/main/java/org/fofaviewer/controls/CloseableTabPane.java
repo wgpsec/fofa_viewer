@@ -7,12 +7,13 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
+import org.fofaviewer.bean.TabDataBean;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class CloseableTabPane extends BorderPane {
     private final TabPane tabPane;
-    private HashMap<Tab, ArrayList<String>> dataMap;
+    private HashMap<Tab, TabDataBean> dataMap;
 
     public CloseableTabPane() {
         this.tabPane = new TabPane();
@@ -38,7 +39,7 @@ public class CloseableTabPane extends BorderPane {
         MenuItem closeSelected = new MenuItem("关闭选中");
         closeSelected.setOnAction(e->{
             for (Tab tab:tabPane.getTabs()){
-                if(tab.getText().equals("起始页")){ // 阻止关闭起始页
+                if(tab.getText().equals("首页")){ // 阻止关闭起始页
                     continue;
                 }
                 if(tab.selectedProperty().getValue()){
@@ -60,7 +61,7 @@ public class CloseableTabPane extends BorderPane {
                 if(tab.selectedProperty().getValue()){
                     tabPane.getTabs().clear();
                     tabPane.getTabs().add(tab);
-                    ArrayList<String> tmp = dataMap.get(tab);
+                    TabDataBean tmp = dataMap.get(tab);
                     dataMap.clear();
                     dataMap.put(tab, tmp);
                     break;
@@ -70,7 +71,7 @@ public class CloseableTabPane extends BorderPane {
         //关闭所有的Tab
         MenuItem closeAll = new MenuItem("关闭所有");
         closeAll.setOnAction(e->{
-            Tab tab = this.getTab("起始页");
+            Tab tab = this.getTab("首页");
             tabPane.getTabs().clear();
             dataMap.clear();
             this.addTab(tab, null);
@@ -78,18 +79,16 @@ public class CloseableTabPane extends BorderPane {
         menuButton.getItems().add(closeAll);
         sp.getChildren().add(menuButton);
         super.setCenter(sp);
-        Tab tab = new Tab("启动页");
-        this.addTab(tab, new ArrayList<String>(0));
+        Tab tab = new Tab("首页");
+        this.addTab(tab, null);
         tab.setClosable(false); //取消启动页的关闭按钮
     }
     //添加单个Tab
-    public void addTab(Tab tab, ArrayList<String> list){
+    public void addTab(Tab tab, TabDataBean list){
         tab.setClosable(true);
         tabPane.getTabs().add(tab);
         if(list != null){
             dataMap.put(tab, list);
-        }else{
-            dataMap.put(tab, new ArrayList<String>());
         }
     }
     //添加Tab集合
@@ -118,7 +117,7 @@ public class CloseableTabPane extends BorderPane {
         return null;
     }
 
-    public ArrayList<String> getList(Tab tab){
+    public TabDataBean getTabDataBean(Tab tab){
         return dataMap.get(tab);
     }
     /**
