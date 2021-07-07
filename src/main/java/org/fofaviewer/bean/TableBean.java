@@ -3,7 +3,7 @@ package org.fofaviewer.bean;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 
-public class TableBean {
+public class TableBean extends BaseBean{
     public SimpleIntegerProperty num = new SimpleIntegerProperty();
     public SimpleStringProperty host = new SimpleStringProperty();
     public SimpleStringProperty title = new SimpleStringProperty();
@@ -22,6 +22,10 @@ public class TableBean {
         this.port.set(port);
         this.protocol.set(protocol);
         this.server.set(server);
+    }
+
+    public void setNum(SimpleIntegerProperty numValue){
+        this.num = numValue;
     }
 
     public int getIntNum(){

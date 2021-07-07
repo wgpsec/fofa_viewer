@@ -7,17 +7,19 @@ import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
+import org.controlsfx.control.StatusBar;
 import org.fofaviewer.bean.TabDataBean;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class CloseableTabPane extends BorderPane {
     private final TabPane tabPane;
     private HashMap<Tab, TabDataBean> dataMap;
+    private HashMap<Tab, StatusBar> barMap;
 
     public CloseableTabPane() {
         this.tabPane = new TabPane();
         this.dataMap = new HashMap<>();
+        this.barMap = new HashMap<>();
         StackPane sp = new StackPane();
         sp.getChildren().add(tabPane);
         MenuButton menuButton = new MenuButton("关闭选项");
@@ -97,6 +99,14 @@ public class CloseableTabPane extends BorderPane {
             tab.setClosable(true);
         }
         tabPane.getTabs().addAll(tabs);
+    }
+
+    public void addBar(Tab tab, StatusBar bar){
+        barMap.put(tab, bar);
+    }
+
+    public StatusBar getBar(Tab tab){
+        return barMap.get(tab);
     }
 
     public boolean isExistTab(String name){

@@ -1,5 +1,12 @@
 package org.fofaviewer.main;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
+import com.alibaba.excel.write.merge.OnceAbsoluteMergeStrategy;
+import com.alibaba.excel.write.metadata.WriteSheet;
+import com.alibaba.excel.write.metadata.style.WriteCellStyle;
+import com.alibaba.excel.write.metadata.style.WriteFont;
+import com.alibaba.excel.write.style.HorizontalCellStyleStrategy;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -8,8 +15,8 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -19,16 +26,20 @@ import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.input.*;
 import javafx.scene.text.Font;
-import javafx.stage.FileChooser;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import org.fofaviewer.bean.FofaBean;
-import org.fofaviewer.bean.TabDataBean;
-import org.fofaviewer.bean.TableBean;
+import org.controlsfx.control.StatusBar;
+import org.controlsfx.dialog.CommandLinksDialog;
+import org.controlsfx.dialog.ProgressDialog;
+import org.fofaviewer.bean.*;
 import org.fofaviewer.controls.AutoHintTextField;
 import org.fofaviewer.utils.LogUtil;
 import org.fofaviewer.utils.RequestHelper;
@@ -56,8 +67,8 @@ public class MainController {
     @FXML
     private CloseableTabPane tabPane;
     private AutoHintTextField decoratedField;
-    private final RequestHelper helper = RequestHelper.getInstance();
-    private FofaBean client;
+    private static final RequestHelper helper = RequestHelper.getInstance();
+    private static FofaBean client;
     private Logger logger = null;
 
     public MainController(){
@@ -68,7 +79,7 @@ public class MainController {
      * 初始化
      */
     @FXML
-    private void initialize(){
+    private void initialize() throws IOException {
         decoratedField = new AutoHintTextField(queryTF);
         loadConfigure();
         //初始化起始页tab
@@ -78,38 +89,44 @@ public class MainController {
         Label resLabel = new Label("结果");
         TextField tf = new TextField();
         TextField res = new TextField();
+        Image image = new Image("api_doc.png");
+        ImageView view = new ImageView(image);
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setContent(view);
+        view.setFitHeight(2000D);
+        view.setFitWidth(750D);
+        scrollPane.setPrefWidth(760);
         tf.setPromptText("请将16进制证书序列号粘贴到此处！");
         tf.setPrefWidth(400);
         res.setPrefWidth(500);
         label.setFont(Font.font(14));
         resLabel.setFont(Font.font(14));
-        queryCert.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                if(tf.getText() != null){
-                    String txt = tf.getText().trim().replaceAll(" ", "");
-                    BigInteger i = new BigInteger(txt, 16);
-                    res.setText(i.toString());
-                }
+        queryCert.setOnAction(event -> {
+            if(tf.getText() != null){
+                String txt = tf.getText().trim().replaceAll(" ", "");
+                BigInteger i = new BigInteger(txt, 16);
+                res.setText(i.toString());
             }
         });
         VBox vb = new VBox();
         HBox hb = new HBox();
-        HBox res_hb = new HBox();
-        hb.getChildren().add(label);
-        hb.getChildren().add(tf);
-        hb.getChildren().add(queryCert);
+        HBox resBox = new HBox();
+        HBox imageBox = new HBox();
+        vb.setSpacing(10);
+        imageBox.getChildren().add(scrollPane);
+        hb.getChildren().addAll(label, tf, queryCert);
         label.setPadding(new Insets(3));
         resLabel.setPadding(new Insets(3));
         hb.setPadding(new Insets(20));
         hb.setSpacing(10);
-        res_hb.setSpacing(45);
+        resBox.setSpacing(45);
         hb.setAlignment(Pos.TOP_CENTER);
-        res_hb.setAlignment(Pos.TOP_CENTER);
-        res_hb.getChildren().add(resLabel);
-        res_hb.getChildren().add(res);
-        vb.getChildren().add(hb);
-        vb.getChildren().add(res_hb);
+        resBox.setAlignment(Pos.TOP_CENTER);
+        imageBox.setAlignment(Pos.TOP_CENTER);
+        resBox.getChildren().add(resLabel);
+        resBox.getChildren().add(res);
+        vb.getChildren().addAll(hb, resBox, imageBox);
         VBox.setMargin(res, new Insets(0, 100, 0 ,100));
         tab.setContent(vb);
     }
@@ -127,43 +144,164 @@ public class MainController {
 
     @FXML
     private void showAbout(ActionEvent event){
-        showAlert(Alert.AlertType.INFORMATION, null, "WgpSec Team \n 项目地址：\n https://github.com/wgpsec/fofa_viewer");
+        List<CommandLinksDialog.CommandLinksButtonType> clb = Arrays.asList(
+                new CommandLinksDialog.CommandLinksButtonType("https://github.com/wgpsec/fofa_viewer", "有问题请先查看说明", true),
+                new CommandLinksDialog.CommandLinksButtonType("https://github.com/wgpsec/fofa_viewer/issues", "有bug请提交issue", true)
+        );
+        CommandLinksDialog dialog = new CommandLinksDialog(clb);
+        dialog.setOnCloseRequest(e -> {
+            ButtonType result = dialog.getResult();
+            URI uri = URI.create(result.getText());
+            Desktop dp = Desktop.getDesktop();
+            if (dp.isSupported(Desktop.Action.BROWSE)) {
+                try {
+                    dp.browse(uri);
+                } catch (IOException ex) {
+                    logger.log(Level.WARNING, ex.getMessage(), e);
+                }
+            }
+        });
+        dialog.setTitle("提示");
+        dialog.setContentText("WgpSec Team");
+        dialog.showAndWait();
     }
 
     /**
-     * 导出查询数据
+     * 导出查询数据到excel文件
      */
     @FXML
     private void exportAction(ActionEvent e) {
-        if(tabPane.getCurrentTab().getText().equals("首页")) return;  // 起始页无数据可导出
-        ArrayList<String> list = this.tabPane.getTabDataBean(tabPane.getCurrentTab()).dataList;
-        ArrayList<String> tmp = new ArrayList<>();
-        for(String i : list){
-            if(!i.startsWith("http")){
-                tmp.add("http://" + i);
-            }else{
-                tmp.add(i);
-            }
-        }
+        Tab tab = tabPane.getCurrentTab();
+        if(tab.getText().equals("首页")) return;  // 首页无数据可导出
         Stage stage = (Stage) rootLayout.getScene().getWindow();
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("选择导出结果到文件...");
-        try {
-            File file = fileChooser.showSaveDialog(stage);
-            if(file != null){
-                BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-                for(String i : tmp){
-                    writer.write(i);
-                    writer.newLine();
-                }
-                writer.close();
-                showAlert(Alert.AlertType.INFORMATION, null, "导出成功！");
-            }
-        }catch (IOException ex){
-            logger.log(Level.WARNING,ex.getMessage(), ex);
-            showAlert(Alert.AlertType.ERROR, null, "导出失败，错误原因：" + ex.getMessage());
-        }
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle("选择导出结果到目录...");
+        File file = directoryChooser.showDialog(stage);
+        if(file != null){
+            TabDataBean bean = this.tabPane.getTabDataBean(tab);
+            HashMap<String,String> urlList = new HashMap<>();
+            List<List<String>> urls = new ArrayList<>();
+            TableView<TableBean> tableView = (TableView<TableBean>) ((BorderPane) tab.getContent()).getCenter();
+            HashMap<String, ExcelData> totalData = new HashMap<>();
+            StringBuilder errorPage = new StringBuilder();
 
+            if(bean.hasMoreData){ // 本地未完全加载时从网络请求进行加载
+                int maxCount = Math.min(bean.total, client.max);
+                int totalPage = (int)Math.ceil(maxCount/ Double.parseDouble(client.getSize()));
+                TextInputDialog td = new TextInputDialog();
+                td.setTitle("导出确认");
+                td.setHeaderText("当前查询条件可查询到" + bean.total + "条数据，最多只能导出" + maxCount + "条数据，总共" + totalPage + "页\n全部导出请直接点击确认，选择导出部分数据请输入页数。");
+                td.setContentText("请输入要导出的页数：");
+                Optional<String> result = td.showAndWait();
+                if (result.isPresent()){
+                    if(!result.get().equals("")){
+                        int inputPage = -1;
+                        try{
+                            inputPage = Integer.parseInt(result.get());
+                            if(inputPage <= 0 || inputPage > totalPage){
+                                showAlert(Alert.AlertType.ERROR, null, "输入的值必须介于0到"+totalPage+"之间！");
+                                return;
+                            }
+                        }catch (NumberFormatException ex){
+                            showAlert(Alert.AlertType.ERROR,null,"输入的值不是整数！");
+                            return;
+                        }
+                        totalPage = inputPage;
+                    }
+                }else{
+                    return;
+                }
+                int finalTotalPage = totalPage;
+                Task<Void> exportTask = new Task<Void>() {
+                    @Override
+                    protected Void call() {
+                        try {
+                            for (int i = 1; i <= finalTotalPage; i++) {
+                                Thread.sleep(500);
+                                String text = replaceString(tab.getText());
+                                HashMap<String, String> result = null;
+                                result = helper.getHTML(client.getParam(String.valueOf(i)) + RequestHelper.encode(text), 50000, 50000);
+                                if (result.get("code").equals("200")) {
+                                    JSONObject obj = JSON.parseObject(result.get("msg"));
+                                    loadJsonData(null, obj, totalData, urlList, true);
+                                    updateMessage("已加载" + i + "/" + finalTotalPage + "页");
+                                    updateProgress(i, finalTotalPage);
+                                } else if (result.get("code").equals("error")) {
+                                    // 请求失败时 等待0.5s再次请求
+                                    Thread.sleep(500);
+                                    result = helper.getHTML(client.getParam(String.valueOf(i)) + RequestHelper.encode(text), 50000, 50000);
+                                    if (result.get("code").equals("error")) {
+                                        errorPage.append(i).append(" ");
+                                        continue;
+                                    }
+                                    JSONObject obj = JSON.parseObject(result.get("msg"));
+                                    loadJsonData(null, obj, totalData, urlList, true);
+                                    updateMessage("已加载" + i + "/" + finalTotalPage + "页");
+                                    updateProgress(i, finalTotalPage);
+                                }
+                            }
+                        }catch (InterruptedException e){
+                            logger.log(Level.WARNING, e.getMessage(), e);
+                        }
+                        return null;
+                    }
+                };
+                ProgressDialog pd = new ProgressDialog(exportTask);
+                pd.setTitle("正在导出数据中...");
+                pd.setHeaderText("数据总量为" + maxCount + "，总共需要导出" + finalTotalPage + "页");
+                new Thread(exportTask).start();
+                pd.showAndWait();
+            }else{ // 从本地数据加载，不再进行网络请求
+                urlList.putAll(bean.dataList);
+                for(TableBean i : tableView.getItems()){
+                    ExcelData data = new ExcelData(
+                            i.host.getValue(), i.title.getValue(), i.ip.getValue(), i.domain.getValue(),
+                            i.port.getValue(), i.protocol.getValue(), i.server.getValue()
+                    );
+                    totalData.put(i.host.getValue(), data);
+                }
+            }
+            for(String i : urlList.keySet()){
+                List<String> item = new ArrayList<>();
+                String t = urlList.get(i);
+                if(!t.startsWith("http")){
+                    item.add("http://" + t);
+                }else{
+                    item.add(t);
+                }
+                urls.add(item);
+            }
+            String fileName = file.getAbsolutePath() + System.getProperty("file.separator") + "fofa导出结果" + System.currentTimeMillis() + ".xlsx";
+            ExcelWriter excelWriter = null;
+            try {
+                excelWriter = EasyExcel.write(fileName).build();
+                OnceAbsoluteMergeStrategy strategy = new OnceAbsoluteMergeStrategy(0,1,0,6);
+                ArrayList<ArrayList<String>> head = new ArrayList<ArrayList<String>>(){{add(new ArrayList<String>(){{add(tab.getText());}});}};
+                WriteCellStyle contentWriteCellStyle = new WriteCellStyle();
+                WriteFont contentWriteFont = new WriteFont();
+                contentWriteFont.setFontHeightInPoints((short)16);
+                contentWriteCellStyle.setWriteFont(contentWriteFont);
+                WriteSheet writeSheet0 = EasyExcel.writerSheet(0,"查询title")
+                        .registerWriteHandler(strategy).registerWriteHandler(new HorizontalCellStyleStrategy(null, contentWriteCellStyle)).build();
+                excelWriter.write(head, writeSheet0);
+                WriteSheet writeSheet1 = EasyExcel.writerSheet(1, "查询结果").head(ExcelData.class).build();
+                excelWriter.write(new ArrayList<>(totalData.values()), writeSheet1);
+                WriteSheet writeSheet2 = EasyExcel.writerSheet(2, "urls").build();
+                excelWriter.write(urls, writeSheet2);
+                if(errorPage.length() == 0){
+                    showAlert(Alert.AlertType.INFORMATION, null, "导出成功！文件保存在" + fileName);
+                }else{
+                    showAlert(Alert.AlertType.INFORMATION, null, "部分数据导出成功，其中第"+ errorPage.toString() +"页加载失败，文件保存在" + fileName);
+                }
+            }catch(Exception exception){
+                logger.log(Level.WARNING, exception.getMessage(), e);
+                showAlert(Alert.AlertType.INFORMATION, null, "导出失败！");
+            }finally {
+                if (excelWriter != null) {
+                    excelWriter.finish();
+                }
+            }
+        }
     }
 
     /**
@@ -171,17 +309,20 @@ public class MainController {
      */
     public void query(String text){
         String tabTitle = text.trim();
-        if(checkHoneyPot.isSelected() && !text.contains("(is_honeypot=false && is_fraud=false)")){
+        if(text.startsWith("(*)")){
+            tabTitle = text;
+            text = text.substring(3);
             text = "(" + text + ") && (is_honeypot=false && is_fraud=false)";
         }
-        if(text.contains("(is_honeypot=false && is_fraud=false)")){
-            tabTitle = "(*)" + tabTitle; // 带有排除蜜罐的给tab设置标记
+        if(checkHoneyPot.isSelected() && !text.contains("(is_honeypot=false && is_fraud=false)")){
+            tabTitle = "(*)" + text;
+            text = "(" + text + ") && (is_honeypot=false && is_fraud=false)";
         }
         if(this.tabPane.isExistTab(tabTitle)){ // 若已存在同名Tab 则直接跳转，不查询
             this.tabPane.setCurrentTab(this.tabPane.getTab(text));
             return;
         }
-        HashMap<String,String> result = this.helper.getHTML(this.client.getParam(null) + RequestHelper.encode(text));
+        HashMap<String,String> result = helper.getHTML(client.getParam(null) + RequestHelper.encode(text), 50000, 50000);
         if(result.get("code").equals("200")){
             Tab tab = new Tab();
             TabDataBean _tmp = new TabDataBean();
@@ -191,15 +332,25 @@ public class MainController {
                 showAlert(Alert.AlertType.ERROR, null, obj.getString("errmsg"));
                 return;
             }
-            if(obj.getInteger("size") < Integer.parseInt(this.client.getSize())){
+            if(obj.getInteger("size") < Integer.parseInt(client.getSize())){
                 _tmp.hasMoreData = false;
             }
             this.tabPane.addTab(tab, _tmp);
-            decoratedField.addLog(text);
+            StatusBar bar = new StatusBar();
+            this.tabPane.addBar(tab, bar);
+            _tmp.total = obj.getInteger("size");
+            Label totalLabel = new Label("当前查询条件查询到 " + obj.getString("size"));
+            Label loadedLabel = new Label(" 条，当前已加载 ");
+            Label countLabel = new Label(String.valueOf(obj.getJSONArray("results").size()));
+            Label tmpLabel = new Label(" 条");
+            bar.getRightItems().addAll(new ArrayList<Label>(){{ add(totalLabel); add(loadedLabel); add(countLabel); add(tmpLabel);}});
+            decoratedField.addLog(tabTitle);
             BorderPane tablePane = new BorderPane();
-            TableView<TableBean> view = new TableView<TableBean>(FXCollections.observableArrayList(loadJsonData(_tmp, obj).values()));
+            Map<String, TableBean> values = (Map<String, TableBean>) loadJsonData(_tmp, obj, null, null, false);
+            TableView<TableBean> view = new TableView<>(FXCollections.observableArrayList(values.values()));
             setTable(view);
             tablePane.setCenter(view);
+            tablePane.setBottom(bar);
             tab.setContent(tablePane);
             tabPane.setCurrentTab(tab);
             // 设置延时任务在滚动条界面渲染结束后进行事件绑定
@@ -218,8 +369,8 @@ public class MainController {
         Properties properties = new Properties();
         try {
             properties.load(new FileInputStream("config.properties"));
-            this.client = new FofaBean(properties.getProperty("email").trim(), properties.getProperty("key").trim());
-            this.client.setSize(properties.getProperty("maxSize"));
+            client = new FofaBean(properties.getProperty("email").trim(), properties.getProperty("key").trim());
+            client.setSize(properties.getProperty("maxSize"));
         } catch (IOException e){
             showAlert(Alert.AlertType.ERROR, null, "缺少配置文件config.properties！");
             Platform.exit();  //结束进程
@@ -239,9 +390,6 @@ public class MainController {
         TableColumn<TableBean, String> domain = new TableColumn<>("域名");
         TableColumn<TableBean, String> protocol = new TableColumn<>("协议");
         TableColumn<TableBean, String> server = new TableColumn<>("Server指纹");
-        List<TableColumn<TableBean,String>> list = new ArrayList<TableColumn<TableBean,String>>(){{
-            add(host);add(title);add(ip);
-        }};
         num.setCellValueFactory(param -> param.getValue().getNum().asObject());
         host.setCellValueFactory(param -> param.getValue().getHost());
         title.setCellValueFactory(param -> param.getValue().getTitle());
@@ -251,11 +399,9 @@ public class MainController {
         protocol.setCellValueFactory(param -> param.getValue().getProtocol());
         server.setCellValueFactory(param -> param.getValue().getServer());
         view.getColumns().add(num);
-        view.getColumns().addAll(list);
+        view.getColumns().addAll(new ArrayList<TableColumn<TableBean,String>>(){{ add(host);add(title);add(ip);}});
         view.getColumns().add(port);
-        view.getColumns().add(domain);
-        view.getColumns().add(protocol);
-        view.getColumns().add(server);
+        view.getColumns().addAll(new ArrayList<TableColumn<TableBean,String>>(){{add(domain);add(protocol);add(server);}});
         view.setRowFactory(param -> {
             final TableRow<TableBean> row = new TableRow<>();
             // 设置表格右键菜单
@@ -271,7 +417,7 @@ public class MainController {
             queryCSet.setOnAction(event -> {
                 String ip1 = row.getItem().ip.getValue();
                 String queryText = ip1.substring(0, ip1.lastIndexOf('.'));
-                query("ip=\""+ queryText + ".1/24" + "\"");
+                query("ip=\""+ queryText + ".0/24" + "\"");
             });
             MenuItem querySubdomain = new MenuItem("查询相关域名资产");
             querySubdomain.setOnAction(event -> {
@@ -329,7 +475,7 @@ public class MainController {
                     String url = row.getItem().host.getValue();
                     String protocol1 = row.getItem().protocol.getValue();
                     String domain1 = row.getItem().domain.getValue();
-                    if(!domain1.equals("") || url.startsWith("http") || protocol1.equals("")){
+                    if(!domain1.equals("") || url.startsWith("http") || protocol1.equals("") || protocol1.startsWith("http")){
                         if(!url.startsWith("http")){
                             if(url.endsWith("443")){
                                 url = "https://" + url.substring(0, url.length()-4);
@@ -376,26 +522,25 @@ public class MainController {
                 if(bean.hasMoreData){
                     bean.page += 1;
                     TableView<TableBean> tableView = (TableView<TableBean>) ((BorderPane) tab.getContent()).getCenter();
-                    String text = tab.getText();
-                    if(text.startsWith("(*)")){
-                        text = text.substring(3);
-                        text = "(" + text + ") && (is_honeypot=false && is_fraud=false)";
-                    }
-                    HashMap<String,String> result = this.helper.getHTML(this.client.getParam(String.valueOf(bean.page)) + RequestHelper.encode(text));
+                    String text = replaceString(tab.getText());
+                    HashMap<String,String> result = helper.getHTML(client.getParam(String.valueOf(bean.page)) + RequestHelper.encode(text), 20000, 20000);
                     if(result.get("code").equals("200")){
                         JSONObject obj = JSON.parseObject(result.get("msg"));
                         if(obj.getBoolean("error")){
                             return;
                         }
-                        HashMap<String, TableBean> list = loadJsonData(bean, obj);
+                        Map<String, TableBean> list = (Map<String, TableBean>) loadJsonData(bean, obj, null, null, false);
                         if (list.keySet().size() !=0){
                             ObservableList<TableBean> _tmp = tableView.getItems();
                             TableBean b = _tmp.get(_tmp.size()-5);
                             List<TableBean> tmp = list.values().stream().sorted(Comparator.comparing(TableBean::getIntNum)).collect(Collectors.toList());
                             tableView.getItems().addAll(FXCollections.observableArrayList(tmp));
                             tableView.scrollTo(b);
+                            StatusBar statusBar = this.tabPane.getBar(tab);
+                            Label countLabel = (Label) statusBar.getRightItems().get(2);
+                            countLabel.setText(String.valueOf(Integer.parseInt(countLabel.getText()) + obj.getJSONArray("results").size()));
                         }
-                        if(bean.page * Integer.parseInt(this.client.getSize()) > obj.getInteger("size")){
+                        if(bean.page * Integer.parseInt(client.getSize()) > obj.getInteger("size")){
                             bean.hasMoreData = false;
                         }
                     }
@@ -404,10 +549,11 @@ public class MainController {
         });
     }
 
-    private HashMap<String, TableBean> loadJsonData(TabDataBean bean, JSONObject obj){
-        HashMap<String, TableBean> list = new HashMap<>();
-        HashMap<String, TableBean> tmp = new HashMap<>();
+    private Map<String, ? extends BaseBean> loadJsonData(TabDataBean bean,
+                                                         JSONObject obj, HashMap<String, ExcelData> excelData,
+                                                         HashMap<String,String> urlList, boolean isExport){
         JSONArray array = obj.getJSONArray("results");
+        HashMap<String, TableBean> list = new HashMap<>();
         for(int index=0; index < array.size(); index ++){
             JSONArray _array = array.getJSONArray(index);
             String host = _array.getString(0);
@@ -417,24 +563,65 @@ public class MainController {
             int port = Integer.parseInt(_array.getString(4));
             String protocol = _array.getString(5);
             String server = _array.getString(6);
-            String _host = ip + ":" +port;
-            TableBean b = new TableBean(++bean.count, host, title, ip, domain, port, protocol, server);
-            if(protocol.equals("")){
-                bean.dataList.add(host);
+            String _host = ip+":"+port;
+
+            if(isExport){ // 导出数据
+                ExcelData d = new ExcelData(host, title, ip, domain, port, protocol, server);
+                getUrlList(urlList, host, ip, port, protocol, _host);
+                //去除http 的重复项
+                if(excelData.containsKey(_host) && protocol.equals("")){
+                    excelData.remove(_host);
+                }
+                // 去除80端口的重复项
+                if(port==80 && excelData.containsKey(_host)){
+                    excelData.remove(_host);
+                }
+                // 去除 443 和 https 的重复项
+                if((excelData.containsKey(host) || excelData.containsKey("https://"+host)) && protocol.startsWith("http")){
+                    continue;
+                }else if(excelData.containsKey(ip) && protocol.equals("http")){
+                    continue;
+                }
+                excelData.put(host, d);
+
+            }else{  // table 页更新数据
+                TableBean b = new TableBean(0, host, title, ip, domain, port, protocol, server);
+                getUrlList(bean.dataList, host, ip, port, protocol, _host);
+                //去除http 的重复项
+                if(list.containsKey(_host) && protocol.equals("")){
+                    b.num = list.get(_host).num;
+                    list.remove(_host);
+                }
+                // 去除80端口的重复项
+                if(port==80 && list.containsKey(_host)){
+                    b.num = list.get(_host).num;
+                    list.remove(_host);
+                }
+                // 去除 443 和 https 的重复项
+                if((list.containsKey(host) || list.containsKey("https://"+host)) && protocol.startsWith("http")){
+                    continue;
+                }else if(list.containsKey(ip) && protocol.equals("http")){
+                    continue;
+                }
+                if(b.num.getValue() == 0){ b.num.set(++bean.count);}
+                list.put(host, b);
             }
-            if(host.startsWith("http")){
-                tmp.put(_host, b);
-            }
-            if(list.containsKey(_host) && protocol.equals("")){ //筛除http协议的端口出现两次的情况
-                bean.count--;
-                b.num = list.get(_host).num;
-                list.remove(_host);
-            }else if((list.containsKey(_host) || tmp.containsKey(_host)) && !protocol.equals("")){
-                bean.count--;continue;
-            }
-            list.put(host, b);
         }
         return list;
+    }
+
+    private void getUrlList(HashMap<String, String> urlList, String host, String ip, int port, String protocol, String _host) {
+        if (protocol.equals("")) {
+            urlList.put(host, host);
+        }else if(port == 80 && protocol.equals("http")){
+            urlList.put("http://" + ip, "http://" + ip);
+        } else if (protocol.equals("http") && !urlList.containsKey(_host)) {
+            urlList.put("http://" + host, "http://" + host);
+        } else if (port == 443 && protocol.equals("https") && !urlList.containsKey("https://" + ip)) {
+            urlList.put("https://" + ip, "https://" + ip);
+        } else if (port != 443 && protocol.equals("https") && !urlList.containsKey("https://" + _host)) {
+            urlList.put("https://" + _host, "https://" + _host);
+        }
     }
 
     /**
@@ -445,8 +632,17 @@ public class MainController {
      */
     public void showAlert(Alert.AlertType type, String header, String content){
         Alert alert = new Alert(type);
+        alert.setTitle("提示");
         alert.setHeaderText(header);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+
+    public String replaceString(String tabTitle){
+        if(tabTitle.startsWith("(*)")){
+            tabTitle = tabTitle.substring(3);
+            tabTitle = "(" + tabTitle + ") && (is_honeypot=false && is_fraud=false)";
+        }
+        return tabTitle;
     }
 }

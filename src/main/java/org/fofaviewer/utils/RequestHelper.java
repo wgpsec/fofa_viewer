@@ -3,14 +3,10 @@ package org.fofaviewer.utils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import javafx.scene.control.Alert;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
+import me.gv7.woodpecker.requests.RawResponse;
+import me.gv7.woodpecker.requests.Requests;
+import me.gv7.woodpecker.requests.Response;
+import me.gv7.woodpecker.requests.exception.RequestsException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -18,22 +14,19 @@ import org.jsoup.select.Elements;
 import sun.misc.BASE64Encoder;
 import org.apache.commons.codec.binary.Base64;
 import javax.net.ssl.*;
-import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.security.*;
+import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import com.google.common.hash.Hashing;
 
 public class RequestHelper {
     private static RequestHelper request = null;
     private Logger logger = null;
-    private static final CloseableHttpClient httpClient = HttpClientBuilder.create().build();
     private final String[] ua = new String[]{
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36",
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0",
@@ -52,29 +45,6 @@ public class RequestHelper {
         return request;
     }
 
-    private CloseableHttpResponse getResponse(String url) {
-        CloseableHttpClient httpClient = HttpClientBuilder.create().build();
-        CloseableHttpResponse response = null;
-        HashMap<String, String> map = new HashMap<String, String>();
-        try {
-            URIBuilder builder = new URIBuilder(url);
-            HttpGet httpGet = new HttpGet(builder.build());
-            httpGet.setHeader("User-Agent", ua[(new SecureRandom()).nextInt(3)]);
-            response = httpClient.execute(httpGet);
-            return response;
-        } catch (java.net.ConnectException e) {
-            logger.log(Level.WARNING, e.getMessage(), e);
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setHeaderText(null);
-            alert.setContentText("网站访问异常！");
-            alert.showAndWait();
-            return null;
-        } catch (Exception ex) {
-            logger.log(Level.WARNING, ex.getMessage(), ex);
-            return null;
-        }
-    }
-
     /**
      * 发起HTTP请求获取响应内容
      *
@@ -84,16 +54,28 @@ public class RequestHelper {
      * other code : request error
      * error ：请求失败
      */
-    public HashMap<String, String> getHTML(String url) {
-        CloseableHttpResponse response = getResponse(url);
+    public HashMap<String, String> getHTML(String url, int connectTimeout, int socksTimeout) {
+        RawResponse response = null;
         HashMap<String, String> result = new HashMap<>();
+        try {
+            response = Requests.get(url)
+                    .headers(new HashMap<String, String>() {{ put("User-Agent", ua[(new SecureRandom()).nextInt(3)]); }})
+                    .connectTimeout(connectTimeout)
+                    .socksTimeout(socksTimeout)
+                    .send();
+        }catch (Exception e){
+            logger.log(Level.WARNING, e.getMessage(), e);
+            result.put("code", "error");
+            result.put("msg", e.getMessage());
+            return result;
+        }
         if (response != null) {
-            int code = response.getStatusLine().getStatusCode();
+            int code = response.statusCode();
             result.put("code", String.valueOf(code));
             try {
                 if (code == 200) {
-                    HttpEntity httpEntity = response.getEntity();
-                    result.put("msg", EntityUtils.toString(httpEntity, "utf8"));
+                    String body = response.readToText(); // 默认使用utf-8编码
+                    result.put("msg", body);
                 } else if (code == 401) {
                     result.put("msg", "请求错误状态码401，可能是没有在config中配置有效的email和key，或者您的账号权限不足无法使用api进行查询。");
                 } else if (code == 502) {
@@ -105,14 +87,7 @@ public class RequestHelper {
             } catch (Exception e) {
                 result.put("code", "error");
                 result.put("msg", e.getMessage());
-                logger.log(Level.WARNING, e.getMessage(), e);
                 return result;
-            } finally {
-                try {
-                    response.close();
-                } catch (IOException ex) {
-                    logger.log(Level.WARNING, ex.getMessage(), ex);
-                }
             }
         }
         result.put("code", "error");
@@ -128,26 +103,31 @@ public class RequestHelper {
      * @return
      */
     public HashMap<String, String> getImageFavicon(String url) {
-        CloseableHttpResponse response = getResponse(url);
+        Response<byte[]> response = null;
         HashMap<String, String> result = new HashMap<>();
+        try {
+            response = Requests.get(url)
+                    .headers(new HashMap<String, String>() {{
+                        put("User-Agent", ua[(new SecureRandom()).nextInt(3)]);
+                    }})
+                    .verify(false) // 忽略证书校验
+                    .send()
+                    .toBytesResponse();
+        }catch (RequestsException e){
+            result.put("code", "error");
+            result.put("msg", e.getMessage());
+        }
         if (response != null) {
-            int code = response.getStatusLine().getStatusCode();
+            int code = response.statusCode();
             result.put("code", String.valueOf(code));
             if (code == 200) {
                 try {
-                    if (response.getEntity().getContentLength() == 0) {
+                    byte[] resp1 = response.body();
+                    if (resp1.length == 0) {
                         logger.log(Level.FINE, url + "无响应内容");
                         return null;
                     }
-                    InputStream is = response.getEntity().getContent();
-                    byte[] buffer = new byte[1024];
-                    ByteArrayOutputStream bos=new ByteArrayOutputStream();
-                    int len = 0;
-                    while((len = is.read(buffer))!=-1){
-                        bos.write(buffer,0, len);
-                    }
-                    bos.flush();
-                    String encoded = new BASE64Encoder().encode(Objects.requireNonNull(bos.toByteArray()));
+                    String encoded = new BASE64Encoder().encode(resp1);
                     String hash = getIconHash(encoded);
                     result.put("msg", "icon_hash=\"" + hash + "\"");
                     return result;
@@ -156,20 +136,14 @@ public class RequestHelper {
                     result.put("msg", e.getMessage());
                     logger.log(Level.WARNING, e.getMessage(), e);
                     return result;
-                } finally {
-                    try {
-                        response.close();
-                    } catch (IOException ex) {
-                        logger.log(Level.WARNING, ex.getMessage(), ex);
-                    }
                 }
             }
         }
-        return null;
+        return result;
     }
 
     public String getLinkIcon(String url) {
-        HashMap<String, String> result = getHTML(url);
+        HashMap<String, String> result = getHTML(url, 10000,10000);
         if (result.get("code").equals("200")) {
             Document document = Jsoup.parse(result.get("msg"));
             Elements elements = document.getElementsByTag("link");
@@ -200,7 +174,10 @@ public class RequestHelper {
      * @return favicon hash值
      */
     private String getIconHash(String f) {
-        int murmu = Hashing.murmur3_32().hashString(f.replaceAll("\r", "") + "\n", StandardCharsets.UTF_8).asInt();
+        int murmu = Hashing
+                .murmur3_32()
+                .hashString(f.replaceAll("\r","" )+ "\n", StandardCharsets.UTF_8)
+                .asInt();
         return String.valueOf(murmu);
     }
 
@@ -232,21 +209,17 @@ public class RequestHelper {
     public List<String> getTips(String key) {
         try {
             key = java.net.URLEncoder.encode(key, "UTF-8");
-            CloseableHttpResponse response = this.getResponse("https://api.fofa.so/v1/search/tip?q=" + key);
-            if(response != null){
-                if (response.getStatusLine().getStatusCode() == 200) {
-                    HttpEntity httpEntity = response.getEntity();
-                    String content = EntityUtils.toString(response.getEntity(), "utf8");
-                    JSONObject obj = JSON.parseObject(content);
-                    if(obj.getString("message").equals("ok")){
-                        List<String> data = new ArrayList<>();
-                        JSONArray objs = obj.getJSONArray("data");
-                        for (Object o : objs) {
-                            JSONObject tmp = (JSONObject) o;
-                            data.add(tmp.getString("name") + "--" + tmp.getString("company"));
-                        }
-                        return data;
+            HashMap<String, String> result = getHTML("https://api.fofa.so/v1/search/tip?q=" + key, 3000, 5000);
+            if (result.get("code").equals("200")) {
+                JSONObject obj = JSON.parseObject(result.get("msg"));
+                if(obj.getString("message").equals("ok")){
+                    List<String> data = new ArrayList<>();
+                    JSONArray objs = obj.getJSONArray("data");
+                    for (Object o : objs) {
+                        JSONObject tmp = (JSONObject) o;
+                        data.add(tmp.getString("name") + "--" + tmp.getString("company"));
                     }
+                    return data;
                 }
             }
             return null;

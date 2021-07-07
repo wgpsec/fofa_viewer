@@ -11,11 +11,8 @@
 <?import org.fofaviewer.controls.CloseableTabPane?>
 <?import org.controlsfx.control.textfield.TextFields?>
 <?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.TextField?>
-<?import java.lang.String?>
 <VBox fx:id="rootLayout" fx:controller="org.fofaviewer.main.MainController" prefHeight="674" prefWidth="1000" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
     <MenuBar prefHeight="0.0" prefWidth="106.0" VBox.vgrow="NEVER">
-<!--        <Menu fx:id="history" mnemonicParsing="false" text="查询历史"></Menu>-->
         <Menu mnemonicParsing="false" text="帮助">
             <MenuItem mnemonicParsing="false" text="关于" onAction="#showAbout"/>
         </Menu>
@@ -35,7 +32,7 @@
                     <Font size="14.0"/>
                 </font>
             </CheckBox>
-            <Button AnchorPane.rightAnchor="10.0" layoutY="10.0" mnemonicParsing="false" alignment="CENTER_RIGHT" text="导出当前页数据" onAction="#exportAction"/>
+            <Button AnchorPane.rightAnchor="10.0" layoutY="10.0" mnemonicParsing="false" alignment="CENTER_RIGHT" text="导出当前查询的所有数据" onAction="#exportAction"/>
         </AnchorPane>
         <CloseableTabPane fx:id="tabPane" prefHeight="560" prefWidth="1000" AnchorPane.topAnchor="50" AnchorPane.rightAnchor="0.0"
                           AnchorPane.leftAnchor="0.0" AnchorPane.bottomAnchor="0.0"/>
