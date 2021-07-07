@@ -32,6 +32,8 @@ https://gitee.com/wgpsec/fofa_viewer （镜像）
 6. 支持输入智能提示
 7. 支持fofa的一键排除干扰（蜜罐）功能。（注：需要高级会员才能使用，使用时会在tab页标记`(*)`）
 8. 显示fofa官网的查询语法
+![](docs/ui.png)
+![](docs/search.png)
 
 ## Q&A
 1. 为什么查询显示结果超过了10000条，但是导出的数据不到10000条？
@@ -47,9 +49,6 @@ https://gitee.com/wgpsec/fofa_viewer （镜像）
     ![](docs/非80http.png)
   - 非443端口的https
     ![](docs/非443https.png)
-
-![](docs/ui.png)
-![](docs/search.png)
 
 ## :rocket: 二次开发
 ```
