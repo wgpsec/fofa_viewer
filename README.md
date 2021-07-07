@@ -15,7 +15,6 @@ Fofa_Viewer 一个简单易用的fofa客户端由WgpSec狼组安全团队 [**f1a
 
 下载最新版本包，修改`config.properties` 即可开始使用
 
-MAC 用户可以参考[zhaodie 师傅的文章](http://www.jizhao.net.cn/index.php/2021/04/15/mac%e8%a7%a3%e5%86%b3fofa_viewer%e6%97%a0%e6%b3%95%e5%90%af%e5%8a%a8/)来配置快速启动
 
 **若下载速度太慢可以使用**
 
