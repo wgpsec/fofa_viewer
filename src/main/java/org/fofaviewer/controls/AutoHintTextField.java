@@ -1,8 +1,7 @@
 package org.fofaviewer.controls;
 
 import javafx.animation.PauseTransition;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -150,7 +149,7 @@ public class AutoHintTextField {
                 return false;
             }
         };
-        new Thread(task).start();
+        Platform.runLater(new Thread(task));
         task.valueProperty().addListener((observable, oldValue1, newValue1) -> {
             if(newValue1){
                 showTipPop();
