@@ -1,8 +1,11 @@
 package org.fofaviewer.controls;
 
 import javafx.animation.PauseTransition;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.control.ListView;
@@ -135,12 +138,24 @@ public class AutoHintTextField {
         if(clickedInput.equals(newValue)){ // 消除点击条目后自动触发的bug
             return;
         }
-        this.showCacheDataList.clear();
-        List<String> data = helper.getTips(newValue);
-        if(data != null && data.size() != 0){
-            this.showCacheDataList.addAll(data);
-            showTipPop();
-        }
+        Task<Boolean> task = new Task<Boolean>() {
+            @Override
+            public Boolean call() {
+                showCacheDataList.clear();
+                List<String> data = helper.getTips(newValue);
+                if(data != null && data.size() != 0){
+                    showCacheDataList.addAll(data);
+                    return true;
+                }
+                return false;
+            }
+        };
+        new Thread(task).start();
+        task.valueProperty().addListener((observable, oldValue1, newValue1) -> {
+            if(newValue1){
+                showTipPop();
+            }
+        });
     }
 
     public final Window getWindow() {
