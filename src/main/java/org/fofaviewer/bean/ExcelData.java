@@ -20,7 +20,7 @@ public class ExcelData extends BaseBean {
     @ExcelProperty("网页标题")
     private String title;
 
-    @ColumnWidth(20)
+    @ColumnWidth(25)
     @ExcelProperty("域名")
     private String domain;
 
@@ -38,7 +38,11 @@ public class ExcelData extends BaseBean {
     @ExcelProperty("banner")
     private String server;
 
-    public ExcelData(String host, String title, String ip, String domain, Integer port, String protocol, String server) {
+    @ColumnWidth(35)
+    @ExcelProperty("fid")
+    private String fid;
+
+    public ExcelData(String host, String title, String ip, String domain, Integer port, String protocol, String server, String fid) {
         this.host = host;
         this.title = title;
         this.ip = ip;
@@ -46,5 +50,6 @@ public class ExcelData extends BaseBean {
         this.port = port;
         this.protocol = protocol;
         this.server = server;
+        this.fid = fid;
     }
 }

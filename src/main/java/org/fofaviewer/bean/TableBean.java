@@ -12,8 +12,9 @@ public class TableBean extends BaseBean{
     public SimpleIntegerProperty port = new SimpleIntegerProperty();
     public SimpleStringProperty protocol = new SimpleStringProperty();
     public SimpleStringProperty server = new SimpleStringProperty();
+    public SimpleStringProperty fid = new SimpleStringProperty();
 
-    public TableBean(int num, String host, String title, String ip, String domain, int port, String protocol, String server) {
+    public TableBean(int num, String host, String title, String ip, String domain, int port, String protocol, String server, String fid) {
         this.num.set(num);
         this.host.set(host);
         this.title.set(title);
@@ -22,6 +23,7 @@ public class TableBean extends BaseBean{
         this.port.set(port);
         this.protocol.set(protocol);
         this.server.set(server);
+        this.fid.set(fid);
     }
 
     public void setNum(SimpleIntegerProperty numValue){
@@ -62,6 +64,10 @@ public class TableBean extends BaseBean{
 
     public SimpleStringProperty getServer(){
         return server;
+    }
+
+    public SimpleStringProperty getFid() {
+        return fid;
     }
 
 }

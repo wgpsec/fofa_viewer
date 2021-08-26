@@ -21,7 +21,7 @@ public class FofaBean {
         this.size = size;
     }
     public String getParam(String page) {
-        String fields = "host,title,ip,domain,port,protocol,server";
+        String fields = "host,title,ip,domain,port,protocol,server,fid";
         String queryUrl = "https://fofa.so/api/v1/search/all";
         if(page != null) {
             return queryUrl + "?email=" + email

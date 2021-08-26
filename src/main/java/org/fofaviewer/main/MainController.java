@@ -44,6 +44,7 @@ import org.fofaviewer.controls.AutoHintTextField;
 import org.fofaviewer.utils.LogUtil;
 import org.fofaviewer.utils.RequestHelper;
 import org.fofaviewer.controls.CloseableTabPane;
+import org.controlsfx.control.textfield.TextFields;
 import java.awt.*;
 import java.io.*;
 import java.math.BigInteger;
@@ -69,7 +70,7 @@ public class MainController {
     private AutoHintTextField decoratedField;
     private static final RequestHelper helper = RequestHelper.getInstance();
     private static FofaBean client;
-    private Logger logger = null;
+    private Logger logger;
 
     public MainController(){
         this.logger = Logger.getLogger("Controller");
@@ -79,55 +80,76 @@ public class MainController {
      * 初始化
      */
     @FXML
-    private void initialize() throws IOException {
+    private void initialize() {
         decoratedField = new AutoHintTextField(queryTF);
         loadConfigure();
         //初始化起始页tab
         Tab tab = this.tabPane.getTab("首页");
-        Button queryCert = new Button("计算");
-        Label label = new Label("证书序列号计算器");
-        Label resLabel = new Label("结果");
-        TextField tf = new TextField();
-        TextField res = new TextField();
+        Button queryCert = new Button("计算并查询");
+        Button queryFavicon = new Button("计算并查询");
+        Label label = new Label("证书序列号计算");
+        Label faviconLabel = new Label("FavionHash计算");
+        TextField tf = TextFields.createClearableTextField();
+        TextField favionTF = TextFields.createClearableTextField();
         Image image = new Image("api_doc.png");
         ImageView view = new ImageView(image);
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         scrollPane.setContent(view);
-        view.setFitHeight(2000D);
+        view.setFitHeight(1600D);
         view.setFitWidth(750D);
         scrollPane.setPrefWidth(760);
         tf.setPromptText("请将16进制证书序列号粘贴到此处！");
+        favionTF.setPromptText("请将网站的Favicon的URL粘贴到此处！");
         tf.setPrefWidth(400);
-        res.setPrefWidth(500);
+        favionTF.setPrefWidth(400);
         label.setFont(Font.font(14));
-        resLabel.setFont(Font.font(14));
+        faviconLabel.setFont(Font.font(14));
         queryCert.setOnAction(event -> {
-            if(tf.getText() != null){
-                String txt = tf.getText().trim().replaceAll(" ", "");
-                BigInteger i = new BigInteger(txt, 16);
-                res.setText(i.toString());
+            String txt = tf.getText().trim();
+            if(!txt.equals("")){
+                String serialnumber = txt.replaceAll(" ", "");
+                BigInteger i = new BigInteger(serialnumber, 16);
+                query("cert=\"" + i.toString() + "\"");
+            }
+        });
+        queryFavicon.setOnAction(event -> {
+            String url = favionTF.getText().trim();
+            if(!url.equals("")){
+                if(!url.startsWith("http")){
+                    showAlert(Alert.AlertType.ERROR, null, "缺少http协议头！");
+                }else {
+                    HashMap<String,String> res = null;
+                    res = helper.getImageFavicon(url);
+                    if(res != null){
+                        if(res.get("code").equals("error")){
+                            showAlert(Alert.AlertType.ERROR, null, res.get("msg"));return;
+                        }
+                        query(res.get("msg"));
+                    }
+                }
             }
         });
         VBox vb = new VBox();
         HBox hb = new HBox();
-        HBox resBox = new HBox();
+        HBox faviconBox = new HBox();
         HBox imageBox = new HBox();
         vb.setSpacing(10);
         imageBox.getChildren().add(scrollPane);
         hb.getChildren().addAll(label, tf, queryCert);
         label.setPadding(new Insets(3));
-        resLabel.setPadding(new Insets(3));
-        hb.setPadding(new Insets(20));
-        hb.setSpacing(10);
-        resBox.setSpacing(45);
+        faviconLabel.setPadding(new Insets(3,5,3,3));
+        hb.setPadding(new Insets(10));
+        hb.setSpacing(15);
+        faviconBox.setSpacing(15); // 设置控件间距
         hb.setAlignment(Pos.TOP_CENTER);
-        resBox.setAlignment(Pos.TOP_CENTER);
+        faviconBox.setAlignment(Pos.TOP_CENTER);
+        faviconBox.setPadding(new Insets(5,0,5,0));
         imageBox.setAlignment(Pos.TOP_CENTER);
-        resBox.getChildren().add(resLabel);
-        resBox.getChildren().add(res);
-        vb.getChildren().addAll(hb, resBox, imageBox);
-        VBox.setMargin(res, new Insets(0, 100, 0 ,100));
+        imageBox.setPadding(new Insets(5,0,10,0));
+        faviconBox.getChildren().addAll(faviconLabel, favionTF, queryFavicon);
+        vb.getChildren().addAll(hb, faviconBox, imageBox);
+        //VBox.setMargin(res, new Insets(0, 100, 0 ,100));
         tab.setContent(vb);
     }
 
@@ -256,7 +278,7 @@ public class MainController {
                 for(TableBean i : tableView.getItems()){
                     ExcelData data = new ExcelData(
                             i.host.getValue(), i.title.getValue(), i.ip.getValue(), i.domain.getValue(),
-                            i.port.getValue(), i.protocol.getValue(), i.server.getValue()
+                            i.port.getValue(), i.protocol.getValue(), i.server.getValue(), i.fid.getValue()
                     );
                     totalData.put(i.host.getValue(), data);
                 }
@@ -390,6 +412,7 @@ public class MainController {
         TableColumn<TableBean, String> domain = new TableColumn<>("域名");
         TableColumn<TableBean, String> protocol = new TableColumn<>("协议");
         TableColumn<TableBean, String> server = new TableColumn<>("Server指纹");
+        TableColumn<TableBean, String> fid = new TableColumn<>("Fid");
         num.setCellValueFactory(param -> param.getValue().getNum().asObject());
         host.setCellValueFactory(param -> param.getValue().getHost());
         title.setCellValueFactory(param -> param.getValue().getTitle());
@@ -398,10 +421,13 @@ public class MainController {
         domain.setCellValueFactory(param -> param.getValue().getDomain());
         protocol.setCellValueFactory(param -> param.getValue().getProtocol());
         server.setCellValueFactory(param -> param.getValue().getServer());
+        fid.setCellValueFactory(param -> param.getValue().getFid());
+        // 修改ip的排序规则
+        ip.setComparator(Comparator.comparing(MainController::getValue));
         view.getColumns().add(num);
         view.getColumns().addAll(new ArrayList<TableColumn<TableBean,String>>(){{ add(host);add(title);add(ip);}});
         view.getColumns().add(port);
-        view.getColumns().addAll(new ArrayList<TableColumn<TableBean,String>>(){{add(domain);add(protocol);add(server);}});
+        view.getColumns().addAll(new ArrayList<TableColumn<TableBean,String>>(){{add(domain);add(protocol);add(server);add(fid);}});
         view.setRowFactory(param -> {
             final TableRow<TableBean> row = new TableRow<>();
             // 设置表格右键菜单
@@ -467,7 +493,16 @@ public class MainController {
                     showAlert(Alert.AlertType.WARNING, null, "请选中host中带有https的行再点击查询证书相关资产");
                 }
             });
-            rowMenu.getItems().addAll(copyLink, queryCSet, querySubdomain, favicon, cert);
+            MenuItem fidMenu = new MenuItem("从fofa搜索对应Fid的资产");
+            fidMenu.setOnAction(event -> {
+                String _fid = row.getItem().fid.getValue();
+                if(!_fid.equals("")){
+                    query("fid=\""+_fid+"\"");
+                }else{
+                    showAlert(Alert.AlertType.WARNING, null,"fid不能为空");
+                }
+            });
+            rowMenu.getItems().addAll(copyLink, queryCSet, querySubdomain, favicon, cert, fidMenu);
             row.contextMenuProperty().bind(Bindings.when(row.emptyProperty()).then((ContextMenu) null).otherwise(rowMenu));
             // 双击行时使用默认浏览器打开
             row.setOnMouseClicked(event -> {
@@ -563,11 +598,11 @@ public class MainController {
             int port = Integer.parseInt(_array.getString(4));
             String protocol = _array.getString(5);
             String server = _array.getString(6);
+            String fid = _array.getString(7);
             String _host = ip+":"+port;
 
             if(isExport){ // 导出数据
-                ExcelData d = new ExcelData(host, title, ip, domain, port, protocol, server);
-                getUrlList(urlList, host, ip, port, protocol, _host);
+                ExcelData d = new ExcelData(host, title, ip, domain, port, protocol, server, fid);
                 //去除http 的重复项
                 if(excelData.containsKey(_host) && protocol.equals("")){
                     excelData.remove(_host);
@@ -582,11 +617,11 @@ public class MainController {
                 }else if(excelData.containsKey(ip) && protocol.equals("http")){
                     continue;
                 }
+                getUrlList(urlList, host, ip, port, protocol, _host);
                 excelData.put(host, d);
 
             }else{  // table 页更新数据
-                TableBean b = new TableBean(0, host, title, ip, domain, port, protocol, server);
-                getUrlList(bean.dataList, host, ip, port, protocol, _host);
+                TableBean b = new TableBean(0, host, title, ip, domain, port, protocol, server, fid);
                 //去除http 的重复项
                 if(list.containsKey(_host) && protocol.equals("")){
                     b.num = list.get(_host).num;
@@ -604,6 +639,7 @@ public class MainController {
                     continue;
                 }
                 if(b.num.getValue() == 0){ b.num.set(++bean.count);}
+                getUrlList(bean.dataList, host, ip, port, protocol, _host);
                 list.put(host, b);
             }
         }
@@ -611,7 +647,9 @@ public class MainController {
     }
 
     private void getUrlList(HashMap<String, String> urlList, String host, String ip, int port, String protocol, String _host) {
-        if (protocol.equals("")) {
+        if (protocol.equals("") && host.endsWith("443") && !host.startsWith("http")){
+            urlList.put("https://" + host, "https://" + host);
+        }else if (protocol.equals("")) {
             urlList.put(host, host);
         }else if(port == 80 && protocol.equals("http")){
             urlList.put("http://" + ip, "http://" + ip);
@@ -630,7 +668,7 @@ public class MainController {
      * @param header 对话框标题
      * @param content 对话框内容
      */
-    public void showAlert(Alert.AlertType type, String header, String content){
+    private void showAlert(Alert.AlertType type, String header, String content){
         Alert alert = new Alert(type);
         alert.setTitle("提示");
         alert.setHeaderText(header);
@@ -638,11 +676,22 @@ public class MainController {
         alert.showAndWait();
     }
 
-    public String replaceString(String tabTitle){
+    private String replaceString(String tabTitle){
         if(tabTitle.startsWith("(*)")){
             tabTitle = tabTitle.substring(3);
             tabTitle = "(" + tabTitle + ") && (is_honeypot=false && is_fraud=false)";
         }
         return tabTitle;
+    }
+
+    /**
+     * 将IP地址转换为浮点数
+     * @param ip IP地址
+     * @return 浮点值
+     */
+    private static Double getValue(String ip){
+        String[] str = ip.split("\\.");
+        return Double.parseDouble(str[0]) * 1000000 + Double.parseDouble(str[1])*1000
+                + Double.parseDouble(str[2])   + Double.parseDouble(str[3])*0.001;
     }
 }
