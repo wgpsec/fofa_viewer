@@ -7,6 +7,8 @@
 </p>
 
 
+中文 | [EN](README.en.md)
+
 ##  简介
 
 Fofa_Viewer 一个简单易用的fofa客户端由WgpSec狼组安全团队 [**f1ashine**](https://github.com/f1ashine) 师傅主要编写 ，程序使用使用javafx编写，便于跨平台使用
@@ -70,7 +72,7 @@ git clone https://github.com/wgpsec/fofa_viewer.git
 
 ![](docs/compile_detail.png)
 
-idea打开项目，等待依赖包下载完毕后直接双击Plugins-assembly-assembly:assembly，然后将target文件夹中带有"with-dependencies"的jar包拷贝到带有config.propertiese的文件夹再运行即可。
+idea打开项目，等待依赖包下载完毕后直接双击Plugins-assembly-assembly:assembly，然后将target文件夹中带有"with-dependencies"的jar包拷贝到带有config.properties的文件夹再运行即可。
 
 ![](docs/maven_detail.png)
 
