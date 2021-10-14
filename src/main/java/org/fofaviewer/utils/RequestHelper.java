@@ -7,6 +7,7 @@ import me.gv7.woodpecker.requests.RawResponse;
 import me.gv7.woodpecker.requests.Requests;
 import me.gv7.woodpecker.requests.Response;
 import me.gv7.woodpecker.requests.exception.RequestsException;
+import org.fofaviewer.bean.FofaBean;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -23,20 +24,17 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import com.google.common.hash.Hashing;
+import sun.rmi.runtime.Log;
 
 public class RequestHelper {
     private static RequestHelper request = null;
-    private Logger logger = null;
     private final String[] ua = new String[]{
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36",
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0",
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.41 Safari/537.36 Edg/88.0.705.22"
     };
 
-    private RequestHelper() {
-        this.logger = Logger.getLogger("RequestHelper");
-        LogUtil.setLogingProperties(logger);
-    }
+    private RequestHelper() {}
 
     public static RequestHelper getInstance() {
         if (request == null) {
@@ -55,7 +53,7 @@ public class RequestHelper {
      * error ：请求失败
      */
     public HashMap<String, String> getHTML(String url, int connectTimeout, int socksTimeout) {
-        RawResponse response = null;
+        RawResponse response;
         HashMap<String, String> result = new HashMap<>();
         try {
             response = Requests.get(url)
@@ -64,7 +62,7 @@ public class RequestHelper {
                     .socksTimeout(socksTimeout)
                     .send();
         }catch (Exception e){
-            logger.log(Level.WARNING, e.getMessage(), e);
+            LogUtil.log("RequestHelper", e, Level.WARNING);
             result.put("code", "error");
             result.put("msg", e.getMessage());
             return result;
@@ -99,8 +97,6 @@ public class RequestHelper {
      * 1. 直接访问url根目录的favicon，若404则跳转至第2步
      * 2. 访问网站，获取html页面，获取head中的 link标签的ico 路径
      *
-     * @param url
-     * @return
      */
     public HashMap<String, String> getImageFavicon(String url) {
         Response<byte[]> response = null;
@@ -124,7 +120,7 @@ public class RequestHelper {
                 try {
                     byte[] resp1 = response.body();
                     if (resp1.length == 0) {
-                        logger.log(Level.FINE, url + "无响应内容");
+                        LogUtil.log("RequestHelper", url + "无响应内容", Level.FINER);
                         return null;
                     }
                     String encoded = new BASE64Encoder().encode(resp1);
@@ -134,7 +130,7 @@ public class RequestHelper {
                 } catch (Exception e) {
                     result.put("code", "error");
                     result.put("msg", e.getMessage());
-                    logger.log(Level.WARNING, e.getMessage(), e);
+                    LogUtil.log("RequestHelper", e, Level.WARNING);
                     return result;
                 }
             }
@@ -181,6 +177,17 @@ public class RequestHelper {
         return String.valueOf(murmu);
     }
 
+    private X509Certificate getX509Certificate(String host) throws Exception {
+        URL url = new URL(host);
+        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+        TrustModifier.relaxHostChecking(conn);
+        conn.setConnectTimeout(3000);
+        conn.setReadTimeout(5000);
+        conn.connect();
+        Certificate[] certs = conn.getServerCertificates();
+        return (X509Certificate) certs[0];
+    }
+
     /**
      * 获取证书编号
      * @param host 域名
@@ -188,28 +195,39 @@ public class RequestHelper {
      */
     public String getCertSerialNum(String host) {
         try {
-            URL url = new URL(host);
-            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-            TrustModifier.relaxHostChecking(conn);
-            conn.connect();
-            Certificate[] certs = conn.getServerCertificates();
-            X509Certificate cert = (X509Certificate) certs[0];
+            X509Certificate cert = getX509Certificate(host);
             return "cert=\"" + cert.getSerialNumber().toString() + "\"";
         } catch (Exception e) {
-            logger.log(Level.FINER, e.getMessage(), e);
+            LogUtil.log("RequestHelper", e, Level.FINER);
+            return null;
         }
-        return null;
+    }
+
+    /**
+     * 从https证书中获取域名
+     */
+    public String getCertSubjectDomain(String host){
+        try {
+            X509Certificate cert = getX509Certificate(host);
+            String subjectCN = cert.getSubjectDN().toString().split(",")[0];
+            int i = subjectCN.lastIndexOf(".");
+            int j = subjectCN.indexOf(".");
+            return i==j ? subjectCN.substring(3) : subjectCN.substring(j+1);
+        } catch (Exception e) {
+            LogUtil.log("RequestHelper", e, Level.FINER);
+            return "";
+        }
     }
 
     /**
      * 自动提示
-     * @param key
-     * @return
+     * @param key query content
+     * @return hint
      */
     public List<String> getTips(String key) {
         try {
             key = java.net.URLEncoder.encode(key, "UTF-8");
-            HashMap<String, String> result = getHTML("https://api.fofa.so/v1/search/tip?q=" + key, 3000, 5000);
+            HashMap<String, String> result = getHTML(FofaBean.TIP_API + key, 3000, 5000);
             if (result.get("code").equals("200")) {
                 JSONObject obj = JSON.parseObject(result.get("msg"));
                 if(obj.getString("message").equals("ok")){
@@ -224,7 +242,7 @@ public class RequestHelper {
             }
             return null;
         }catch (Exception e){
-            logger.log(Level.WARNING, e.getMessage(), e);
+            LogUtil.log("RequestHelper", e, Level.WARNING);
             return null;
         }
 
@@ -236,7 +254,7 @@ public class RequestHelper {
      * @param str 字符串
      * @return 编码字符串
      */
-    public static String encode(String str) {
+    public String encode(String str) {
         return Base64.encodeBase64String(str.getBytes(StandardCharsets.UTF_8));
     }
 }

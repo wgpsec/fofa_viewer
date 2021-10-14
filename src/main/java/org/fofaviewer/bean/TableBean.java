@@ -30,6 +30,10 @@ public class TableBean extends BaseBean{
         this.num = numValue;
     }
 
+    public void setDomain(String value){
+        this.domain = new SimpleStringProperty(value);
+    }
+
     public int getIntNum(){
         return num.intValue();
     }

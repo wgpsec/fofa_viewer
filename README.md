@@ -1,11 +1,12 @@
 <h1 align="center">Fofa_Viewer 🔗 </h1>
 <p align="center"> 
 <img src="https://img.shields.io/badge/JDK-1.8-green">
-<img src="https://img.shields.io/badge/version-1.0.8-brightgreen">
+<img src="https://img.shields.io/badge/version-1.0.9-brightgreen">
 <img src="https://img.shields.io/badge/author-f1ashine-orange">
 <img src="https://img.shields.io/badge/WgpSec-%E7%8B%BC%E7%BB%84%E5%AE%89%E5%85%A8%E5%9B%A2%E9%98%9F-blue">
 </p>
 
+中文 | [EN](README.en.md)
 
 ##  简介
 
@@ -34,8 +35,8 @@ https://gitee.com/wgpsec/fofa_viewer （镜像）
 7. 支持fofa的一键排除干扰（蜜罐）功能。（注：需要高级会员才能使用，使用时会在tab页标记`(*)`）
 8. 显示fofa官网的查询语法
 
-![](docs/ui.png)
-![](docs/search.jpg)
+![](docs/cn/ui.png)
+![](docs/cn/search.jpg)
 
 ## Q&A
 1. 为什么查询显示结果超过了10000条，但是导出的数据不到10000条？  

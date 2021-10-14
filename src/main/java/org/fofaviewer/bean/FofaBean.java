@@ -1,13 +1,16 @@
 package org.fofaviewer.bean;
 
-import java.util.Map;
+import java.util.Locale;
 
 public class FofaBean {
     public String email;
     public String key;
     public String page = "1";
     public final int max = 10000;
-    private String size = "1000";
+    public String size = "1000";
+    public static final String TIP_API = Locale.getDefault()==Locale.CHINA ? "https://api.fofa.so/v1/search/tip?q=" : "https://api.soall.org/v1/search/tip?q=";
+    public static final String API = "https://fofa.so/api/v1/search/all";
+    public static final String fields = "host,title,ip,domain,port,protocol,server,fid";
 
     public FofaBean(String m, String k) {
         this.email = m;
@@ -17,26 +20,17 @@ public class FofaBean {
     public String getSize() {
         return this.size;
     }
+
     public void setSize(String size){
         this.size = size;
     }
+
     public String getParam(String page) {
-        String fields = "host,title,ip,domain,port,protocol,server,fid";
-        String queryUrl = "https://fofa.so/api/v1/search/all";
+        StringBuilder builder = new StringBuilder(API).append("?email=").append(email).append("&key=").append(key).append("&page=");
         if(page != null) {
-            return queryUrl + "?email=" + email
-                    + "&key=" + key
-                    + "&page=" + page
-                    + "&size=" + size
-                    + "&fields=" + fields
-                    + "&qbase64=";
+            return builder.append(page).append("&size=").append(size).append("&fields=").append(fields).append("&qbase64=").toString();
         }else{
-            return queryUrl + "?email=" + email
-                    + "&key=" + key
-                    + "&page=" + this.page
-                    + "&size=" + size
-                    + "&fields=" + fields
-                    + "&qbase64=";
+            return builder.append(this.page).append("&size=").append(size).append("&fields=").append(fields).append("&qbase64=").toString();
         }
     }
 }

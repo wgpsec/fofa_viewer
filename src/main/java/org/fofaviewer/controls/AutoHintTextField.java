@@ -4,7 +4,6 @@ import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.control.ListView;
@@ -28,6 +27,7 @@ public class AutoHintTextField {
     private ObservableList<String> showCacheDataList = FXCollections.observableArrayList();
     private final RequestHelper helper = RequestHelper.getInstance();
     private String clickedInput = "";
+    private String inputText = "";
     private final ListView<String> histroyView;
     /** 输入内容后显示的提示信息列表 */
     private final ListView<String> autoTipList = new ListView<>();
@@ -85,18 +85,22 @@ public class AutoHintTextField {
      * 设置监听器
      */
     private void confListnenr() {
-        textField.setOnMouseClicked(event -> {
-            pop.show(textField);
-        });
+        textField.setOnMouseClicked(event -> pop.show(textField));
 
         histroyView.setOnMouseClicked(event -> {
             this.textField.setText(histroyView.getSelectionModel().getSelectedItem());
             this.pop.hide();
         });
 
-        PauseTransition pause = new PauseTransition(Duration.seconds(1)); // 延时1秒查询api
+        PauseTransition pause = new PauseTransition(Duration.seconds(1.5)); // 延时1.5秒查询api
         textField.textProperty().addListener((observable, oldValue, newValue) -> {
-            pause.setOnFinished(event -> updateCacheDataList(oldValue, newValue));
+            inputText = newValue;
+            pop.hide();
+            pause.setOnFinished(event -> {
+                if(inputText.equals(newValue)){ // 避免在输入中查询，尽量保持在输出结束后查询关联
+                    updateCacheDataList(oldValue, newValue);
+                }
+            });
             pause.playFromStart();
         });
 
@@ -137,21 +141,11 @@ public class AutoHintTextField {
         if(clickedInput.equals(newValue)){ // 消除点击条目后自动触发的bug
             return;
         }
-        Task<Boolean> task = new Task<Boolean>() {
-            @Override
-            public Boolean call() {
-                showCacheDataList.clear();
-                List<String> data = helper.getTips(newValue);
-                if(data != null && data.size() != 0){
-                    showCacheDataList.addAll(data);
-                    return true;
-                }
-                return false;
-            }
-        };
-        Platform.runLater(new Thread(task));
-        task.valueProperty().addListener((observable, oldValue1, newValue1) -> {
-            if(newValue1){
+        Platform.runLater(() -> {
+            showCacheDataList.clear();
+            List<String> data = helper.getTips(newValue);
+            if(data != null && data.size() != 0){
+                showCacheDataList.addAll(data);
                 showTipPop();
             }
         });

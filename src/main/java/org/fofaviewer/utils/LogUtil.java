@@ -55,4 +55,15 @@ public class LogUtil {
         }
     }
 
+    public static void log(String name, Exception e, Level level){
+        Logger logger = Logger.getLogger(name);
+        LogUtil.setLogingProperties(logger);
+        logger.log(level, e.getMessage(), e);
+    }
+
+    public static void log(String name, String info, Level level){
+        Logger logger = Logger.getLogger(name);
+        LogUtil.setLogingProperties(logger);
+        logger.log(level, info);
+    }
 }

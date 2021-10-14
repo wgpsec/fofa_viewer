@@ -41,10 +41,13 @@ import org.controlsfx.dialog.CommandLinksDialog;
 import org.controlsfx.dialog.ProgressDialog;
 import org.fofaviewer.bean.*;
 import org.fofaviewer.controls.AutoHintTextField;
+import org.fofaviewer.controls.RequestTask;
+import org.fofaviewer.utils.CertRequestUtil;
 import org.fofaviewer.utils.LogUtil;
 import org.fofaviewer.utils.RequestHelper;
 import org.fofaviewer.controls.CloseableTabPane;
 import org.controlsfx.control.textfield.TextFields;
+import org.fofaviewer.utils.ResourceBundleUtil;
 import java.awt.*;
 import java.io.*;
 import java.math.BigInteger;
@@ -52,13 +55,22 @@ import java.net.URI;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
  * 处理事件
  */
 public class MainController {
+    @FXML
+    private MenuItem help;
+    @FXML
+    private MenuItem about;
+    @FXML
+    private Button exportDataBtn;
+    @FXML
+    private Button searchBtn;
+    @FXML
+    private Label queryString;
     @FXML
     private VBox rootLayout;
     @FXML
@@ -70,28 +82,38 @@ public class MainController {
     private AutoHintTextField decoratedField;
     private static final RequestHelper helper = RequestHelper.getInstance();
     private static FofaBean client;
-    private Logger logger;
+    private final ResourceBundle resourceBundle;
+    private Label loadedLabel;
+    private Label tmpLabel;
 
     public MainController(){
-        this.logger = Logger.getLogger("Controller");
-        LogUtil.setLogingProperties(this.logger);
+        this.resourceBundle = ResourceBundleUtil.getResource();
     }
     /**
      * 初始化
      */
     @FXML
     private void initialize() {
+        //switch language
+        about.setText(resourceBundle.getString("ABOUT"));
+        help.setText(resourceBundle.getString("HELP"));
+        searchBtn.setText(resourceBundle.getString("SEARCH"));
+        exportDataBtn.setText(resourceBundle.getString("EXPORT_BUTTON"));
+        queryString.setText(resourceBundle.getString("QUERY_CONTENT"));
+        checkHoneyPot.setText(resourceBundle.getString("REMOVE_HONEYPOTS"));
         decoratedField = new AutoHintTextField(queryTF);
+        loadedLabel = new Label(resourceBundle.getString("QUERY_TIPS2"));
+        tmpLabel = new Label(resourceBundle.getString("QUERY_TIPS3"));
         loadConfigure();
         //初始化起始页tab
-        Tab tab = this.tabPane.getTab("首页");
-        Button queryCert = new Button("计算并查询");
-        Button queryFavicon = new Button("计算并查询");
-        Label label = new Label("证书序列号计算");
-        Label faviconLabel = new Label("FavionHash计算");
+        Tab tab = this.tabPane.getTab(resourceBundle.getString("HOMEPAGE"));
+        Button queryCert = new Button(resourceBundle.getString("QUERY_BUTTON"));
+        Button queryFavicon = new Button(resourceBundle.getString(("QUERY_BUTTON")));
+        Label label = new Label(resourceBundle.getString("CERT_LABEL"));
+        Label faviconLabel = new Label(resourceBundle.getString("FAVICON_LABEL"));
         TextField tf = TextFields.createClearableTextField();
         TextField favionTF = TextFields.createClearableTextField();
-        Image image = new Image("api_doc.png");
+        Image image = new Image(Locale.getDefault() == Locale.CHINA ? "api_doc_cn.png" : "api_doc_en.png");
         ImageView view = new ImageView(image);
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -99,15 +121,15 @@ public class MainController {
         view.setFitHeight(1600D);
         view.setFitWidth(750D);
         scrollPane.setPrefWidth(760);
-        tf.setPromptText("请将16进制证书序列号粘贴到此处！");
-        favionTF.setPromptText("请将网站的Favicon的URL粘贴到此处！");
+        tf.setPromptText(resourceBundle.getString("CERT_HINT"));
+        favionTF.setPromptText(resourceBundle.getString("FAVICON_HINT"));
         tf.setPrefWidth(400);
         favionTF.setPrefWidth(400);
         label.setFont(Font.font(14));
         faviconLabel.setFont(Font.font(14));
         queryCert.setOnAction(event -> {
             String txt = tf.getText().trim();
-            if(!txt.equals("")){
+            if(!txt.isEmpty()){
                 String serialnumber = txt.replaceAll(" ", "");
                 BigInteger i = new BigInteger(serialnumber, 16);
                 query("cert=\"" + i.toString() + "\"");
@@ -115,12 +137,11 @@ public class MainController {
         });
         queryFavicon.setOnAction(event -> {
             String url = favionTF.getText().trim();
-            if(!url.equals("")){
+            if(!url.isEmpty()){
                 if(!url.startsWith("http")){
-                    showAlert(Alert.AlertType.ERROR, null, "缺少http协议头！");
+                    showAlert(Alert.AlertType.ERROR, null, resourceBundle.getString("ERROR_URL"));
                 }else {
-                    HashMap<String,String> res = null;
-                    res = helper.getImageFavicon(url);
+                    HashMap<String,String> res = helper.getImageFavicon(url);
                     if(res != null){
                         if(res.get("code").equals("error")){
                             showAlert(Alert.AlertType.ERROR, null, res.get("msg"));return;
@@ -167,8 +188,10 @@ public class MainController {
     @FXML
     private void showAbout(ActionEvent event){
         List<CommandLinksDialog.CommandLinksButtonType> clb = Arrays.asList(
-                new CommandLinksDialog.CommandLinksButtonType("https://github.com/wgpsec/fofa_viewer", "有问题请先查看说明", true),
-                new CommandLinksDialog.CommandLinksButtonType("https://github.com/wgpsec/fofa_viewer/issues", "有bug请提交issue", true)
+                new CommandLinksDialog.CommandLinksButtonType("https://github.com/wgpsec/fofa_viewer",
+                        resourceBundle.getString("ABOUT_HINT1"), true),
+                new CommandLinksDialog.CommandLinksButtonType("https://github.com/wgpsec/fofa_viewer/issues",
+                        resourceBundle.getString("ABOUT_HINT2"), true)
         );
         CommandLinksDialog dialog = new CommandLinksDialog(clb);
         dialog.setOnCloseRequest(e -> {
@@ -179,11 +202,11 @@ public class MainController {
                 try {
                     dp.browse(uri);
                 } catch (IOException ex) {
-                    logger.log(Level.WARNING, ex.getMessage(), e);
+                    LogUtil.log("Controller", ex, Level.WARNING);
                 }
             }
         });
-        dialog.setTitle("提示");
+        dialog.setTitle("Notice");
         dialog.setContentText("WgpSec Team");
         dialog.showAndWait();
     }
@@ -194,38 +217,40 @@ public class MainController {
     @FXML
     private void exportAction(ActionEvent e) {
         Tab tab = tabPane.getCurrentTab();
-        if(tab.getText().equals("首页")) return;  // 首页无数据可导出
+        if(tab.getText().equals(resourceBundle.getString("HOMEPAGE"))) return;  // 首页无数据可导出
         Stage stage = (Stage) rootLayout.getScene().getWindow();
         DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setTitle("选择导出结果到目录...");
+        directoryChooser.setTitle(resourceBundle.getString("DIRECTORY_CHOOSER_TITLE"));
         File file = directoryChooser.showDialog(stage);
         if(file != null){
             TabDataBean bean = this.tabPane.getTabDataBean(tab);
             HashMap<String,String> urlList = new HashMap<>();
             List<List<String>> urls = new ArrayList<>();
             TableView<TableBean> tableView = (TableView<TableBean>) ((BorderPane) tab.getContent()).getCenter();
-            HashMap<String, ExcelData> totalData = new HashMap<>();
+            HashMap<String, ExcelBean> totalData = new HashMap<>();
             StringBuilder errorPage = new StringBuilder();
 
             if(bean.hasMoreData){ // 本地未完全加载时从网络请求进行加载
                 int maxCount = Math.min(bean.total, client.max);
                 int totalPage = (int)Math.ceil(maxCount/ Double.parseDouble(client.getSize()));
                 TextInputDialog td = new TextInputDialog();
-                td.setTitle("导出确认");
-                td.setHeaderText("当前查询条件可查询到" + bean.total + "条数据，最多只能导出" + maxCount + "条数据，总共" + totalPage + "页\n全部导出请直接点击确认，选择导出部分数据请输入页数。");
-                td.setContentText("请输入要导出的页数：");
+                td.setTitle(resourceBundle.getString("EXPORT_CONFIRM"));
+                td.setHeaderText(resourceBundle.getString("EXPORT_HINT1") + bean.total + resourceBundle.getString("EXPORT_HINT2")
+                        + maxCount + resourceBundle.getString("EXPORT_HINT3") + totalPage + resourceBundle.getString("EXPORT_HINT4"));
+                td.setContentText(resourceBundle.getString("EXPORT_CONTENT"));
                 Optional<String> result = td.showAndWait();
                 if (result.isPresent()){
-                    if(!result.get().equals("")){
+                    if(!result.get().isEmpty()){
                         int inputPage = -1;
                         try{
                             inputPage = Integer.parseInt(result.get());
                             if(inputPage <= 0 || inputPage > totalPage){
-                                showAlert(Alert.AlertType.ERROR, null, "输入的值必须介于0到"+totalPage+"之间！");
+                                showAlert(Alert.AlertType.ERROR, null, resourceBundle.getString("EXPORT_INPUT_NUM_HINT1")
+                                        + totalPage + resourceBundle.getString("EXPORT_INPUT_NUM_HINT2"));
                                 return;
                             }
                         }catch (NumberFormatException ex){
-                            showAlert(Alert.AlertType.ERROR,null,"输入的值不是整数！");
+                            showAlert(Alert.AlertType.ERROR,null, resourceBundle.getString("EXPORT_INPUT_NUM_ERROR"));
                             return;
                         }
                         totalPage = inputPage;
@@ -241,42 +266,47 @@ public class MainController {
                             for (int i = 1; i <= finalTotalPage; i++) {
                                 Thread.sleep(500);
                                 String text = replaceString(tab.getText());
-                                HashMap<String, String> result = null;
-                                result = helper.getHTML(client.getParam(String.valueOf(i)) + RequestHelper.encode(text), 50000, 50000);
+                                HashMap<String, String> result = helper.getHTML(client.getParam(String.valueOf(i))
+                                        + helper.encode(text), 50000, 50000);
                                 if (result.get("code").equals("200")) {
                                     JSONObject obj = JSON.parseObject(result.get("msg"));
-                                    loadJsonData(null, obj, totalData, urlList, true);
-                                    updateMessage("已加载" + i + "/" + finalTotalPage + "页");
+                                    loadJsonData(null, obj, totalData, urlList, true, null);
+                                    updateMessage(resourceBundle.getString("LOADDATA_HINT1") + i + "/"
+                                            + finalTotalPage + resourceBundle.getString("LOADDATA_HINT2"));
                                     updateProgress(i, finalTotalPage);
                                 } else if (result.get("code").equals("error")) {
-                                    // 请求失败时 等待0.5s再次请求
-                                    Thread.sleep(500);
-                                    result = helper.getHTML(client.getParam(String.valueOf(i)) + RequestHelper.encode(text), 50000, 50000);
+                                    // 请求失败时 等待1s再次请求
+                                    Thread.sleep(1000);
+                                    result = helper.getHTML(client.getParam(String.valueOf(i))
+                                            + helper.encode(text), 50000, 50000);
                                     if (result.get("code").equals("error")) {
                                         errorPage.append(i).append(" ");
                                         continue;
                                     }
                                     JSONObject obj = JSON.parseObject(result.get("msg"));
-                                    loadJsonData(null, obj, totalData, urlList, true);
-                                    updateMessage("已加载" + i + "/" + finalTotalPage + "页");
+                                    loadJsonData(null, obj, totalData, urlList, true, null);
+                                    updateMessage(resourceBundle.getString("LOADDATA_HINT1") + i + "/" + finalTotalPage
+                                            + resourceBundle.getString("LOADDATA_HINT2"));
                                     updateProgress(i, finalTotalPage);
                                 }
                             }
                         }catch (InterruptedException e){
-                            logger.log(Level.WARNING, e.getMessage(), e);
+                            LogUtil.log("Controller", e, Level.WARNING);
                         }
                         return null;
                     }
                 };
                 ProgressDialog pd = new ProgressDialog(exportTask);
-                pd.setTitle("正在导出数据中...");
-                pd.setHeaderText("数据总量为" + maxCount + "，总共需要导出" + finalTotalPage + "页");
+                pd.setTitle(resourceBundle.getString("EXPORT_TITLE"));
+                pd.setHeaderText(resourceBundle.getString("EXPORT_HEADER1") + maxCount
+                        + resourceBundle.getString("EXPORT_HEADER2")
+                        + finalTotalPage + resourceBundle.getString("EXPORT_HEADER3"));
                 new Thread(exportTask).start();
                 pd.showAndWait();
             }else{ // 从本地数据加载，不再进行网络请求
                 urlList.putAll(bean.dataList);
                 for(TableBean i : tableView.getItems()){
-                    ExcelData data = new ExcelData(
+                    ExcelBean data = new ExcelBean(
                             i.host.getValue(), i.title.getValue(), i.ip.getValue(), i.domain.getValue(),
                             i.port.getValue(), i.protocol.getValue(), i.server.getValue(), i.fid.getValue()
                     );
@@ -293,7 +323,8 @@ public class MainController {
                 }
                 urls.add(item);
             }
-            String fileName = file.getAbsolutePath() + System.getProperty("file.separator") + "fofa导出结果" + System.currentTimeMillis() + ".xlsx";
+            String fileName = file.getAbsolutePath() + System.getProperty("file.separator")
+                    + resourceBundle.getString("EXPORT_FILENAME") + System.currentTimeMillis() + ".xlsx";
             ExcelWriter excelWriter = null;
             try {
                 excelWriter = EasyExcel.write(fileName).build();
@@ -303,21 +334,24 @@ public class MainController {
                 WriteFont contentWriteFont = new WriteFont();
                 contentWriteFont.setFontHeightInPoints((short)16);
                 contentWriteCellStyle.setWriteFont(contentWriteFont);
-                WriteSheet writeSheet0 = EasyExcel.writerSheet(0,"查询title")
-                        .registerWriteHandler(strategy).registerWriteHandler(new HorizontalCellStyleStrategy(null, contentWriteCellStyle)).build();
+                WriteSheet writeSheet0 = EasyExcel.writerSheet(0, resourceBundle.getString("EXPORT_FILENAME_SHEET1"))
+                        .registerWriteHandler(strategy)
+                        .registerWriteHandler(new HorizontalCellStyleStrategy(null, contentWriteCellStyle)).build();
                 excelWriter.write(head, writeSheet0);
-                WriteSheet writeSheet1 = EasyExcel.writerSheet(1, "查询结果").head(ExcelData.class).build();
+                WriteSheet writeSheet1 = EasyExcel.writerSheet(1, resourceBundle.getString("EXPORT_FILENAME_SHEET2"))
+                        .head(ExcelBean.class).build();
                 excelWriter.write(new ArrayList<>(totalData.values()), writeSheet1);
-                WriteSheet writeSheet2 = EasyExcel.writerSheet(2, "urls").build();
+                WriteSheet writeSheet2 = EasyExcel.writerSheet(2, resourceBundle.getString("EXPORT_FILENAME_SHEET3")).build();
                 excelWriter.write(urls, writeSheet2);
                 if(errorPage.length() == 0){
-                    showAlert(Alert.AlertType.INFORMATION, null, "导出成功！文件保存在" + fileName);
+                    showAlert(Alert.AlertType.INFORMATION, null, resourceBundle.getString("EXPORT_MESSAGE1") + fileName);
                 }else{
-                    showAlert(Alert.AlertType.INFORMATION, null, "部分数据导出成功，其中第"+ errorPage.toString() +"页加载失败，文件保存在" + fileName);
+                    showAlert(Alert.AlertType.INFORMATION, null, resourceBundle.getString("EXPORT_MESSAGE2_1")
+                            + errorPage.toString() + resourceBundle.getString("EXPORT_MESSAGE2_2") + " " + fileName);
                 }
             }catch(Exception exception){
-                logger.log(Level.WARNING, exception.getMessage(), e);
-                showAlert(Alert.AlertType.INFORMATION, null, "导出失败！");
+                LogUtil.log("Controller", exception, Level.WARNING);
+                showAlert(Alert.AlertType.INFORMATION, null, resourceBundle.getString("EXPORT_ERROR"));
             }finally {
                 if (excelWriter != null) {
                     excelWriter.finish();
@@ -344,44 +378,54 @@ public class MainController {
             this.tabPane.setCurrentTab(this.tabPane.getTab(text));
             return;
         }
-        HashMap<String,String> result = helper.getHTML(client.getParam(null) + RequestHelper.encode(text), 50000, 50000);
-        if(result.get("code").equals("200")){
-            Tab tab = new Tab();
-            TabDataBean _tmp = new TabDataBean();
-            tab.setText(tabTitle);
-            JSONObject obj = JSON.parseObject(result.get("msg"));
-            if(obj.getBoolean("error")){
-                showAlert(Alert.AlertType.ERROR, null, obj.getString("errmsg"));
-                return;
+        RequestTask task = new RequestTask(client.getParam(null) + helper.encode(text), tabTitle);
+        task.valueProperty().addListener((observable, oldValue, newValue) -> {
+            HashMap<String, String> result = task.getValue();
+            if (result != null) {
+                if (result.get("code").equals("200")) {
+                    Tab tab = new Tab();
+                    TabDataBean _tmp = new TabDataBean();
+                    tab.setText(task.getTabTitle());
+                    JSONObject obj = JSON.parseObject(result.get("msg"));
+                    if (obj.getBoolean("error")) {
+                        showAlert(Alert.AlertType.ERROR, null, obj.getString("errmsg"));
+                        return;
+                    }
+                    if (obj.getInteger("size") < Integer.parseInt(client.getSize())) {
+                        _tmp.hasMoreData = false;
+                    }
+                    tabPane.addTab(tab, _tmp);
+                    tabPane.setCurrentTab(tab);
+                    StatusBar bar = new StatusBar();
+                    tabPane.addBar(tab, bar);
+                    _tmp.total = obj.getInteger("size");
+                    Label totalLabel = new Label(resourceBundle.getString("QUERY_TIPS1") + obj.getString("size"));
+                    Label countLabel = new Label(String.valueOf(obj.getJSONArray("results").size()));
+                    bar.getRightItems().addAll(new ArrayList<Label>() {{
+                        add(totalLabel);
+                        add(loadedLabel);
+                        add(countLabel);
+                        add(tmpLabel);
+                    }});
+                    decoratedField.addLog(task.getTabTitle());
+                    BorderPane tablePane = new BorderPane();
+                    TableView<TableBean> view = new TableView<>();
+                    Map<String, TableBean> values = (Map<String, TableBean>) loadJsonData(_tmp, obj, null, null, false, view);
+                    view.setItems(FXCollections.observableArrayList(values.values()));
+                    setTable(view);
+                    tablePane.setCenter(view);
+                    tablePane.setBottom(bar);
+                    tab.setContent(tablePane);
+                    // 设置延时任务在滚动条界面渲染结束后进行事件绑定
+                    PauseTransition pause = new PauseTransition(Duration.seconds(0.5));
+                    pause.setOnFinished(event -> addScrollBarListener(view));
+                    pause.playFromStart();
+                } else {
+                    showAlert(Alert.AlertType.ERROR, result.get("code"), result.get("msg"));
+                }
             }
-            if(obj.getInteger("size") < Integer.parseInt(client.getSize())){
-                _tmp.hasMoreData = false;
-            }
-            this.tabPane.addTab(tab, _tmp);
-            StatusBar bar = new StatusBar();
-            this.tabPane.addBar(tab, bar);
-            _tmp.total = obj.getInteger("size");
-            Label totalLabel = new Label("当前查询条件查询到 " + obj.getString("size"));
-            Label loadedLabel = new Label(" 条，当前已加载 ");
-            Label countLabel = new Label(String.valueOf(obj.getJSONArray("results").size()));
-            Label tmpLabel = new Label(" 条");
-            bar.getRightItems().addAll(new ArrayList<Label>(){{ add(totalLabel); add(loadedLabel); add(countLabel); add(tmpLabel);}});
-            decoratedField.addLog(tabTitle);
-            BorderPane tablePane = new BorderPane();
-            Map<String, TableBean> values = (Map<String, TableBean>) loadJsonData(_tmp, obj, null, null, false);
-            TableView<TableBean> view = new TableView<>(FXCollections.observableArrayList(values.values()));
-            setTable(view);
-            tablePane.setCenter(view);
-            tablePane.setBottom(bar);
-            tab.setContent(tablePane);
-            tabPane.setCurrentTab(tab);
-            // 设置延时任务在滚动条界面渲染结束后进行事件绑定
-            PauseTransition pause = new PauseTransition(Duration.seconds(0.5));
-            pause.setOnFinished(event -> addScrollBarListener(view));
-            pause.playFromStart();
-        }else{
-            showAlert(Alert.AlertType.ERROR, result.get("code"), result.get("msg"));
-        }
+        });
+        new Thread(task).start();
     }
 
     /**
@@ -394,25 +438,24 @@ public class MainController {
             client = new FofaBean(properties.getProperty("email").trim(), properties.getProperty("key").trim());
             client.setSize(properties.getProperty("maxSize"));
         } catch (IOException e){
-            showAlert(Alert.AlertType.ERROR, null, "缺少配置文件config.properties！");
+            showAlert(Alert.AlertType.ERROR, null, resourceBundle.getString("LOAD_CONFIG_ERROR"));
             Platform.exit();  //结束进程
         }
     }
 
     /**
      * 表格配置
-     * @param view
      */
     public void setTable(TableView<TableBean> view){
-        TableColumn<TableBean, Integer> num = new TableColumn<>("序号");
-        TableColumn<TableBean, String> host = new TableColumn<>("HOST");
-        TableColumn<TableBean, String> title = new TableColumn<>("标题");
-        TableColumn<TableBean, String> ip = new TableColumn<>("IP");
-        TableColumn<TableBean, Integer> port = new TableColumn<>("端口");
-        TableColumn<TableBean, String> domain = new TableColumn<>("域名");
-        TableColumn<TableBean, String> protocol = new TableColumn<>("协议");
-        TableColumn<TableBean, String> server = new TableColumn<>("Server指纹");
-        TableColumn<TableBean, String> fid = new TableColumn<>("Fid");
+        TableColumn<TableBean, Integer> num = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_NO"));
+        TableColumn<TableBean, String> host = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_HOST"));
+        TableColumn<TableBean, String> title = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_TITLE"));
+        TableColumn<TableBean, String> ip = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_IP"));
+        TableColumn<TableBean, Integer> port = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_PORT"));
+        TableColumn<TableBean, String> domain = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_DOMAIN"));
+        TableColumn<TableBean, String> protocol = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_PROCOTOL"));
+        TableColumn<TableBean, String> server = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_SERVER"));
+        TableColumn<TableBean, String> fid = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_FID"));
         num.setCellValueFactory(param -> param.getValue().getNum().asObject());
         host.setCellValueFactory(param -> param.getValue().getHost());
         title.setCellValueFactory(param -> param.getValue().getTitle());
@@ -423,7 +466,7 @@ public class MainController {
         server.setCellValueFactory(param -> param.getValue().getServer());
         fid.setCellValueFactory(param -> param.getValue().getFid());
         // 修改ip的排序规则
-        ip.setComparator(Comparator.comparing(MainController::getValue));
+        ip.setComparator(Comparator.comparing(MainController::getValueFromIP));
         view.getColumns().add(num);
         view.getColumns().addAll(new ArrayList<TableColumn<TableBean,String>>(){{ add(host);add(title);add(ip);}});
         view.getColumns().add(port);
@@ -432,28 +475,40 @@ public class MainController {
             final TableRow<TableBean> row = new TableRow<>();
             // 设置表格右键菜单
             ContextMenu rowMenu = new ContextMenu();
-            MenuItem copyLink = new MenuItem("复制链接");
-            copyLink.setOnAction(event -> { //设置剪贴板
+            MenuItem copyLink = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_COPYLINK"));
+            copyLink.setOnAction(event -> {
+                //设置剪贴板
                 Clipboard clipboard = Clipboard.getSystemClipboard();
                 ClipboardContent content = new ClipboardContent();
                 content.putString(row.getItem().host.getValue());
                 clipboard.setContent(content);
             });
-            MenuItem queryCSet = new MenuItem("查询对应C段资产");
-            queryCSet.setOnAction(event -> {
-                String ip1 = row.getItem().ip.getValue();
-                String queryText = ip1.substring(0, ip1.lastIndexOf('.'));
-                query("ip=\""+ queryText + ".0/24" + "\"");
+            MenuItem copyIP = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_COPYIP"));
+            copyIP.setOnAction(event -> {
+                Clipboard clipboard = Clipboard.getSystemClipboard();
+                ClipboardContent content = new ClipboardContent();
+                content.putString(row.getItem().ip.getValue());
+                clipboard.setContent(content);
             });
-            MenuItem querySubdomain = new MenuItem("查询相关域名资产");
+            MenuItem queryIp = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_QUERY_IP"));
+            queryIp.setOnAction(event -> {
+                String _ip = row.getItem().ip.getValue();
+                query("ip=\"" + _ip + "/32" + "\"");
+            });
+            MenuItem queryCSet = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_QUERY_C-CLASS"));
+            queryCSet.setOnAction(event -> {
+                String _ip = row.getItem().ip.getValue();
+                query("ip=\""+ _ip.substring(0, _ip.lastIndexOf('.')) + ".0/24" + "\"");
+            });
+            MenuItem querySubdomain = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_QUERY_DOAMIN"));
             querySubdomain.setOnAction(event -> {
                 String domain1 = row.getItem().domain.getValue();
-                if(!domain1.equals("")){
+                if(!domain1.isEmpty()){
                     query("domain=\""+ domain1 + "\"");
                 }
             });
-            MenuItem favicon = new MenuItem("从fofa搜索favicon相关的资产");
-            favicon.setOnAction(event -> {
+            MenuItem queryFavicon = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_QUERY_FAVICON"));
+            queryFavicon.setOnAction(event -> {
                 String url = row.getItem().host.getValue();
                 if(!url.startsWith("http")){
                     url = "http://" + url;
@@ -475,10 +530,10 @@ public class MainController {
                     query(res.get("msg"));
                     return;
                 }
-                showAlert(Alert.AlertType.ERROR, null, "该网站未提供favicon");
+                showAlert(Alert.AlertType.ERROR, null, resourceBundle.getString("QUERY_FAVICON_ERROR"));
             });
-            MenuItem cert = new MenuItem("从fofa搜索证书相关的资产");
-            cert.setOnAction(event -> {
+            MenuItem queryCert = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_CERT"));
+            queryCert.setOnAction(event -> {
                 String host1 = row.getItem().host.getValue();
                 if(host1.startsWith("https")){
                     try {
@@ -487,22 +542,22 @@ public class MainController {
                             query(value);
                         }
                     }catch (Exception e){
-                        logger.log(Level.WARNING, e.getMessage(), e);
+                        LogUtil.log("Controller", e, Level.WARNING);
                     }
                 }else{
-                    showAlert(Alert.AlertType.WARNING, null, "请选中host中带有https的行再点击查询证书相关资产");
+                    showAlert(Alert.AlertType.WARNING, null, resourceBundle.getString("QUERY_CERT_ERROR"));
                 }
             });
-            MenuItem fidMenu = new MenuItem("从fofa搜索对应Fid的资产");
+            MenuItem fidMenu = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_FID"));
             fidMenu.setOnAction(event -> {
                 String _fid = row.getItem().fid.getValue();
-                if(!_fid.equals("")){
+                if(!_fid.isEmpty()){
                     query("fid=\""+_fid+"\"");
                 }else{
-                    showAlert(Alert.AlertType.WARNING, null,"fid不能为空");
+                    showAlert(Alert.AlertType.WARNING, null,resourceBundle.getString("QUERY_FID_ERROR"));
                 }
             });
-            rowMenu.getItems().addAll(copyLink, queryCSet, querySubdomain, favicon, cert, fidMenu);
+            rowMenu.getItems().addAll(copyLink, copyIP, queryIp, queryCSet, querySubdomain, queryFavicon, queryCert, fidMenu);
             row.contextMenuProperty().bind(Bindings.when(row.emptyProperty()).then((ContextMenu) null).otherwise(rowMenu));
             // 双击行时使用默认浏览器打开
             row.setOnMouseClicked(event -> {
@@ -510,7 +565,7 @@ public class MainController {
                     String url = row.getItem().host.getValue();
                     String protocol1 = row.getItem().protocol.getValue();
                     String domain1 = row.getItem().domain.getValue();
-                    if(!domain1.equals("") || url.startsWith("http") || protocol1.equals("") || protocol1.startsWith("http")){
+                    if(!domain1.isEmpty() || url.startsWith("http") || protocol1.isEmpty() || protocol1.startsWith("http")){
                         if(!url.startsWith("http")){
                             if(url.endsWith("443")){
                                 url = "https://" + url.substring(0, url.length()-4);
@@ -524,7 +579,7 @@ public class MainController {
                             try {
                                 dp.browse(uri);
                             } catch (IOException e) {
-                                logger.log(Level.WARNING, e.getMessage(), e);
+                                LogUtil.log("Controller", e, Level.WARNING);
                             }
                         }
                     }
@@ -558,35 +613,44 @@ public class MainController {
                     bean.page += 1;
                     TableView<TableBean> tableView = (TableView<TableBean>) ((BorderPane) tab.getContent()).getCenter();
                     String text = replaceString(tab.getText());
-                    HashMap<String,String> result = helper.getHTML(client.getParam(String.valueOf(bean.page)) + RequestHelper.encode(text), 20000, 20000);
-                    if(result.get("code").equals("200")){
-                        JSONObject obj = JSON.parseObject(result.get("msg"));
-                        if(obj.getBoolean("error")){
-                            return;
+                    RequestTask task = new RequestTask(client.getParam(String.valueOf(bean.page))
+                            + helper.encode(text), null);
+                    task.valueProperty().addListener((observable1, oldValue1, newValue1) -> {
+                        HashMap<String,String> result = task.getValue();
+                        if(result != null) {
+                            if (result.get("code").equals("200")) {
+                                JSONObject obj = JSON.parseObject(result.get("msg"));
+                                if (obj.getBoolean("error")) {
+                                    return;
+                                }
+                                Map<String, TableBean> list = (Map<String, TableBean>) loadJsonData(bean, obj, null, null, false, tableView);
+                                if (list.keySet().size() != 0) {
+                                    ObservableList<TableBean> _tmp = tableView.getItems();
+                                    TableBean b = _tmp.get(_tmp.size() - 5);
+                                    List<TableBean> tmp = list.values().stream().sorted(Comparator.comparing(TableBean::getIntNum)).collect(Collectors.toList());
+                                    tableView.getItems().addAll(FXCollections.observableArrayList(tmp));
+                                    tableView.scrollTo(b);
+                                    StatusBar statusBar = tabPane.getBar(tab);
+                                    Label countLabel = (Label) statusBar.getRightItems().get(2);
+                                    countLabel.setText(String.valueOf(Integer.parseInt(countLabel.getText()) + obj.getJSONArray("results").size()));
+                                }
+                                if (bean.page * Integer.parseInt(client.getSize()) > obj.getInteger("size")) {
+                                    bean.hasMoreData = false;
+                                }
+                            }
                         }
-                        Map<String, TableBean> list = (Map<String, TableBean>) loadJsonData(bean, obj, null, null, false);
-                        if (list.keySet().size() !=0){
-                            ObservableList<TableBean> _tmp = tableView.getItems();
-                            TableBean b = _tmp.get(_tmp.size()-5);
-                            List<TableBean> tmp = list.values().stream().sorted(Comparator.comparing(TableBean::getIntNum)).collect(Collectors.toList());
-                            tableView.getItems().addAll(FXCollections.observableArrayList(tmp));
-                            tableView.scrollTo(b);
-                            StatusBar statusBar = this.tabPane.getBar(tab);
-                            Label countLabel = (Label) statusBar.getRightItems().get(2);
-                            countLabel.setText(String.valueOf(Integer.parseInt(countLabel.getText()) + obj.getJSONArray("results").size()));
-                        }
-                        if(bean.page * Integer.parseInt(client.getSize()) > obj.getInteger("size")){
-                            bean.hasMoreData = false;
-                        }
-                    }
+                    });
+                    new Thread(task).start();
                 }
             }
         });
     }
 
-    private Map<String, ? extends BaseBean> loadJsonData(TabDataBean bean,
-                                                         JSONObject obj, HashMap<String, ExcelData> excelData,
-                                                         HashMap<String,String> urlList, boolean isExport){
+    public static Map<String, ? extends BaseBean> loadJsonData(TabDataBean bean,
+                                                         JSONObject obj, HashMap<String, ExcelBean> excelData,
+                                                         HashMap<String,String> urlList,
+                                                               boolean isExport,
+                                                               TableView<TableBean> view){
         JSONArray array = obj.getJSONArray("results");
         HashMap<String, TableBean> list = new HashMap<>();
         for(int index=0; index < array.size(); index ++){
@@ -601,10 +665,15 @@ public class MainController {
             String fid = _array.getString(7);
             String _host = ip+":"+port;
 
-            if(isExport){ // 导出数据
-                ExcelData d = new ExcelData(host, title, ip, domain, port, protocol, server, fid);
+            // 当 host 为带https的url时，尝试从证书中获取域名
+//            if(host.startsWith("https") && domain.isEmpty()){
+//                domain = helper.getCertSubjectDomain(host);
+//            }
+
+            if(isExport){ // 是否为导出数据
+                ExcelBean d = new ExcelBean(host, title, ip, domain, port, protocol, server, fid);
                 //去除http 的重复项
-                if(excelData.containsKey(_host) && protocol.equals("")){
+                if(excelData.containsKey(_host) && protocol.isEmpty()){
                     excelData.remove(_host);
                 }
                 // 去除80端口的重复项
@@ -623,7 +692,7 @@ public class MainController {
             }else{  // table 页更新数据
                 TableBean b = new TableBean(0, host, title, ip, domain, port, protocol, server, fid);
                 //去除http 的重复项
-                if(list.containsKey(_host) && protocol.equals("")){
+                if(list.containsKey(_host) && protocol.isEmpty()){
                     b.num = list.get(_host).num;
                     list.remove(_host);
                 }
@@ -643,13 +712,23 @@ public class MainController {
                 list.put(host, b);
             }
         }
+        try {
+            CertRequestUtil util = new CertRequestUtil(view);
+            if (isExport) {
+                util.getCertDomain(excelData, true);
+            } else {
+                util.getCertDomain(list, false);
+            }
+        }catch (InterruptedException e){
+            LogUtil.log("Controller", e, Level.WARNING);
+        }
         return list;
     }
 
-    private void getUrlList(HashMap<String, String> urlList, String host, String ip, int port, String protocol, String _host) {
-        if (protocol.equals("") && host.endsWith("443") && !host.startsWith("http")){
+    public static void getUrlList(HashMap<String, String> urlList, String host, String ip, int port, String protocol, String _host) {
+        if (protocol.isEmpty() && host.endsWith("443") && !host.startsWith("http")){
             urlList.put("https://" + host, "https://" + host);
-        }else if (protocol.equals("")) {
+        }else if (protocol.isEmpty()) {
             urlList.put(host, host);
         }else if(port == 80 && protocol.equals("http")){
             urlList.put("http://" + ip, "http://" + ip);
@@ -664,9 +743,9 @@ public class MainController {
 
     /**
      * 对话框配置
-     * @param type 对话框类型
-     * @param header 对话框标题
-     * @param content 对话框内容
+     * @param type dialog type
+     * @param header dialog title
+     * @param content content of dialog
      */
     private void showAlert(Alert.AlertType type, String header, String content){
         Alert alert = new Alert(type);
@@ -686,12 +765,12 @@ public class MainController {
 
     /**
      * 将IP地址转换为浮点数
-     * @param ip IP地址
-     * @return 浮点值
+     * @param ip IP
+     * @return double value
      */
-    private static Double getValue(String ip){
+    private static Double getValueFromIP(String ip){
         String[] str = ip.split("\\.");
-        return Double.parseDouble(str[0]) * 1000000 + Double.parseDouble(str[1])*1000
-                + Double.parseDouble(str[2])   + Double.parseDouble(str[3])*0.001;
+        return Double.parseDouble(str[0]) * 1000000 + Double.parseDouble(str[1]) * 1000
+                + Double.parseDouble(str[2]) + Double.parseDouble(str[3]) * 0.001;
     }
 }

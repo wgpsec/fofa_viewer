@@ -9,9 +9,11 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import org.controlsfx.control.StatusBar;
 import org.fofaviewer.bean.TabDataBean;
+import org.fofaviewer.utils.ResourceBundleUtil;
 import java.util.HashMap;
 
 public class CloseableTabPane extends BorderPane {
+    private final String homepage = ResourceBundleUtil.getResource().getString("HOMEPAGE");
     private final TabPane tabPane;
     private HashMap<Tab, TabDataBean> dataMap;
     private HashMap<Tab, StatusBar> barMap;
@@ -22,7 +24,7 @@ public class CloseableTabPane extends BorderPane {
         this.barMap = new HashMap<>();
         StackPane sp = new StackPane();
         sp.getChildren().add(tabPane);
-        MenuButton menuButton = new MenuButton("关闭选项");
+        MenuButton menuButton = new MenuButton(ResourceBundleUtil.getResource().getString("CLOSE_OPTIONS"));
         menuButton.setVisible(false);
         StackPane.setMargin(menuButton,new Insets(5));
         sp.setAlignment(Pos.TOP_RIGHT);
@@ -30,18 +32,14 @@ public class CloseableTabPane extends BorderPane {
         tabPane.getTabs().addListener(new ListChangeListener<Tab>() {
             @Override
             public void onChanged(Change<? extends Tab> c) {
-                if(tabPane.getTabs().size()==0){
-                    menuButton.setVisible(false);
-                }else {
-                    menuButton.setVisible(true);
-                }
+                menuButton.setVisible(tabPane.getTabs().size() != 0);
             }
         });
         //关闭选中的Tab
-        MenuItem closeSelected = new MenuItem("关闭选中");
+        MenuItem closeSelected = new MenuItem(ResourceBundleUtil.getResource().getString("CLOSE_CHOOSE"));
         closeSelected.setOnAction(e->{
             for (Tab tab:tabPane.getTabs()){
-                if(tab.getText().equals("首页")){ // 阻止关闭起始页
+                if(tab.getText().equals(homepage)){
                     continue;
                 }
                 if(tab.selectedProperty().getValue()){
@@ -53,11 +51,11 @@ public class CloseableTabPane extends BorderPane {
         });
         menuButton.getItems().add(closeSelected);
         //关闭除选中的其他Tab
-        MenuItem closeOthers = new MenuItem("关闭其他");
+        MenuItem closeOthers = new MenuItem(ResourceBundleUtil.getResource().getString("CLOSE_OTHERS"));
         menuButton.getItems().add(closeOthers);
         closeOthers.setOnAction(e->{
             for (Tab tab:tabPane.getTabs()){
-                if(tab.getText().equals("起始页")){ // 阻止关闭起始页
+                if(tab.getText().equals(homepage)){ // 阻止关闭起始页
                     continue;
                 }
                 if(tab.selectedProperty().getValue()){
@@ -71,9 +69,9 @@ public class CloseableTabPane extends BorderPane {
             }
         });
         //关闭所有的Tab
-        MenuItem closeAll = new MenuItem("关闭所有");
+        MenuItem closeAll = new MenuItem(ResourceBundleUtil.getResource().getString("CLOSE_ALL"));
         closeAll.setOnAction(e->{
-            Tab tab = this.getTab("首页");
+            Tab tab = this.getTab(homepage);
             tabPane.getTabs().clear();
             dataMap.clear();
             this.addTab(tab, null);
@@ -81,7 +79,7 @@ public class CloseableTabPane extends BorderPane {
         menuButton.getItems().add(closeAll);
         sp.getChildren().add(menuButton);
         super.setCenter(sp);
-        Tab tab = new Tab("首页");
+        Tab tab = new Tab(homepage);
         this.addTab(tab, null);
         tab.setClosable(false); //取消启动页的关闭按钮
     }

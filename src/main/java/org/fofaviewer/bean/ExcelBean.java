@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @HeadFontStyle(fontHeightInPoints = 16)
 @ContentFontStyle(fontHeightInPoints = 14)
-public class ExcelData extends BaseBean {
+public class ExcelBean extends BaseBean {
     @ColumnWidth(35)
     @ExcelProperty("host")
     private String host;
@@ -42,7 +42,7 @@ public class ExcelData extends BaseBean {
     @ExcelProperty("fid")
     private String fid;
 
-    public ExcelData(String host, String title, String ip, String domain, Integer port, String protocol, String server, String fid) {
+    public ExcelBean(String host, String title, String ip, String domain, Integer port, String protocol, String server, String fid) {
         this.host = host;
         this.title = title;
         this.ip = ip;
