@@ -12,7 +12,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import sun.misc.BASE64Encoder;
 import org.apache.commons.codec.binary.Base64;
 import javax.net.ssl.*;
 import java.net.URL;
@@ -22,9 +21,7 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import com.google.common.hash.Hashing;
-import sun.rmi.runtime.Log;
 
 public class RequestHelper {
     private static RequestHelper request = null;
@@ -123,7 +120,7 @@ public class RequestHelper {
                         LogUtil.log("RequestHelper", url + "无响应内容", Level.FINER);
                         return null;
                     }
-                    String encoded = new BASE64Encoder().encode(resp1);
+                    String encoded =  Base64.encodeBase64String(resp1);
                     String hash = getIconHash(encoded);
                     result.put("msg", "icon_hash=\"" + hash + "\"");
                     return result;
