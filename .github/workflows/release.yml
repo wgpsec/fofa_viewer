@@ -1,5 +1,6 @@
 # This workflow will build a Java project with Maven
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+# WgpSec Team Build For FoFaViewer Build Release
 
 name: Build fofa_viewer release
 
@@ -10,34 +11,67 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: true
+      matrix:
+        version: [8,11]
+
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK 8
+
+
+      - if: ${{ matrix.version == '8' }}
+        name: Set up JDK 8
         uses: actions/setup-java@v1
         with:
           java-package: jdk+fx
           java-version: '1.8'
           distribution: 'adopt'
-      - name: Get version
-        id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
-      - name: Build fofa_viewer
+      - if: ${{ matrix.version == '8' }}
+        name: Build fofa_viewer For JDK 8
         run: mvn -DskipTests assembly:assembly -f pom.xml
 
-      - name: Copy out packages fofa_viewer
+      - if: ${{ matrix.version == '11' }}
+        name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-package: jdk
+          java-version: '11'
+          distribution: 'adopt'
+
+      - if: ${{ matrix.version == '11' }}
+        name: Build FOR JDK11
+        run: mvn assembly:assembly -f pom-jdk11.xml
+
+      - name: Copy out packages fofa_viewer ${{ matrix.version }}
         run: |
           cp target/fofaviewer-jar-with-dependencies.jar .
           mv fofaviewer-jar-with-dependencies.jar fofaviewer.jar
           mv config-example.properties config.properties
-          zip fofaviewer.zip fofaviewer.jar config.properties
+          zip ${{ matrix.version }}.zip fofaviewer.jar config.properties
 
+      - name: upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.version }}.zip
+          path: ${{ matrix.version }}.zip
+
+  release:
+    needs: [build]
+    runs-on: ubuntu-18.04
+    steps:
       - name: Build Changelog
         id: github_release
         uses: mikepenz/release-changelog-builder-action@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v2
+      - name: Get version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
       - name: Create Release
         id: create_release
@@ -50,13 +84,37 @@ jobs:
           body: ${{steps.github_release.outputs.changelog}}
           draft: false
           prerelease: false
-      - name: Upload fofa_viewer
-        id: upload-release-fofa_viewer
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: 8.zip
+          path: ./
+
+      - name: Download artifacts11
+        uses: actions/download-artifact@v2
+        with:
+          name: 11.zip
+          path: ./
+
+      - name: Upload fofa_viewer JDK8 Version
+        id: upload-release-fofa_viewer-JDK8
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: fofaviewer.zip
-          asset_name: fofaviewer_${{ steps.get_version.outputs.VERSION }}_.zip
+          asset_path: 8.zip
+          asset_name: FofaViewer_${{ steps.get_version.outputs.VERSION }}_JDK8.zip
+          asset_content_type: application/gzip
+
+      - name: Upload fofa_viewer
+        id: upload-release-fofa_viewer11
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: 11.zip
+          asset_name: FofaViewer_${{ steps.get_version.outputs.VERSION }}.zip
           asset_content_type: application/gzip

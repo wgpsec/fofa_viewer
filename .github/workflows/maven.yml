@@ -19,6 +19,7 @@ jobs:
         version: [8,11]
     steps:
       - uses: actions/checkout@v2
+
       - if: ${{ matrix.version == '8' }}
         name: Set up JDK 8
         uses: actions/setup-java@v1
@@ -26,12 +27,15 @@ jobs:
           java-package: jdk+fx
           java-version: '1.8'
           distribution: 'adopt'
+
       - if: ${{ matrix.version == '8' }}
         name: Add openjfx FOR JDK8
         run: sudo apt-get install openjfx
+
       - if: ${{ matrix.version == '8' }}
         name: Build FOR JDK8
         run: mvn assembly:assembly -f pom.xml
+
       - if: ${{ matrix.version == '11' }}
         name: Set up JDK 11 ${{ matrix.version }}
         uses: actions/setup-java@v2
@@ -39,6 +43,7 @@ jobs:
           java-package: jdk
           java-version: '11'
           distribution: 'adopt'
+
       - if: ${{ matrix.version == '11' }}
         name: Build FOR JDK11
         run: mvn assembly:assembly -f pom-jdk11.xml
