@@ -14,7 +14,8 @@
 
 Fofa_Viewer 一个简单易用的fofa客户端由WgpSec狼组安全团队 [**f1ashine**](https://github.com/f1ashine) 师傅主要编写 ，程序使用使用javaFx编写，便于跨平台使用
 
-##  使用
+##  使用说明
+本工具基于FoFa的API进行的封装，使用时需要高级会员或者普通会员的API key，使用注册用户的API key会提示账户需要充值F币。
 
 点击 https://github.com/wgpsec/fofa_viewer/releases下载
 
@@ -24,7 +25,6 @@ Fofa_Viewer 一个简单易用的fofa客户端由WgpSec狼组安全团队 [**f1a
 下载后修改`config.properties` 即可开始使用
 
 Mac 用户可通过 [自动化操作创建应用程序](docs/mac.md) 进行快速启动 Fofa_Viewer
-
 
 **若下载速度太慢可以使用**
 

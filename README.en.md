@@ -15,6 +15,14 @@ Fofa_Viewer: A simple FOFA client written in JavaFX.
 Made by WgpSec, Maintained by [**f1ashine**](https://github.com/f1ashine).
 
 ## Usage
+The data obtained by this tool through FoFa's API.  
+You need to set the API key of senior member or ordinary member to the file config.properties.  
+Using the API key of the registered user will prompt that the account needs to be topped up with F coins
+
+Click https://github.com/wgpsec/fofa_viewer/releases to download.
+
+- If you are using JDK11 or higher version, please download the zip package without version number.
+- If you are using JDK8, please download FoFaViewer_JDK8.zip
 
 Download [latest build](https://github.com/wgpsec/fofa_viewer/releases/) and edit `config.properties` to start. 
 

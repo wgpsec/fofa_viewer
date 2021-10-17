@@ -8,10 +8,10 @@ public class ResourceBundleUtil {
     private static final ResourceBundle resource;
 
     static {
-        if (Locale.getDefault() != Locale.CHINA) {
-            resource = ResourceBundle.getBundle("locales", Locale.US);
-        }else{
+        if (Locale.getDefault().getLanguage().equals(Locale.CHINESE.getLanguage())) {
             resource = ResourceBundle.getBundle("locales", Locale.CHINA);
+        }else{
+            resource = ResourceBundle.getBundle("locales", Locale.US);
         }
     }
 

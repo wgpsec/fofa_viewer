@@ -22,12 +22,14 @@ public class CloseableTabPane extends BorderPane {
         this.tabPane = new TabPane();
         this.dataMap = new HashMap<>();
         this.barMap = new HashMap<>();
+        this.tabPane.tabMaxWidthProperty().set(150);
+        tabPane.getStylesheets().add(getClass().getResource("/tabpane.css").toExternalForm());
         StackPane sp = new StackPane();
         sp.getChildren().add(tabPane);
         MenuButton menuButton = new MenuButton(ResourceBundleUtil.getResource().getString("CLOSE_OPTIONS"));
         menuButton.setVisible(false);
         StackPane.setMargin(menuButton,new Insets(5));
-        sp.setAlignment(Pos.TOP_RIGHT);
+        sp.setAlignment(Pos.TOP_LEFT);
         //Tab全部关闭后，则不显示关闭菜单按钮
         tabPane.getTabs().addListener(new ListChangeListener<Tab>() {
             @Override
@@ -80,6 +82,7 @@ public class CloseableTabPane extends BorderPane {
         sp.getChildren().add(menuButton);
         super.setCenter(sp);
         Tab tab = new Tab(homepage);
+        tab.setTooltip(new Tooltip(tab.getText()));
         this.addTab(tab, null);
         tab.setClosable(false); //取消启动页的关闭按钮
     }

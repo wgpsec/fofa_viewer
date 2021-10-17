@@ -113,7 +113,7 @@ public class MainController {
         Label faviconLabel = new Label(resourceBundle.getString("FAVICON_LABEL"));
         TextField tf = TextFields.createClearableTextField();
         TextField favionTF = TextFields.createClearableTextField();
-        Image image = new Image(Locale.getDefault() == Locale.CHINA ? "api_doc_cn.png" : "api_doc_en.png");
+        Image image = new Image(Locale.getDefault().getLanguage().equals(Locale.CHINESE.getLanguage()) ? "api_doc_cn.png" : "api_doc_en.png");
         ImageView view = new ImageView(image);
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -386,6 +386,7 @@ public class MainController {
                     Tab tab = new Tab();
                     TabDataBean _tmp = new TabDataBean();
                     tab.setText(task.getTabTitle());
+                    tab.setTooltip(new Tooltip(tab.getText()));
                     JSONObject obj = JSON.parseObject(result.get("msg"));
                     if (obj.getBoolean("error")) {
                         showAlert(Alert.AlertType.ERROR, null, obj.getString("errmsg"));

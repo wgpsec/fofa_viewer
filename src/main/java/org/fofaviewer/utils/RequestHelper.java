@@ -120,7 +120,7 @@ public class RequestHelper {
                         LogUtil.log("RequestHelper", url + "无响应内容", Level.FINER);
                         return null;
                     }
-                    String encoded =  Base64.encodeBase64String(resp1);
+                    String encoded = Base64.encodeBase64String(resp1);
                     String hash = getIconHash(encoded);
                     result.put("msg", "icon_hash=\"" + hash + "\"");
                     return result;
