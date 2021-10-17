@@ -17,7 +17,7 @@ Fofa_Viewer 一个简单易用的fofa客户端由WgpSec狼组安全团队 [**f1a
 ##  使用说明
 本工具基于FoFa的API进行的封装，使用时需要高级会员或者普通会员的API key，使用注册用户的API key会提示账户需要充值F币。
 
-点击 https://github.com/wgpsec/fofa_viewer/releases下载
+点击 https://github.com/wgpsec/fofa_viewer/releases 下载
 
 - 如果你使用的是JDK11版本以及更高java版本，请选择不带版本号的zip包使用
 - 如果你使用的是**JDK8**版本，请选择 FoFaViewer_JDK8 下载使用
