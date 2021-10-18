@@ -35,8 +35,9 @@ MacOS users can [Create a Automator Workflow](docs/mac.md) to pin Fofa_Viewer in
 4. Manually set max query count pre query for non-premium users (Change value of `maxSize` in `config.properties`)
 5. Fill hex certificate signature into homepage's toolbox to convert it to FOFA's decimal format. Use `cert="converted_value"` to match a certain SSL certificate. [Example (zh)](https://mp.weixin.qq.com/s/jBf9h6IQVja6WwFcSYEvKg)
 6. Input autocompletion
-7. Support FOFA's exclude fraud/honeypot feature (FOFA Premium Only, will mark a `(*)` in tab when active)
-8. FOFA grammar cheatsheet
+7. Support FOFA's exclude fraud/honeypot feature (Only for FoFa senior user, will mark a `(*)` in tab when active)
+8. Support Fid query (Only for FoFa senior user, need to check the box)
+9. FOFA grammar cheatsheet
 
 ![](docs/en/ui.png)
 ![](docs/en/search.jpg)

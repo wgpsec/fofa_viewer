@@ -78,6 +78,8 @@ public class MainController {
     @FXML
     private CheckBox checkHoneyPot;
     @FXML
+    private CheckBox withFid;
+    @FXML
     private CloseableTabPane tabPane;
     private AutoHintTextField decoratedField;
     private static final RequestHelper helper = RequestHelper.getInstance();
@@ -101,6 +103,7 @@ public class MainController {
         exportDataBtn.setText(resourceBundle.getString("EXPORT_BUTTON"));
         queryString.setText(resourceBundle.getString("QUERY_CONTENT"));
         checkHoneyPot.setText(resourceBundle.getString("REMOVE_HONEYPOTS"));
+        withFid.setText(resourceBundle.getString("WITH_FID"));
         decoratedField = new AutoHintTextField(queryTF);
         loadedLabel = new Label(resourceBundle.getString("QUERY_TIPS2"));
         tmpLabel = new Label(resourceBundle.getString("QUERY_TIPS3"));
@@ -114,6 +117,7 @@ public class MainController {
         TextField tf = TextFields.createClearableTextField();
         TextField favionTF = TextFields.createClearableTextField();
         Image image = new Image(Locale.getDefault().getLanguage().equals(Locale.CHINESE.getLanguage()) ? "api_doc_cn.png" : "api_doc_en.png");
+//        Image image = new Image("api_doc_en.png");
         ImageView view = new ImageView(image);
         ScrollPane scrollPane = new ScrollPane();
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -266,7 +270,7 @@ public class MainController {
                             for (int i = 1; i <= finalTotalPage; i++) {
                                 Thread.sleep(500);
                                 String text = replaceString(tab.getText());
-                                HashMap<String, String> result = helper.getHTML(client.getParam(String.valueOf(i))
+                                HashMap<String, String> result = helper.getHTML(client.getParam(String.valueOf(i), withFid.isSelected())
                                         + helper.encode(text), 50000, 50000);
                                 if (result.get("code").equals("200")) {
                                     JSONObject obj = JSON.parseObject(result.get("msg"));
@@ -277,7 +281,7 @@ public class MainController {
                                 } else if (result.get("code").equals("error")) {
                                     // 请求失败时 等待1s再次请求
                                     Thread.sleep(1000);
-                                    result = helper.getHTML(client.getParam(String.valueOf(i))
+                                    result = helper.getHTML(client.getParam(String.valueOf(i), withFid.isSelected())
                                             + helper.encode(text), 50000, 50000);
                                     if (result.get("code").equals("error")) {
                                         errorPage.append(i).append(" ");
@@ -378,7 +382,7 @@ public class MainController {
             this.tabPane.setCurrentTab(this.tabPane.getTab(text));
             return;
         }
-        RequestTask task = new RequestTask(client.getParam(null) + helper.encode(text), tabTitle);
+        RequestTask task = new RequestTask(client.getParam(null, withFid.isSelected()) + helper.encode(text), tabTitle);
         task.valueProperty().addListener((observable, oldValue, newValue) -> {
             HashMap<String, String> result = task.getValue();
             if (result != null) {
@@ -614,7 +618,7 @@ public class MainController {
                     bean.page += 1;
                     TableView<TableBean> tableView = (TableView<TableBean>) ((BorderPane) tab.getContent()).getCenter();
                     String text = replaceString(tab.getText());
-                    RequestTask task = new RequestTask(client.getParam(String.valueOf(bean.page))
+                    RequestTask task = new RequestTask(client.getParam(String.valueOf(bean.page), withFid.isSelected())
                             + helper.encode(text), null);
                     task.valueProperty().addListener((observable1, oldValue1, newValue1) -> {
                         HashMap<String,String> result = task.getValue();
@@ -663,7 +667,12 @@ public class MainController {
             int port = Integer.parseInt(_array.getString(4));
             String protocol = _array.getString(5);
             String server = _array.getString(6);
-            String fid = _array.getString(7);
+            String fid;
+            try{
+                fid =  _array.getString(7);
+            }catch(IndexOutOfBoundsException e){
+                fid = "";
+            }
             String _host = ip+":"+port;
 
             // 当 host 为带https的url时，尝试从证书中获取域名

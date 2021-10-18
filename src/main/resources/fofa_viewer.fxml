@@ -13,18 +13,16 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.scene.Group?>
-<VBox fx:id="rootLayout" fx:controller="org.fofaviewer.main.MainController" prefHeight="674" prefWidth="1000" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
+<VBox fx:id="rootLayout" fx:controller="org.fofaviewer.main.MainController" prefHeight="674" prefWidth="1100" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
     <MenuBar prefHeight="0.0" prefWidth="106.0" VBox.vgrow="NEVER">
         <Menu fx:id="help" mnemonicParsing="false">
             <MenuItem fx:id="about" mnemonicParsing="false" onAction="#showAbout"/>
         </Menu>
     </MenuBar>
     <AnchorPane VBox.vgrow="ALWAYS">
-        <AnchorPane prefHeight="600" prefWidth="1000" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+        <AnchorPane prefHeight="600" prefWidth="1100" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
                     AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-            <HBox spacing="10" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="300">
+            <HBox spacing="10" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="280">
                 <padding><Insets top="12" right="22" left="22"/></padding>
                 <Label fx:id="queryString" alignment="CENTER">
                     <HBox.margin><Insets top="4"/></HBox.margin>
@@ -33,6 +31,10 @@
                 <TextFields HBox.hgrow="ALWAYS" fx:factory="createClearableTextField" fx:id="queryTF" prefHeight="27.0" prefWidth="400" />
                 <Button fx:id="searchBtn" mnemonicParsing="false" onAction="#queryAction"/>
                 <CheckBox fx:id="checkHoneyPot" mnemonicParsing="false">
+                    <HBox.margin><Insets top="4" /></HBox.margin>
+                    <font><Font size="14.0"/></font>
+                </CheckBox>
+                <CheckBox fx:id="withFid" mnemonicParsing="false">
                     <HBox.margin><Insets top="4"/></HBox.margin>
                     <font><Font size="14.0"/></font>
                 </CheckBox>
