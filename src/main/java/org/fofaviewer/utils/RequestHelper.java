@@ -167,9 +167,17 @@ public class RequestHelper {
      * @return favicon hash值
      */
     private String getIconHash(String f) {
+        StringBuilder builder = new StringBuilder();
+        int lines = f.length() / 76;
+        for (int index = 0; index < lines; index++) {
+            String childStr = f.substring(index * 76, (index + 1) * 76);
+            builder.append(childStr).append("\n");
+        }
+        builder.append(f.substring(lines * 76)).append("\n");
+        System.out.println(builder.toString());
         int murmu = Hashing
                 .murmur3_32()
-                .hashString(f.replaceAll("\r","" )+ "\n", StandardCharsets.UTF_8)
+                .hashString(builder.toString(), StandardCharsets.UTF_8)
                 .asInt();
         return String.valueOf(murmu);
     }
