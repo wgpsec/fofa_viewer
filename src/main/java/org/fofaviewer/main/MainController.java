@@ -85,8 +85,6 @@ public class MainController {
     private static final RequestHelper helper = RequestHelper.getInstance();
     private static FofaBean client;
     private final ResourceBundle resourceBundle;
-    private Label loadedLabel;
-    private Label tmpLabel;
 
     public MainController(){
         this.resourceBundle = ResourceBundleUtil.getResource();
@@ -105,8 +103,6 @@ public class MainController {
         checkHoneyPot.setText(resourceBundle.getString("REMOVE_HONEYPOTS"));
         withFid.setText(resourceBundle.getString("WITH_FID"));
         decoratedField = new AutoHintTextField(queryTF);
-        loadedLabel = new Label(resourceBundle.getString("QUERY_TIPS2"));
-        tmpLabel = new Label(resourceBundle.getString("QUERY_TIPS3"));
         loadConfigure();
         //初始化起始页tab
         Tab tab = this.tabPane.getTab(resourceBundle.getString("HOMEPAGE"));
@@ -408,9 +404,9 @@ public class MainController {
                     Label countLabel = new Label(String.valueOf(obj.getJSONArray("results").size()));
                     bar.getRightItems().addAll(new ArrayList<Label>() {{
                         add(totalLabel);
-                        add(loadedLabel);
+                        add(new Label(resourceBundle.getString("QUERY_TIPS2")));
                         add(countLabel);
-                        add(tmpLabel);
+                        add(new Label(resourceBundle.getString("QUERY_TIPS3")));
                     }});
                     decoratedField.addLog(task.getTabTitle());
                     BorderPane tablePane = new BorderPane();
