@@ -17,7 +17,7 @@ public class MainApp extends Application {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fofa_viewer.fxml"));
         Scene scene = new Scene(loader.load());
         stage.setScene(scene);
-        stage.setTitle("Fofa_Viewer v1.1.1 By f1ashine@WgpSec");
+        stage.setTitle("Fofa_Viewer v1.1.3 By f1ashine@WgpSec");
         stage.show();
         // 设置窗口的最小宽度和高度，避免自由伸缩太小不方便看
         stage.widthProperty().addListener((o, oldValue, newValue)->{

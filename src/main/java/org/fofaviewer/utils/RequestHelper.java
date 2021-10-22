@@ -251,6 +251,6 @@ public class RequestHelper {
      * @return 编码字符串
      */
     public String encode(String str) {
-        return Base64.getMimeEncoder().encodeToString(str.getBytes(StandardCharsets.UTF_8));
+        return Base64.getEncoder().encodeToString(str.getBytes(StandardCharsets.UTF_8));
     }
 }
