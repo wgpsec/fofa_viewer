@@ -181,6 +181,7 @@ public class MainController {
     @FXML
     private void queryAction(ActionEvent event){
         if(queryTF.getText() != null){
+            searchBtn.setDisable(true);
             query(queryTF.getText());
         }
     }
@@ -308,7 +309,7 @@ public class MainController {
                 for(TableBean i : tableView.getItems()){
                     ExcelBean data = new ExcelBean(
                             i.host.getValue(), i.title.getValue(), i.ip.getValue(), i.domain.getValue(),
-                            i.port.getValue(), i.protocol.getValue(), i.server.getValue(), i.fid.getValue()
+                            i.port.getValue(), i.protocol.getValue(), i.server.getValue(), i.fid.getValue(), i.certCN.getValue()
                     );
                     totalData.put(i.host.getValue(), data);
                 }
@@ -425,6 +426,7 @@ public class MainController {
                     showAlert(Alert.AlertType.ERROR, result.get("code"), result.get("msg"));
                 }
             }
+            searchBtn.setDisable(false);
         });
         new Thread(task).start();
     }
@@ -457,6 +459,8 @@ public class MainController {
         TableColumn<TableBean, String> protocol = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_PROCOTOL"));
         TableColumn<TableBean, String> server = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_SERVER"));
         TableColumn<TableBean, String> fid = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_FID"));
+        TableColumn<TableBean, String> cert = new TableColumn<>();
+        TableColumn<TableBean, String> certCN = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_CERTCN"));
         num.setCellValueFactory(param -> param.getValue().getNum().asObject());
         host.setCellValueFactory(param -> param.getValue().getHost());
         title.setCellValueFactory(param -> param.getValue().getTitle());
@@ -466,12 +470,18 @@ public class MainController {
         protocol.setCellValueFactory(param -> param.getValue().getProtocol());
         server.setCellValueFactory(param -> param.getValue().getServer());
         fid.setCellValueFactory(param -> param.getValue().getFid());
+        cert.setCellValueFactory(param -> param.getValue().getCert());
+        cert.setVisible(false); // 证书序列号太长默认不显示
+        certCN.setCellValueFactory(param -> param.getValue().getCertCN());
+        if(!withFid.isSelected()){ // 未勾选fid时默认不显示
+            fid.setVisible(false);
+        }
         // 修改ip的排序规则
         ip.setComparator(Comparator.comparing(MainController::getValueFromIP));
         view.getColumns().add(num);
         view.getColumns().addAll(new ArrayList<TableColumn<TableBean,String>>(){{ add(host);add(title);add(ip);}});
         view.getColumns().add(port);
-        view.getColumns().addAll(new ArrayList<TableColumn<TableBean,String>>(){{add(domain);add(protocol);add(server);add(fid);}});
+        view.getColumns().addAll(new ArrayList<TableColumn<TableBean,String>>(){{add(domain);add(protocol);add(certCN);add(server);add(fid);add(cert);}});
         view.setRowFactory(param -> {
             final TableRow<TableBean> row = new TableRow<>();
             // 设置表格右键菜单
@@ -518,7 +528,7 @@ public class MainController {
                     }
                 }
                 String link = helper.getLinkIcon(url); // 请求获取link中的favicon链接
-                HashMap<String,String> res = null;
+                HashMap<String,String> res;
                 if(link !=null){
                     res = helper.getImageFavicon(link);
                 }else{
@@ -535,18 +545,11 @@ public class MainController {
             });
             MenuItem queryCert = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_CERT"));
             queryCert.setOnAction(event -> {
-                String host1 = row.getItem().host.getValue();
-                if(host1.startsWith("https")){
-                    try {
-                        String value = helper.getCertSerialNum(host1);
-                        if(value != null){
-                            query(value);
-                        }
-                    }catch (Exception e){
-                        LogUtil.log("Controller", e, Level.WARNING);
-                    }
-                }else{
+                String sn = row.getItem().cert.getValue();
+                if(sn.isEmpty()){
                     showAlert(Alert.AlertType.WARNING, null, resourceBundle.getString("QUERY_CERT_ERROR"));
+                }else{
+                    query("cert=" + sn);
                 }
             });
             MenuItem fidMenu = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_FID"));
@@ -663,21 +666,22 @@ public class MainController {
             int port = Integer.parseInt(_array.getString(4));
             String protocol = _array.getString(5);
             String server = _array.getString(6);
+            String cert = _array.getString(7);
+            String certCN = "";
             String fid;
             try{
-                fid =  _array.getString(7);
+                fid =  _array.getString(8);
             }catch(IndexOutOfBoundsException e){
                 fid = "";
             }
-            String _host = ip+":"+port;
-
-            // 当 host 为带https的url时，尝试从证书中获取域名
-//            if(host.startsWith("https") && domain.isEmpty()){
-//                domain = helper.getCertSubjectDomain(host);
-//            }
+            if(!cert.isEmpty()){
+                certCN = helper.getCertSubjectDomainByFoFa(cert);
+                cert = helper.getCertSerialNumberByFoFa(cert);
+            }
+            String _host = ip + ":" + port;
 
             if(isExport){ // 是否为导出数据
-                ExcelBean d = new ExcelBean(host, title, ip, domain, port, protocol, server, fid);
+                ExcelBean d = new ExcelBean(host, title, ip, domain, port, protocol, server, fid, certCN);
                 //去除http 的重复项
                 if(excelData.containsKey(_host) && protocol.isEmpty()){
                     excelData.remove(_host);
@@ -687,7 +691,7 @@ public class MainController {
                     excelData.remove(_host);
                 }
                 // 去除 443 和 https 的重复项
-                if((excelData.containsKey(host) || excelData.containsKey("https://"+host)) && protocol.startsWith("http")){
+                if((excelData.containsKey(host) || excelData.containsKey("https://" + host)) && protocol.startsWith("http")){
                     continue;
                 }else if(excelData.containsKey(ip) && protocol.equals("http")){
                     continue;
@@ -696,7 +700,7 @@ public class MainController {
                 excelData.put(host, d);
 
             }else{  // table 页更新数据
-                TableBean b = new TableBean(0, host, title, ip, domain, port, protocol, server, fid);
+                TableBean b = new TableBean(0, host, title, ip, domain, port, protocol, server, fid, cert, certCN);
                 //去除http 的重复项
                 if(list.containsKey(_host) && protocol.isEmpty()){
                     b.num = list.get(_host).num;

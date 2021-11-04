@@ -22,6 +22,8 @@ Fofa_Viewer 一个简单易用的fofa客户端由WgpSec狼组安全团队 [**f1a
 - 如果你使用的是JDK11版本以及更高java版本，请选择不带版本号的zip包使用
 - 如果你使用的是**JDK8**版本，请选择 FoFaViewer_JDK8 下载使用
 
+JDK16在导出Excel时会报错，可在命令行添加JVM Options（--illegal-access=permit）即可导出。
+
 下载后修改`config.properties` 即可开始使用
 
 Mac 用户可通过 [自动化操作创建应用程序](docs/mac.md) 进行快速启动 Fofa_Viewer

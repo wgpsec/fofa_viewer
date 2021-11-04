@@ -20,15 +20,19 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import com.google.common.hash.Hashing;
 
 public class RequestHelper {
     private static RequestHelper request = null;
     private final String[] ua = new String[]{
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.41 Safari/537.36 Edg/88.0.705.22"
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Safari/605.1.15",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.41 Safari/537.36 Edg/88.0.705.22"
     };
+    Pattern cnPattern = Pattern.compile("CommonName: ([\\w|\\.]+)\n\n");
+    Pattern snPattern = Pattern.compile("Serial Number: (\\d+)\n");
 
     private RequestHelper() {}
 
@@ -75,7 +79,7 @@ public class RequestHelper {
                 } else if (code == 502) {
                     result.put("msg", "请求错误状态码502，可能是账号限制了每次请求的最大数量，建议尝试修改config中的maxSize为100");
                 } else {
-                    result.put("msg", "请求响应错误,状态码" + String.valueOf(code));
+                    result.put("msg", "请求响应错误,状态码" + code);
                 }
                 return result;
             } catch (Exception e) {
@@ -252,5 +256,27 @@ public class RequestHelper {
      */
     public String encode(String str) {
         return Base64.getEncoder().encodeToString(str.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * 从fofa API 获取的证书信息中提取CommonName
+     */
+    public String getCertSubjectDomainByFoFa(String cert){
+        Matcher matcher = cnPattern.matcher(cert);
+        if(matcher.find()){
+            return matcher.group(1);
+        }
+        return "";
+    }
+
+    /**
+     * 从fofa API 获取的证书信息中提取Serial Number
+     */
+    public String getCertSerialNumberByFoFa(String cert){
+        Matcher matcher = snPattern.matcher(cert);
+        if(matcher.find()){
+            return matcher.group(1);
+        }
+        return "";
     }
 }

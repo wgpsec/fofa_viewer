@@ -10,7 +10,7 @@ public class FofaBean {
     public String size = "1000";
     public static final String TIP_API = Locale.getDefault()==Locale.CHINA ? "https://api.fofa.so/v1/search/tip?q=" : "https://api.soall.org/v1/search/tip?q=";
     public static final String API = "https://fofa.so/api/v1/search/all";
-    public static final String fields = "host,title,ip,domain,port,protocol,server";
+    public static final String fields = "host,title,ip,domain,port,protocol,server,cert";
     public static final String fid = "fid";
 
     public FofaBean(String m, String k) {

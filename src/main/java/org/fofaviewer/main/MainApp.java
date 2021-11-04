@@ -17,24 +17,10 @@ public class MainApp extends Application {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fofa_viewer.fxml"));
         Scene scene = new Scene(loader.load());
         stage.setScene(scene);
-        stage.setTitle("Fofa_Viewer v1.1.3 By f1ashine@WgpSec");
+        stage.setTitle("Fofa_Viewer v1.1.4 By f1ashine@WgpSec");
         stage.show();
-        // 设置窗口的最小宽度和高度，避免自由伸缩太小不方便看
-        stage.widthProperty().addListener((o, oldValue, newValue)->{
-            if(newValue.intValue() < 1100.0) {
-                stage.setResizable(false);
-                stage.setWidth(1100);
-                stage.setResizable(true);
-            }
-        });
-        stage.heightProperty().addListener((o, oldValue, newValue)->{
-            if(newValue.intValue() < 700.0) {
-                stage.setResizable((false));
-                stage.setHeight(700);
-                stage.setResizable(true);
-            }
-        });
-        //stage.setResizable(false); //禁止窗口拉伸
+        stage.setMinWidth(1100);
+        stage.setMinHeight(800);
     }
 
     public static void main(String[] args){

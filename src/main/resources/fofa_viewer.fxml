@@ -13,7 +13,7 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.geometry.Insets?>
-<VBox fx:id="rootLayout" fx:controller="org.fofaviewer.main.MainController" prefHeight="674" prefWidth="1100" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
+<VBox fx:id="rootLayout" fx:controller="org.fofaviewer.main.MainController" prefHeight="700" prefWidth="1100" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
     <MenuBar prefHeight="0.0" prefWidth="106.0" VBox.vgrow="NEVER">
         <Menu fx:id="help" mnemonicParsing="false">
             <MenuItem fx:id="about" mnemonicParsing="false" onAction="#showAbout"/>

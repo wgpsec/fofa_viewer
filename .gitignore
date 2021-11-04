@@ -25,5 +25,5 @@ build/
 .vscode/
 /.mvn/
 config.properties
-/log
+*.log
 /target
