@@ -12,21 +12,21 @@
 
 ##  简介
 
-Fofa_Viewer 一个简单易用的fofa客户端由WgpSec狼组安全团队 [**f1ashine**](https://github.com/f1ashine) 师傅主要编写 ，程序使用使用javaFx编写，便于跨平台使用
+Fofa_Viewer： 一个简单易用的fofa客户端，由 WgpSec狼组安全团队 [**f1ashine**](https://github.com/f1ashine) 师傅主要开发。程序使用 JavaFX 编写，便于跨平台使用
 
 ##  使用说明
-本工具基于FoFa的API进行的封装，使用时需要高级会员或者普通会员的API key，使用注册用户的API key会提示账户需要充值F币。
+本工具基于 FoFa 的 API 进行封装，使用时需要高级会员或者普通会员的 API key。使用注册用户的 API key 会提示账户需要充值F币。
 
 点击 https://github.com/wgpsec/fofa_viewer/releases 下载
 
-- 如果你使用的是JDK11版本以及更高java版本，请选择不带版本号的zip包使用
-- 如果你使用的是**JDK8**版本，请选择 FoFaViewer_JDK8 下载使用
+- 如果你使用的是 JDK11 以及更高的 Java 版本，请选择不带版本号的zip包使用
+- 如果你使用的是 **JDK8** 版本，请选择下载 FoFaViewer_JDK8
 
-JDK16在导出Excel时会报错，可在命令行添加JVM Options（--illegal-access=permit）即可导出。
+JDK16+ 在导出 Excel 时会报错，可在命令行添加 JVM 参数 `--illegal-access=permit` 以导出。
 
-下载后修改`config.properties` 即可开始使用
+下载后修改 `config.properties` 即可开始使用
 
-Mac 用户可通过 [自动化操作创建应用程序](docs/mac.md) 进行快速启动 Fofa_Viewer
+Mac 用户可通过 [自动化操作创建应用程序](docs/mac.md) 建立快速启动 Fofa_Viewer 的快捷图标
 
 **若下载速度太慢可以使用**
 
