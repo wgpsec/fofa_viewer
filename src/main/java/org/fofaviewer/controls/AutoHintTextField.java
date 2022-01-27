@@ -14,7 +14,7 @@ import javafx.stage.Popup;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import org.controlsfx.control.PopOver;
-import org.fofaviewer.utils.RequestHelper;
+import org.fofaviewer.utils.RequestUtil;
 import java.util.HashSet;
 import java.util.List;
 
@@ -25,7 +25,7 @@ public class AutoHintTextField {
     private final static int LIST_SHOW_SIZE = 7;
     private final static int LIST_CELL_HEIGHT = 24;
     private ObservableList<String> showCacheDataList = FXCollections.observableArrayList();
-    private final RequestHelper helper = RequestHelper.getInstance();
+    private final RequestUtil helper = RequestUtil.getInstance();
     private String clickedInput = "";
     private String inputText = "";
     private final ListView<String> histroyView;
@@ -92,7 +92,7 @@ public class AutoHintTextField {
             this.pop.hide();
         });
 
-        PauseTransition pause = new PauseTransition(Duration.seconds(1.5)); // 延时1.5秒查询api
+        PauseTransition pause = new PauseTransition(Duration.seconds(0.5)); // 延时1.5秒查询api
         textField.textProperty().addListener((observable, oldValue, newValue) -> {
             inputText = newValue;
             pop.hide();

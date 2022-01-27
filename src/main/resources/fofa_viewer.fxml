@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
@@ -13,10 +12,14 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.geometry.Insets?>
-<VBox fx:id="rootLayout" fx:controller="org.fofaviewer.main.MainController" prefHeight="700" prefWidth="1100" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
+<VBox fx:id="rootLayout" fx:controller="org.fofaviewer.controllers.MainController" prefHeight="700" prefWidth="1100" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
     <MenuBar prefHeight="0.0" prefWidth="106.0" VBox.vgrow="NEVER">
         <Menu fx:id="help" mnemonicParsing="false">
             <MenuItem fx:id="about" mnemonicParsing="false" onAction="#showAbout"/>
+        </Menu>
+        <Menu fx:id="project" mnemonicParsing="false">
+            <MenuItem fx:id="createProject" mnemonicParsing="false" onAction="#openProject"/>
+            <MenuItem fx:id="saveProject" mnemonicParsing="false" onAction="#saveProject"/>
         </Menu>
     </MenuBar>
     <AnchorPane VBox.vgrow="ALWAYS">
@@ -35,6 +38,10 @@
                     <font><Font size="14.0"/></font>
                 </CheckBox>
                 <CheckBox fx:id="withFid" mnemonicParsing="false">
+                    <HBox.margin><Insets top="4"/></HBox.margin>
+                    <font><Font size="14.0"/></font>
+                </CheckBox>
+                <CheckBox fx:id="isAll" mnemonicParsing="false">
                     <HBox.margin><Insets top="4"/></HBox.margin>
                     <font><Font size="14.0"/></font>
                 </CheckBox>

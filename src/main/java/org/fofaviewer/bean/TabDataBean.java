@@ -11,7 +11,7 @@ public class TabDataBean {
      */
     public int total;
     /**
-     * 导出查询条件对应tab页中的url
+     * 导出查询条件对应tab页中的url，用于后续扫描
      */
     public HashMap<String, String> dataList;
     /**

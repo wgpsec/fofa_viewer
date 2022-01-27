@@ -10,7 +10,7 @@ import java.util.concurrent.Executors;
 public class CertRequestUtil {
     public TableView<TableBean> view;
     public ExecutorService threadPool = Executors.newCachedThreadPool();
-    public static RequestHelper helper = RequestHelper.getInstance();
+    public static RequestUtil helper = RequestUtil.getInstance();
 
     public CertRequestUtil(TableView<TableBean> view) {
         this.view = view;

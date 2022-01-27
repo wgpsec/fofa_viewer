@@ -19,13 +19,13 @@ import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.*;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import com.google.common.hash.Hashing;
+import org.tinylog.Logger;
 
-public class RequestHelper {
-    private static RequestHelper request = null;
+public class RequestUtil {
+    private static RequestUtil request = null;
     private final String[] ua = new String[]{
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Safari/605.1.15",
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0",
@@ -34,11 +34,11 @@ public class RequestHelper {
     Pattern cnPattern = Pattern.compile("CommonName: ([\\w|\\.]+)\n\n");
     Pattern snPattern = Pattern.compile("Serial Number: (\\d+)\n");
 
-    private RequestHelper() {}
+    private RequestUtil() {}
 
-    public static RequestHelper getInstance() {
+    public static RequestUtil getInstance() {
         if (request == null) {
-            request = new RequestHelper();
+            request = new RequestUtil();
         }
         return request;
     }
@@ -62,7 +62,7 @@ public class RequestHelper {
                     .socksTimeout(socksTimeout)
                     .send();
         }catch (Exception e){
-            LogUtil.log("RequestHelper", e, Level.WARNING);
+            Logger.warn(e);
             result.put("code", "error");
             result.put("msg", e.getMessage());
             return result;
@@ -83,6 +83,7 @@ public class RequestHelper {
                 }
                 return result;
             } catch (Exception e) {
+                Logger.warn(e);
                 result.put("code", "error");
                 result.put("msg", e.getMessage());
                 return result;
@@ -110,6 +111,7 @@ public class RequestHelper {
                     .send()
                     .toBytesResponse();
         }catch (RequestsException e){
+            Logger.warn(e);
             result.put("code", "error");
             result.put("msg", e.getMessage());
         }
@@ -120,7 +122,7 @@ public class RequestHelper {
                 try {
                     byte[] resp1 = response.body();
                     if (resp1.length == 0) {
-                        LogUtil.log("RequestHelper", url + "无响应内容", Level.FINER);
+                        Logger.warn(url + "无响应内容");
                         return null;
                     }
                     String encoded = Base64.getMimeEncoder().encodeToString(resp1);
@@ -130,7 +132,7 @@ public class RequestHelper {
                 } catch (Exception e) {
                     result.put("code", "error");
                     result.put("msg", e.getMessage());
-                    LogUtil.log("RequestHelper", e, Level.WARNING);
+                    Logger.warn(e);
                     return result;
                 }
             }
@@ -198,7 +200,7 @@ public class RequestHelper {
             X509Certificate cert = getX509Certificate(host);
             return "cert=\"" + cert.getSerialNumber().toString() + "\"";
         } catch (Exception e) {
-            LogUtil.log("RequestHelper", e, Level.FINER);
+            Logger.warn(e);
             return null;
         }
     }
@@ -214,7 +216,7 @@ public class RequestHelper {
             int j = subjectCN.indexOf(".");
             return i==j ? subjectCN.substring(3) : subjectCN.substring(j+1);
         } catch (Exception e) {
-            LogUtil.log("RequestHelper", e, Level.FINER);
+            Logger.warn(e, host);
             return "";
         }
     }
@@ -242,7 +244,7 @@ public class RequestHelper {
             }
             return null;
         }catch (Exception e){
-            LogUtil.log("RequestHelper", e, Level.WARNING);
+            Logger.warn(e);
             return null;
         }
 

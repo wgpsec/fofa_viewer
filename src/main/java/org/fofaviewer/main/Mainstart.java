@@ -1,6 +1,7 @@
 package org.fofaviewer.main;
 
 import javafx.application.Application;
+import org.fofaviewer.main.MainApp;
 
 public class Mainstart {
     /*
