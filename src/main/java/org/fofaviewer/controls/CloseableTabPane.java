@@ -17,9 +17,9 @@ public class CloseableTabPane extends BorderPane {
     private final String homepage = ResourceBundleUtil.getResource().getString("HOMEPAGE");
     private final TabPane tabPane;
     // tab页的数据存储，主要是
-    private HashMap<Tab, TabDataBean> dataMap;
+    private final HashMap<Tab, TabDataBean> dataMap;
     // tab页下方的状态栏
-    private HashMap<Tab, StatusBar> barMap;
+    private final HashMap<Tab, StatusBar> barMap;
 
     public CloseableTabPane() {
         this.tabPane = new TabPane();
@@ -72,7 +72,6 @@ public class CloseableTabPane extends BorderPane {
             tabPane.getTabs().add(tab);
         });
         MenuItem reload = new MenuItem(ResourceBundleUtil.getResource().getString("RELOAD_TAB"));
-        reload.setVisible(false);
         reload.setOnAction(e->{
             Tab tab = this.tabPane.getSelectionModel().getSelectedItem();
             TabDataBean bean = this.getTabDataBean(tab);

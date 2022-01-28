@@ -7,7 +7,7 @@ import me.gv7.woodpecker.requests.RawResponse;
 import me.gv7.woodpecker.requests.Requests;
 import me.gv7.woodpecker.requests.Response;
 import me.gv7.woodpecker.requests.exception.RequestsException;
-import org.fofaviewer.bean.FofaBean;
+import org.fofaviewer.main.FofaConfig;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -229,7 +229,7 @@ public class RequestUtil {
     public List<String> getTips(String key) {
         try {
             key = java.net.URLEncoder.encode(key, "UTF-8");
-            HashMap<String, String> result = getHTML(FofaBean.TIP_API + key, 3000, 5000);
+            HashMap<String, String> result = getHTML(FofaConfig.TIP_API + key, 3000, 5000);
             if (result.get("code").equals("200")) {
                 JSONObject obj = JSON.parseObject(result.get("msg"));
                 if(obj.getString("message").equals("ok")){

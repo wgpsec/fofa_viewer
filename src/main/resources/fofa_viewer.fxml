@@ -33,6 +33,9 @@
                 </Label>
                 <TextFields HBox.hgrow="ALWAYS" fx:factory="createClearableTextField" fx:id="queryTF" prefHeight="27.0" prefWidth="400" />
                 <Button fx:id="searchBtn" mnemonicParsing="false" onAction="#queryAction"/>
+            </HBox>
+            <Button fx:id="exportDataBtn" AnchorPane.rightAnchor="10.0" layoutY="10" mnemonicParsing="false" alignment="CENTER_RIGHT" onAction="#exportAction"/>
+            <HBox spacing="10" AnchorPane.leftAnchor="22" AnchorPane.topAnchor="50">
                 <CheckBox fx:id="checkHoneyPot" mnemonicParsing="false">
                     <HBox.margin><Insets top="4" /></HBox.margin>
                     <font><Font size="14.0"/></font>
@@ -45,10 +48,17 @@
                     <HBox.margin><Insets top="4"/></HBox.margin>
                     <font><Font size="14.0"/></font>
                 </CheckBox>
+                <CheckBox fx:id="title">
+                    <HBox.margin><Insets top="4"/></HBox.margin>
+                    <font><Font size="14.0"/></font>
+                </CheckBox>
+                <CheckBox fx:id="cert">
+                    <HBox.margin><Insets top="4"/></HBox.margin>
+                    <font><Font size="14.0"/></font>
+                </CheckBox>
             </HBox>
-            <Button fx:id="exportDataBtn" AnchorPane.rightAnchor="10.0" layoutY="10" mnemonicParsing="false" alignment="CENTER_RIGHT" onAction="#exportAction"/>
         </AnchorPane>
-        <CloseableTabPane fx:id="tabPane" prefHeight="560" prefWidth="1000" AnchorPane.topAnchor="50" AnchorPane.rightAnchor="0.0"
+        <CloseableTabPane fx:id="tabPane" prefHeight="560" prefWidth="1000" AnchorPane.topAnchor="86" AnchorPane.rightAnchor="0.0"
                           AnchorPane.leftAnchor="0.0" AnchorPane.bottomAnchor="0.0"/>
     </AnchorPane>
 </VBox>

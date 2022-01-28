@@ -14,13 +14,14 @@ import org.fofaviewer.bean.BaseBean;
 import org.fofaviewer.bean.ExcelBean;
 import org.fofaviewer.bean.TabDataBean;
 import org.fofaviewer.bean.TableBean;
+import org.fofaviewer.main.FofaConfig;
 import org.tinylog.Logger;
 import java.util.*;
 import java.util.List;
 
 public class DataUtil {
     private static final RequestUtil helper = RequestUtil.getInstance();
-    private static final ResourceBundle resourceBundle = ResourceBundleUtil.getResource();;
+    private static final ResourceBundle resourceBundle = ResourceBundleUtil.getResource();
 
     /**
      * 对话框配置
@@ -59,7 +60,7 @@ public class DataUtil {
                 showAlert(Alert.AlertType.INFORMATION, null, resourceBundle.getString("EXPORT_MESSAGE1") + fileName);
             }else{
                 showAlert(Alert.AlertType.INFORMATION, null, resourceBundle.getString("EXPORT_MESSAGE2_1")
-                        + errorPage.toString() + resourceBundle.getString("EXPORT_MESSAGE2_2") + " " + fileName);
+                        + errorPage + resourceBundle.getString("EXPORT_MESSAGE2_2") + " " + fileName);
             }
         }catch(Exception exception){
             Logger.error(exception);
@@ -78,28 +79,33 @@ public class DataUtil {
                                                                TableView<TableBean> view){
         JSONArray array = obj.getJSONArray("results");
         HashMap<String, TableBean> list = new HashMap<>();
+        FofaConfig config = FofaConfig.getInstance();
         for(int index=0; index < array.size(); index ++){
             JSONArray _array = array.getJSONArray(index);
-            String host = _array.getString(0);
-            int port = Integer.parseInt(_array.getString(4));
-            String ip = _array.getString(2);
+            String host = _array.getString(config.fields.indexOf("host"));
+            int port = Integer.parseInt(_array.getString(config.fields.indexOf("port")));
+            String ip = _array.getString(config.fields.indexOf("ip"));
             String _host = ip + ":" + port;
             if((port==443 && host.equals("https://"+ _host) && list.containsKey("https://"+ip)) || (port == 80 && host.equals(_host) && list.containsKey(ip))){
                 continue;
             }
 
-            String title = _array.getString(1);
-            String domain = _array.getString(3);
-            String protocol = _array.getString(5);
-            String server = _array.getString(6);
-            String cert = _array.getString(7);
-            String certCN = "";
-            String fid;
-            try{
-                fid =  _array.getString(8);
-            }catch(IndexOutOfBoundsException e){
-                fid = "";
+            String domain = _array.getString(config.fields.indexOf("domain"));
+            String protocol = _array.getString(config.fields.indexOf("protocol"));
+            String server = _array.getString(config.fields.indexOf("server"));
+            String cert = "";
+            String fid = "";
+            String title = "";
+            if(config.fields.contains("cert")){
+                cert = _array.getString(config.fields.indexOf("cert"));
             }
+            if(config.fields.contains("fid")){
+                fid = _array.getString(config.fields.indexOf("fid"));
+            }
+            if(config.fields.contains("title")){
+                title = _array.getString(config.fields.indexOf("title"));
+            }
+            String certCN = "";
             if(!cert.isEmpty()){
                 certCN = helper.getCertSubjectDomainByFoFa(cert);
                 cert = helper.getCertSerialNumberByFoFa(cert);

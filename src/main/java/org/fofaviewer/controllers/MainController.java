@@ -32,6 +32,7 @@ import org.fofaviewer.bean.*;
 import org.fofaviewer.controls.AutoHintTextField;
 import org.fofaviewer.controls.LoadingPane;
 import org.fofaviewer.controls.SaveOptionDialog;
+import org.fofaviewer.main.FofaConfig;
 import org.fofaviewer.request.MainControllerCallback;
 import org.fofaviewer.request.Request;
 import org.fofaviewer.request.RequestCallback;
@@ -80,10 +81,14 @@ public class MainController {
     @FXML
     private CheckBox isAll;
     @FXML
+    private CheckBox title;
+    @FXML
+    private CheckBox cert;
+    @FXML
     private CloseableTabPane tabPane;
     private AutoHintTextField decoratedField;
     private static final RequestUtil helper = RequestUtil.getInstance();
-    private static FofaBean client;
+    private static FofaConfig client;
     private final ResourceBundle resourceBundle;
 
     public MainController(){
@@ -95,10 +100,11 @@ public class MainController {
     @FXML
     private void initialize() {
         //switch language
+        title.setText("标题");
+        cert.setText("证书");
         about.setText(resourceBundle.getString("ABOUT"));
         help.setText(resourceBundle.getString("HELP"));
         project.setText(resourceBundle.getString("PROJECT"));
-        project.setVisible(false);
         saveProject.setText(resourceBundle.getString("SAVE_PROJECT"));
         createProject.setText(resourceBundle.getString("CREATE_PROJECT"));
         searchBtn.setText(resourceBundle.getString("SEARCH"));
@@ -293,7 +299,7 @@ public class MainController {
                             for (int i = 1; i <= finalTotalPage; i++) {
                                 Thread.sleep(500);
                                 String text = DataUtil.replaceString(tab.getText());
-                                HashMap<String, String> result = helper.getHTML(client.getParam(String.valueOf(i), withFid.isSelected(), isAll.isSelected())
+                                HashMap<String, String> result = helper.getHTML(client.getParam(String.valueOf(i), isAll.isSelected())
                                         + helper.encode(text), 50000, 50000);
                                 if (result.get("code").equals("200")) {
                                     JSONObject obj = JSON.parseObject(result.get("msg"));
@@ -304,7 +310,7 @@ public class MainController {
                                 } else if (result.get("code").equals("error")) {
                                     // 请求失败时 等待1s再次请求
                                     Thread.sleep(1000);
-                                    result = helper.getHTML(client.getParam(String.valueOf(i), withFid.isSelected(), isAll.isSelected())
+                                    result = helper.getHTML(client.getParam(String.valueOf(i), isAll.isSelected())
                                             + helper.encode(text), 50000, 50000);
                                     if (result.get("code").equals("error")) {
                                         errorPage.append(i).append(" ");
@@ -374,6 +380,21 @@ public class MainController {
             this.tabPane.setCurrentTab(this.tabPane.getTab(text));
             return;
         }
+        if(withFid.isSelected() && !client.fields.contains("fid")){
+            client.fields.add("fid");
+        }else{
+            client.fields.remove("fid");
+        }
+        if(cert.isSelected() && !client.fields.contains("cert")){
+            client.fields.add("cert");
+        }else{
+            client.fields.remove("cert");
+        }
+        if(title.isSelected() && !client.fields.contains("title")){
+            client.fields.add("title");
+        }else{
+            client.fields.remove("title");
+        }
         MainControllerCallback mCallback = new MainControllerCallback() {
             @Override
             public boolean getFidStatus() {
@@ -393,7 +414,7 @@ public class MainController {
         Tab tab = new Tab();
         tab.setText(tabTitle);
         tab.setTooltip(new Tooltip(tabTitle));
-        RequestBean bean = new RequestBean(client.getParam(null, withFid.isSelected(), isAll.isSelected())
+        RequestBean bean = new RequestBean(client.getParam(null, isAll.isSelected())
                 + helper.encode(text), tabTitle, client.getSize());
         new Request(new ArrayList<RequestBean>(){{add(bean);}}, new RequestCallback<Request>() {
             @Override
@@ -429,7 +450,10 @@ public class MainController {
         Properties properties = new Properties();
         try {
             properties.load(new FileInputStream("./config.properties"));
-            client = new FofaBean(properties.getProperty("email").trim(), properties.getProperty("key").trim(), properties.getProperty("api").trim());
+            client = FofaConfig.getInstance();
+            client.setEmail(properties.getProperty("email").trim());
+            client.setKey(properties.getProperty("key").trim());
+            client.setAPI(properties.getProperty("api").trim());
             client.setSize(properties.getProperty("maxSize"));
         } catch (IOException e){
             DataUtil.showAlert(Alert.AlertType.ERROR, null, resourceBundle.getString("LOAD_CONFIG_ERROR"));
@@ -462,7 +486,7 @@ public class MainController {
                     Task<Void> task = new Task<Void>() {
                         @Override
                         protected Void call() {
-                            HashMap<String,String> result = helper.getHTML(client.getParam(null, withFid.isSelected(),
+                            HashMap<String,String> result = helper.getHTML(client.getParam(null,
                                     isAll.isSelected()) + helper.encode(text), 10000, 10000);
                             TableView<TableBean> tableView = (TableView<TableBean>) ((BorderPane) tab.getContent()).getCenter();
                             if (result.get("code").equals("200")) {

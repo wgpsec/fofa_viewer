@@ -1,7 +1,9 @@
-import org.fofaviewer.bean.FofaBean;
+import org.fofaviewer.main.FofaConfig;
 import org.fofaviewer.utils.RequestUtil;
+
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,14 +32,18 @@ public class Test {
     public static void main(String[] args) throws IOException {
         Properties properties = new Properties();
         properties.load(new FileInputStream("config.properties"));
-        FofaBean client = new FofaBean(properties.getProperty("email").trim(), properties.getProperty("key").trim(), properties.getProperty("api"));
+        FofaConfig client = FofaConfig.getInstance();
+        client.setKey(properties.getProperty("key").trim());
+        client.setEmail(properties.getProperty("email").trim());
+        client.setAPI(properties.getProperty("api"));
         client.setSize(properties.getProperty("maxSize"));
         RequestUtil helper = RequestUtil.getInstance();
-        String a = "致远";
+        String a = "domain=\"wgpsec.org\"";
         System.out.println(a);
-        String requestUrl = client.getParam(null, false, true) + helper.encode(a);
+        String requestUrl = client.getParam("2", false) + helper.encode(a);
         System.out.println(requestUrl);
         System.out.println(helper.getHTML(requestUrl, 3000,5000));
+
 //        Test test = new Test();
 //        test.getCommonName();
 //        test.getSerialNumber();
