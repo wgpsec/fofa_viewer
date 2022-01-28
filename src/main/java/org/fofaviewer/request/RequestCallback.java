@@ -22,7 +22,7 @@ public interface RequestCallback<T> {
     /**
      * 请求失败
      */
-    default void failed(RequestBean bean){}
+    default void failed(String  text){}
 
     /**
      * 暂停线程

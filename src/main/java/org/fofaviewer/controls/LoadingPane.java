@@ -6,6 +6,7 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 
@@ -14,6 +15,7 @@ import javafx.scene.text.Font;
  */
 public class LoadingPane extends BorderPane{
     private final VBox box = new VBox();
+    private final HBox hbox = new HBox();
     private final ImageView loadingView = new ImageView(new Image("/images/loading.gif"));
     private final Label header = new Label("");
 
@@ -24,14 +26,17 @@ public class LoadingPane extends BorderPane{
         this.header.setFont(new Font(30));
         this.header.setText("加载中...");
         this.setCenter(box);
-        box.setPadding(new Insets(150,0,0,0));
+        box.setPadding(new Insets(100,0,0,0));
         box.setAlignment(Pos.TOP_CENTER);
-        box.getChildren().addAll(header,loadingView);
+        hbox.getChildren().add(loadingView);
+        hbox.setAlignment(Pos.CENTER);
+        box.getChildren().addAll(header,hbox);
+        hbox.setPadding(new Insets(0,0,0,100));
     }
 
     public void setErrorText(String info){
         this.header.setText("错误信息：");
-        box.getChildren().remove(loadingView);
+        box.getChildren().remove(hbox);
         Label label = new Label(info);
         label.setFont(new Font(20));
         box.getChildren().add(label);
@@ -40,7 +45,7 @@ public class LoadingPane extends BorderPane{
     public void setLoadingView(){
         this.header.setText("加载中...");
         this.box.getChildren().clear();
-        box.getChildren().add(loadingView);
+        box.getChildren().add(hbox);
     }
 
 }

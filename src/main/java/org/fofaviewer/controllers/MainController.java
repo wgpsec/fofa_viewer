@@ -98,6 +98,7 @@ public class MainController {
         about.setText(resourceBundle.getString("ABOUT"));
         help.setText(resourceBundle.getString("HELP"));
         project.setText(resourceBundle.getString("PROJECT"));
+        project.setVisible(false);
         saveProject.setText(resourceBundle.getString("SAVE_PROJECT"));
         createProject.setText(resourceBundle.getString("CREATE_PROJECT"));
         searchBtn.setText(resourceBundle.getString("SEARCH"));
@@ -175,8 +176,6 @@ public class MainController {
         vb.getChildren().addAll(hb, faviconBox, imageBox);
         //VBox.setMargin(res, new Insets(0, 100, 0 ,100));
         tab.setContent(vb);
-
-        //tabPane.addTab(new Tab(), new TabDataBean());
     }
 
     /**
@@ -417,8 +416,8 @@ public class MainController {
             }
 
             @Override
-            public void failed(RequestBean bean) { // 网络问题请求失败
-                ((LoadingPane)tab.getContent()).setErrorText(bean.getResult().get("msg"));
+            public void failed(String text) { // 网络问题请求失败
+                ((LoadingPane)tab.getContent()).setErrorText(text);
             }
         }, mCallback).query();
     }

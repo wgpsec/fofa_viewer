@@ -2,7 +2,7 @@
 <p align="center"> 
 <img src="https://img.shields.io/badge/JDK-1.8-green">
 <img src="https://img.shields.io/badge/JDK-11-green">
-<img src="https://img.shields.io/badge/version-1.1.0-brightgreen">
+<img src="https://img.shields.io/badge/version-1.1.5-brightgreen">
 <img src="https://img.shields.io/badge/author-f1ashine-orange">
 <img src="https://img.shields.io/badge/WgpSec-%E7%8B%BC%E7%BB%84%E5%AE%89%E5%85%A8%E5%9B%A2%E9%98%9F-blue">
 </p>
@@ -24,7 +24,7 @@ Fofa_Viewer： 一个简单易用的fofa客户端，由 WgpSec狼组安全团队
 
 JDK16+ 在导出 Excel 时会报错，可在命令行添加 JVM 参数 `--illegal-access=permit` 以导出。
 
-下载后修改 `config.properties` 即可开始使用
+下载后修改 `config.properties`即可开始使用，api参数默认为`https://fofa.info`，若fofa官方更换域名可修改该参数后再使用。
 
 Mac 用户可通过 [自动化操作创建应用程序](docs/mac.md) 建立快速启动 Fofa_Viewer 的快捷图标
 
@@ -36,7 +36,7 @@ https://gitee.com/wgpsec/fofa_viewer （镜像）
 
 **FOFA会员说明链接！！！！！**
 
-VIP说明：https://fofa.so/static_pages/vip
+VIP说明：https://fofa.info/static_pages/vip
 
 ## :sparkles: 功能
 1. 多标签式查询结果展示
@@ -47,7 +47,8 @@ VIP说明：https://fofa.so/static_pages/vip
 6. 支持输入智能提示
 7. 支持fofa的一键排除干扰（蜜罐）功能。（注：需要高级会员，使用时会在tab页标记`(*)`）
 8. 支持Fid查询（注：需要高级会员，查询时需要勾选）
-9. 显示fofa官网的查询语法
+9. 支持full查询(查询全部数据)
+10. 显示fofa官网的查询语法
 
 ![](docs/cn/ui.png)
 ![](docs/cn/search.jpg)

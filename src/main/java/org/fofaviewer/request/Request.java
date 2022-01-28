@@ -52,16 +52,18 @@ public class Request {
                     Platform.runLater(() -> this.callback.before(_tmp));
                     HashMap<String, String> res = RequestUtil.getInstance().getHTML(bean.getRequestUrl(), 10000, 10000);
                     bean.setResult(res);
-                    if(res.get("code").equals("error")){
+                    if(res.get("code").equals("error") || !res.get("code").equals("200")){
                         bean.setRequestStatus(RequestStatus.FAILED);
-                        Platform.runLater(() -> this.callback.failed(bean));
+                        Platform.runLater(() -> this.callback.failed(res.get("msg")));
                     }else {
-                        bean.setRequestStatus(RequestStatus.SUCCEEDED);
                         JSONObject obj = JSON.parseObject(bean.getResult().get("msg"));
                         if (obj.getBoolean("error")) {
-                            DataUtil.showAlert(Alert.AlertType.ERROR, null, obj.getString("errmsg"));
+                            Platform.runLater(() -> this.callback.failed(obj.getString("errmsg")));
+                            semaphore.release();
+                            succeeded.incrementAndGet();
                             return;
                         }
+                        bean.setRequestStatus(RequestStatus.SUCCEEDED);
                         if (obj.getInteger("size") < Integer.parseInt(bean.getSize())) {
                             _tmp.hasMoreData = false;
                         }
