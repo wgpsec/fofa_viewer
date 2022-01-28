@@ -72,6 +72,7 @@ public class CloseableTabPane extends BorderPane {
             tabPane.getTabs().add(tab);
         });
         MenuItem reload = new MenuItem(ResourceBundleUtil.getResource().getString("RELOAD_TAB"));
+        reload.setVisible(false);
         reload.setOnAction(e->{
             Tab tab = this.tabPane.getSelectionModel().getSelectedItem();
             TabDataBean bean = this.getTabDataBean(tab);

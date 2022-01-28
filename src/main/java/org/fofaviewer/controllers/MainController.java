@@ -105,6 +105,7 @@ public class MainController {
         about.setText(resourceBundle.getString("ABOUT"));
         help.setText(resourceBundle.getString("HELP"));
         project.setText(resourceBundle.getString("PROJECT"));
+        project.setVisible(false);
         saveProject.setText(resourceBundle.getString("SAVE_PROJECT"));
         createProject.setText(resourceBundle.getString("CREATE_PROJECT"));
         searchBtn.setText(resourceBundle.getString("SEARCH"));
