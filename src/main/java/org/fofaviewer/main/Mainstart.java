@@ -1,7 +1,6 @@
 package org.fofaviewer.main;
 
 import javafx.application.Application;
-import org.fofaviewer.main.MainApp;
 
 public class Mainstart {
     /*
@@ -9,6 +8,6 @@ public class Mainstart {
     *
     * */
     public static void main(String[] args) {
-        Application.launch(MainApp.class,args);
+        Application.launch(MainApp.class, args);
     }
 }

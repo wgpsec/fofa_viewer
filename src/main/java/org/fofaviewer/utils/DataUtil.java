@@ -9,13 +9,18 @@ import com.alibaba.excel.write.metadata.style.WriteFont;
 import com.alibaba.excel.write.style.HorizontalCellStyleStrategy;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import javafx.application.Platform;
 import javafx.scene.control.*;
 import org.fofaviewer.bean.BaseBean;
 import org.fofaviewer.bean.ExcelBean;
 import org.fofaviewer.bean.TabDataBean;
 import org.fofaviewer.bean.TableBean;
+import org.fofaviewer.controls.SetConfiDialog;
 import org.fofaviewer.main.FofaConfig;
+import org.fofaviewer.main.ProxyConfig;
 import org.tinylog.Logger;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
@@ -29,12 +34,12 @@ public class DataUtil {
      * @param header dialog title
      * @param content content of dialog
      */
-    public static void showAlert(Alert.AlertType type, String header, String content){
+    public static Alert showAlert(Alert.AlertType type, String header, String content){
         Alert alert = new Alert(type);
         alert.setTitle("提示");
         alert.setHeaderText(header);
         alert.setContentText(content);
-        alert.showAndWait();
+        return alert;
     }
 
     public static void exportToExcel(String fileName, String tabTitle, HashMap<String, ExcelBean> totalData, List<List<String>> urls, StringBuilder errorPage){
@@ -79,6 +84,9 @@ public class DataUtil {
                                                                TableView<TableBean> view){
         JSONArray array = obj.getJSONArray("results");
         HashMap<String, TableBean> list = new HashMap<>();
+        if(array.size() == 0){
+            return list;
+        }
         FofaConfig config = FofaConfig.getInstance();
         for(int index=0; index < array.size(); index ++){
             JSONArray _array = array.getJSONArray(index);
@@ -120,6 +128,14 @@ public class DataUtil {
                 if(port==80 && excelData.containsKey(_host)){
                     excelData.remove(_host);
                 }
+                if(excelData.containsKey(host)){
+                    if(!d.getTitle().equals("")){
+                        excelData.put(host,d);
+                        continue;
+                    }else{
+                        continue;
+                    }
+                }
                 getUrlList(urlList, host, ip, port, protocol, _host);
                 excelData.put(host, d);
             }else{  // table 页更新数据
@@ -133,6 +149,16 @@ public class DataUtil {
                 if(port==80 && list.containsKey(_host)){
                     b.num = list.get(_host).num;
                     list.remove(_host);
+                }
+                // host相同时保留带有title的数据
+                if(list.containsKey(host)){
+                    if(!b.title.getValue().equals("")){
+                        b.num = list.get(host).num;
+                        list.put(host,b);
+                        continue;
+                    }else{
+                        continue;
+                    }
                 }
                 if(b.num.getValue() == 0){ b.num.set(++bean.count);}
                 getUrlList(bean.dataList, host, ip, port, protocol, _host);
@@ -183,5 +209,58 @@ public class DataUtil {
             tabTitle = "(" + tabTitle + ") && (is_honeypot=false && is_fraud=false)";
         }
         return tabTitle;
+    }
+
+    /**
+     * 从配置文件加载fofa认证信息
+     */
+    public static FofaConfig loadConfigure(){
+        Properties properties = new Properties();
+        FofaConfig client = null;
+        ProxyConfig proxyConfig = null;
+        try {
+            properties.load(new FileInputStream(System.getProperty("user.dir") + System.getProperty("file.separator") + "config.properties"));
+            client = FofaConfig.getInstance();
+            client.setEmail(properties.getProperty("email").trim());
+            client.setKey(properties.getProperty("key").trim());
+            client.setAPI(properties.getProperty("api").trim());
+            client.setSize(properties.getProperty("max_size"));
+            proxyConfig = ProxyConfig.getInstance();
+            if(properties.getProperty("proxy_status").equals("on")){
+                proxyConfig.setStatus(true);
+                switch(properties.getProperty("proxy_type")){
+                    case "HTTP": proxyConfig.setProxy_type(ProxyConfig.ProxyType.HTTP);break;
+                    case "SOCKS5": proxyConfig.setProxy_type(ProxyConfig.ProxyType.SOCKS5);break;
+                }
+                proxyConfig.setProxy_ip(properties.getProperty("proxy_ip"));
+                proxyConfig.setProxy_port(properties.getProperty("proxy_port"));
+                proxyConfig.setProxy_user(properties.getProperty("proxy_user"));
+                proxyConfig.setProxy_password(properties.getProperty("proxy_password"));
+            }else{
+                proxyConfig.setStatus(false);
+            }
+        } catch (IOException | NullPointerException e){
+            setConfigDialog();
+        }
+        return client;
+    }
+
+    private static void setConfigDialog(){
+        Alert dialog = showAlert(Alert.AlertType.CONFIRMATION, null, resourceBundle.getString("LOAD_CONFIG_ERROR"));
+        dialog.setOnCloseRequest(event -> {
+            ButtonType result = dialog.getResult();
+            if(result.getButtonData() == ButtonBar.ButtonData.OK_DONE){
+                SetConfiDialog scf = new SetConfiDialog(resourceBundle.getString("CONFIG_PANEL"));
+                scf.setOnCloseRequest(event1 -> {
+                    if(scf.getResult() == ButtonType.CANCEL){
+                        Platform.exit();
+                    }
+                });
+                scf.showAndWait();
+            }else{
+                Platform.exit();//结束进程
+            }
+        });
+        dialog.showAndWait();
     }
 }

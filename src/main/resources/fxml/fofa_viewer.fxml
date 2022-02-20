@@ -17,15 +17,22 @@
         <Menu fx:id="help" mnemonicParsing="false">
             <MenuItem fx:id="about" mnemonicParsing="false" onAction="#showAbout"/>
         </Menu>
+        <Menu fx:id="config" mnemonicParsing="false">
+            <MenuItem fx:id="setConfig" mnemonicParsing="false" onAction="#setConfig"/>
+        </Menu>
         <Menu fx:id="project" mnemonicParsing="false">
-            <MenuItem fx:id="createProject" mnemonicParsing="false" onAction="#openProject"/>
             <MenuItem fx:id="saveProject" mnemonicParsing="false" onAction="#saveProject"/>
+            <MenuItem fx:id="openProject" mnemonicParsing="false" onAction="#openProject"/>
+        </Menu>
+        <Menu fx:id="rule" mnemonicParsing="false">
+            <MenuItem fx:id="createRule" mnemonicParsing="false" onAction="#createRule"/>
+            <MenuItem fx:id="exportRule" mnemonicParsing="false" onAction="#exportRule"/>
         </Menu>
     </MenuBar>
     <AnchorPane VBox.vgrow="ALWAYS">
         <AnchorPane prefHeight="600" prefWidth="1100" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
                     AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-            <HBox spacing="10" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="280">
+            <HBox spacing="10.0D" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="280">
                 <padding><Insets top="12" right="22" left="22"/></padding>
                 <Label fx:id="queryString" alignment="CENTER">
                     <HBox.margin><Insets top="4"/></HBox.margin>
@@ -35,16 +42,16 @@
                 <Button fx:id="searchBtn" mnemonicParsing="false" onAction="#queryAction"/>
             </HBox>
             <Button fx:id="exportDataBtn" AnchorPane.rightAnchor="10.0" layoutY="10" mnemonicParsing="false" alignment="CENTER_RIGHT" onAction="#exportAction"/>
-            <HBox spacing="10" AnchorPane.leftAnchor="22" AnchorPane.topAnchor="50">
+            <HBox spacing="10.0D" AnchorPane.leftAnchor="22" AnchorPane.topAnchor="50">
                 <CheckBox fx:id="checkHoneyPot" mnemonicParsing="false">
                     <HBox.margin><Insets top="4" /></HBox.margin>
                     <font><Font size="14.0"/></font>
                 </CheckBox>
-                <CheckBox fx:id="withFid" mnemonicParsing="false">
+                <CheckBox fx:id="isAll" mnemonicParsing="false">
                     <HBox.margin><Insets top="4"/></HBox.margin>
                     <font><Font size="14.0"/></font>
                 </CheckBox>
-                <CheckBox fx:id="isAll" mnemonicParsing="false">
+                <CheckBox fx:id="withFid" mnemonicParsing="false">
                     <HBox.margin><Insets top="4"/></HBox.margin>
                     <font><Font size="14.0"/></font>
                 </CheckBox>

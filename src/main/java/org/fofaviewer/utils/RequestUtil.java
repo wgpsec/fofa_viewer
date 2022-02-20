@@ -3,11 +3,10 @@ package org.fofaviewer.utils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import me.gv7.woodpecker.requests.RawResponse;
-import me.gv7.woodpecker.requests.Requests;
-import me.gv7.woodpecker.requests.Response;
+import me.gv7.woodpecker.requests.*;
 import me.gv7.woodpecker.requests.exception.RequestsException;
 import org.fofaviewer.main.FofaConfig;
+import org.fofaviewer.main.ProxyConfig;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -26,6 +25,7 @@ import org.tinylog.Logger;
 
 public class RequestUtil {
     private static RequestUtil request = null;
+    private ProxyConfig config;
     private final String[] ua = new String[]{
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Safari/605.1.15",
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0",
@@ -34,13 +34,19 @@ public class RequestUtil {
     Pattern cnPattern = Pattern.compile("CommonName: ([\\w|\\.]+)\n\n");
     Pattern snPattern = Pattern.compile("Serial Number: (\\d+)\n");
 
-    private RequestUtil() {}
+    private RequestUtil() {
+        config = ProxyConfig.getInstance();
+    }
 
     public static RequestUtil getInstance() {
         if (request == null) {
             request = new RequestUtil();
         }
         return request;
+    }
+
+    private RequestBuilder getBuilder(String url){
+        return config.getStatus() ? Requests.get(url).proxy(config.getProxy()) : Requests.get(url);
     }
 
     /**
@@ -56,7 +62,7 @@ public class RequestUtil {
         RawResponse response;
         HashMap<String, String> result = new HashMap<>();
         try {
-            response = Requests.get(url)
+            response = getBuilder(url)
                     .headers(new HashMap<String, String>() {{ put("User-Agent", ua[(new SecureRandom()).nextInt(3)]); }})
                     .connectTimeout(connectTimeout)
                     .socksTimeout(socksTimeout)
@@ -103,7 +109,7 @@ public class RequestUtil {
         Response<byte[]> response = null;
         HashMap<String, String> result = new HashMap<>();
         try {
-            response = Requests.get(url)
+            response = getBuilder(url)
                     .headers(new HashMap<String, String>() {{
                         put("User-Agent", ua[(new SecureRandom()).nextInt(3)]);
                     }})
@@ -181,7 +187,12 @@ public class RequestUtil {
 
     private X509Certificate getX509Certificate(String host) throws Exception {
         URL url = new URL(host);
-        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+        HttpsURLConnection conn;
+        if(config.getStatus()){
+            conn = (HttpsURLConnection) url.openConnection(config.getProxy());
+        }else{
+            conn = (HttpsURLConnection) url.openConnection();
+        }
         TrustModifier.relaxHostChecking(conn);
         conn.setConnectTimeout(3000);
         conn.setReadTimeout(5000);
@@ -226,18 +237,18 @@ public class RequestUtil {
      * @param key query content
      * @return hint
      */
-    public List<String> getTips(String key) {
+    public Map<String,String> getTips(String key) {
         try {
             key = java.net.URLEncoder.encode(key, "UTF-8");
             HashMap<String, String> result = getHTML(FofaConfig.TIP_API + key, 3000, 5000);
             if (result.get("code").equals("200")) {
                 JSONObject obj = JSON.parseObject(result.get("msg"));
                 if(obj.getString("message").equals("ok")){
-                    List<String> data = new ArrayList<>();
+                    Map<String,String> data = new HashMap();
                     JSONArray objs = obj.getJSONArray("data");
                     for (Object o : objs) {
                         JSONObject tmp = (JSONObject) o;
-                        data.add(tmp.getString("name") + "--" + tmp.getString("company"));
+                        data.put(tmp.getString("name") + "--" + tmp.getString("company"), "app=\""+tmp.getString("name")+"\"");
                     }
                     return data;
                 }

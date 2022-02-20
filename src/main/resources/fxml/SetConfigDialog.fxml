@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" fx:controller="org.fofaviewer.controllers.SetConfigDialogController">
+    <TabPane>
+        <Tab fx:id="fofa_tab" closable="false" >
+            <GridPane alignment="CENTER" vgap="15.0D">
+                <padding><Insets right="10.0D" left="10.0D"/></padding>
+                <Label fx:id="label_fofa_api" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <TextField fx:id="fofa_api" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="250"/>
+                <Label fx:id="label_fofa_email" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <TextField fx:id="fofa_email" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                <Label fx:id="label_fofa_key" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <TextField fx:id="fofa_key" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                <Label fx:id="label_fofa_max_size" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                <TextField fx:id="fofa_max_size" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+            </GridPane>
+        </Tab>
+        <Tab fx:id="proxy_tab" closable="false">
+            <VBox>
+                <GridPane alignment="CENTER" vgap="15.0D" hgap="6.0D">
+                    <HBox spacing="10.0D" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                        <RadioButton fx:id="enable" />
+                        <RadioButton fx:id="disable" />
+                    </HBox>
+                    <padding><Insets top="20.0D" right="10.0D" left="10.0D"/></padding>
+                    <Label fx:id="labelCombo" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <ComboBox fx:id="typeCombo" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                    <Label fx:id="label_proxy_ip" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                    <TextField fx:id="proxy_ip" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                    <Label fx:id="label_proxy_port" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                    <TextField fx:id="proxy_port" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                    <Label fx:id="label_proxy_user" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                    <TextField fx:id="proxy_user" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+                    <Label fx:id="label_proxy_password" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+                    <TextField fx:id="proxy_password" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+                </GridPane>
+            </VBox>
+        </Tab>
+    </TabPane>
+</VBox>

@@ -5,22 +5,22 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.layout.Pane;
-import org.fofaviewer.controllers.SaveOptionsController;
+import org.fofaviewer.controllers.SetConfigDialogController;
 import org.tinylog.Logger;
+
 import java.io.IOException;
 
-public class SaveOptionDialog extends Dialog<ButtonType> {
-
-    public SaveOptionDialog(CloseableTabPane tablePane, boolean isProject)  {
+public class SetConfiDialog extends Dialog<ButtonType> {
+    public SetConfiDialog(String title) {
         try{
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/SaveOptionsDialog.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/SetConfigDialog.fxml"));
             Pane pane = loader.load();
+            this.setTitle(title);
             DialogPane dialogPane = this.getDialogPane();
             dialogPane.setContent(pane);
-            SaveOptionsController controller = loader.getController();
             dialogPane.getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-            controller.setProject(isProject, dialogPane);
-            controller.setTabs(tablePane);
+            SetConfigDialogController controller = loader.getController();
+            controller.setAction(dialogPane);
         }catch (IOException e){
             Logger.error(e);
         }

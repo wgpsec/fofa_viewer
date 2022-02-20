@@ -11,6 +11,7 @@ import org.fofaviewer.bean.TabDataBean;
 import org.fofaviewer.utils.ResourceBundleUtil;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 
 public class CloseableTabPane extends BorderPane {
@@ -20,11 +21,13 @@ public class CloseableTabPane extends BorderPane {
     private final HashMap<Tab, TabDataBean> dataMap;
     // tab页下方的状态栏
     private final HashMap<Tab, StatusBar> barMap;
+    private final HashMap<Tab, String> queryMap;
 
     public CloseableTabPane() {
         this.tabPane = new TabPane();
         this.dataMap = new HashMap<>();
         this.barMap = new HashMap<>();
+        this.queryMap = new HashMap<>();
         this.tabPane.tabMaxWidthProperty().set(150);
         tabPane.getStylesheets().add(getClass().getResource("/tabpane.css").toExternalForm());
         StackPane sp = new StackPane();
@@ -72,7 +75,7 @@ public class CloseableTabPane extends BorderPane {
             tabPane.getTabs().add(tab);
         });
         MenuItem reload = new MenuItem(ResourceBundleUtil.getResource().getString("RELOAD_TAB"));
-        reload.setVisible(false);
+//        reload.setVisible(false);
         reload.setOnAction(e->{
             Tab tab = this.tabPane.getSelectionModel().getSelectedItem();
             TabDataBean bean = this.getTabDataBean(tab);
@@ -83,16 +86,20 @@ public class CloseableTabPane extends BorderPane {
         super.setCenter(sp);
         Tab tab = new Tab(homepage);
         tab.setTooltip(new Tooltip(tab.getText()));
-        this.addTab(tab, null);
+        this.addTab(tab, null, null);
         tab.setClosable(false); //取消启动页的关闭按钮
     }
     //添加单个Tab
-    public void addTab(Tab tab, TabDataBean list){
+    public void addTab(Tab tab, TabDataBean list, String queryTxt){
+        if(tabPane.getTabs().size()!=0 && tab.getText().equals(homepage)) {
+            return;
+        }
         tab.setClosable(true);
         tabPane.getTabs().add(tab);
         if(list != null){
             dataMap.put(tab, list);
         }
+        queryMap.put(tab, queryTxt);
     }
 
     public void addBar(Tab tab, StatusBar bar){
@@ -137,5 +144,15 @@ public class CloseableTabPane extends BorderPane {
 
     public Tab getCurrentTab(){
         return this.tabPane.getSelectionModel().getSelectedItem();
+    }
+
+    public void closeTab(Tab tab){
+        this.dataMap.remove(tab);
+        this.barMap.remove(tab);
+        this.queryMap.remove(tab);
+    }
+
+    public Collection<String> getTabsTxt(){
+        return this.queryMap.values();
     }
 }

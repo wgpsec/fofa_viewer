@@ -4,6 +4,7 @@ import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
 import javafx.scene.control.ListView;
@@ -15,8 +16,9 @@ import javafx.stage.Window;
 import javafx.util.Duration;
 import org.controlsfx.control.PopOver;
 import org.fofaviewer.utils.RequestUtil;
-import java.util.HashSet;
-import java.util.List;
+import org.fofaviewer.utils.SQLiteUtils;
+
+import java.util.*;
 
 public class AutoHintTextField {
     private final HashSet<String> historySet;
@@ -25,6 +27,7 @@ public class AutoHintTextField {
     private final static int LIST_SHOW_SIZE = 7;
     private final static int LIST_CELL_HEIGHT = 24;
     private ObservableList<String> showCacheDataList = FXCollections.observableArrayList();
+    private HashMap<String, String> tipMap = new HashMap<>();
     private final RequestUtil helper = RequestUtil.getInstance();
     private String clickedInput = "";
     private String inputText = "";
@@ -92,7 +95,7 @@ public class AutoHintTextField {
             this.pop.hide();
         });
 
-        PauseTransition pause = new PauseTransition(Duration.seconds(0.5)); // 延时1.5秒查询api
+        PauseTransition pause = new PauseTransition(Duration.seconds(0.5)); // 延时0.5秒查询api
         textField.textProperty().addListener((observable, oldValue, newValue) -> {
             inputText = newValue;
             pop.hide();
@@ -117,7 +120,7 @@ public class AutoHintTextField {
      * 选中条目点击事件
      */
     private void selectedItem() {
-        clickedInput = "app=\"" + autoTipList.getSelectionModel().getSelectedItem().split("--")[0] + "\"";
+        clickedInput = tipMap.get(autoTipList.getSelectionModel().getSelectedItem());
         textField.setText(clickedInput);
         textField.end();
         popShowList.hide();
@@ -132,6 +135,7 @@ public class AutoHintTextField {
         this.pop.hide();
         if(newValue.trim().equals("")){ // 内容为空时不查询
             showCacheDataList.clear();
+            tipMap.clear();
             return;
         }
         if(newValue.trim().equals(oldValue)){ // 键入空格不查询
@@ -141,14 +145,35 @@ public class AutoHintTextField {
         if(clickedInput.equals(newValue)){ // 消除点击条目后自动触发的bug
             return;
         }
-        Platform.runLater(() -> {
-            showCacheDataList.clear();
-            List<String> data = helper.getTips(newValue);
-            if(data != null && data.size() != 0){
-                showCacheDataList.addAll(data);
-                showTipPop();
+        showCacheDataList.clear();
+        tipMap.clear();
+        Task<Void> task = new Task<Void>() {
+            @Override
+            protected Void call() {
+                Map<String,String> ruleData = SQLiteUtils.matchRule(newValue);
+                Map<String,String> tipData = helper.getTips(newValue);
+                tipMap.putAll(ruleData);
+                tipMap.putAll(tipData);
+                List<String> rdata = new ArrayList<>(ruleData.keySet());
+                List<String> tdata = new ArrayList<>(tipData.keySet());
+                List<String> data;
+                if(rdata.size() != 0){
+                    rdata.addAll(tdata);
+                    data = rdata;
+                }else{
+                    data = tdata;
+                }
+                List<String> list = data;
+                if(data.size() != 0){
+                    Platform.runLater(() -> {
+                        showCacheDataList.addAll(list);
+                        showTipPop();
+                    });
+                }
+                return null;
             }
-        });
+        };
+        new Thread(task).start();
     }
 
     public final Window getWindow() {

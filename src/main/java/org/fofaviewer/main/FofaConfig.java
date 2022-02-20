@@ -15,11 +15,24 @@ public class FofaConfig {
     //public static final String TIP_API = Locale.getDefault()==Locale.CHINA ? "https://api.fofa.so/v1/search/tip?q="
     public ArrayList<String> fields = new ArrayList<String>(){{add("host");add("ip");add("domain");add("port");add("protocol");add("server");}};//title,cert";
 
+    private FofaConfig(){
+        this.email = "";
+        this.key = "";
+    }
+
     public static FofaConfig getInstance(){
         if (config == null) {
             config = new FofaConfig();
         }
         return config;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getKey() {
+        return key;
     }
 
     public void setEmail(String email) {
@@ -31,7 +44,7 @@ public class FofaConfig {
     }
 
     public void setAPI(String API) {
-        this.API = API + path;
+        this.API = API;
     }
 
     public String getSize() {
@@ -44,7 +57,7 @@ public class FofaConfig {
 
     public String getParam(String page, boolean isAll) {
         String all = isAll ? "&full=true" : "";
-        StringBuilder builder = new StringBuilder(API).append("?email=").append(email).append("&key=").append(key).append(all).append("&page=");
+        StringBuilder builder = new StringBuilder(API).append(path).append("?email=").append(email).append("&key=").append(key).append(all).append("&page=");
         if(page != null) {
             return builder.append(page).append("&size=").append(size).append("&fields=").append(getFields()).append("&qbase64=").toString();
         }else{
