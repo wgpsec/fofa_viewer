@@ -2,7 +2,6 @@ package org.fofaviewer.utils;
 
 import javafx.scene.control.Alert;
 import org.tinylog.Logger;
-
 import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
@@ -100,7 +99,7 @@ public class SQLiteUtils {
         try{
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection("jdbc:sqlite:rules.db");
-            String sql = "INSERT INTO \"rules\" (\"id\", \"rule_name\", \"query_text\", \"description\") VALUES (NULL, ?,?,?)";
+            String sql = "INSERT INTO \"rules\" (\"rule_name\", \"query_text\", \"description\") VALUES (?,?,?)";
             stmt = connection.prepareStatement(sql);
             stmt.setString(1, rule.get("rule_name"));
             stmt.setString(2, rule.get("query_text"));
@@ -111,7 +110,7 @@ public class SQLiteUtils {
             return true;
         }catch ( Exception e ) {
             Logger.error(e);
-            DataUtil.showAlert(Alert.AlertType.ERROR, null, e.getMessage());
+            DataUtil.showAlert(Alert.AlertType.ERROR, null, e.getMessage()).showAndWait();
             return false;
         }
     }

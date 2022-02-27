@@ -6,6 +6,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
+import org.fofaviewer.callback.SaveOptionCallback;
 import org.fofaviewer.controls.CloseableTabPane;
 import org.fofaviewer.utils.DataUtil;
 import org.fofaviewer.utils.ResourceBundleUtil;
@@ -90,10 +91,13 @@ public class SaveOptionsController {
         }
     }
 
-    public void setProject(boolean isProject, DialogPane dialogPane) {
+    public void setProject(boolean isProject, DialogPane dialogPane, SaveOptionCallback callback) {
         this.isProject = isProject;
         if(isProject){ //save project
             window.getChildren().remove(rule);
+            if(!callback.getProjectName().equals("")){
+                project_name.setText(callback.getProjectName());
+            }
             dialogPane.lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, e -> {
                 List<String> res = new ArrayList<>();
                 for(CheckBox box:boxes){
@@ -116,19 +120,20 @@ public class SaveOptionsController {
                             try {
                                 File f = new File(file.getAbsolutePath() + System.getProperty("file.separator")
                                         + project_name.getText() + ".txt");
-                                if(!f.exists()){
-                                    f.createNewFile();
-                                    FileWriter writer = new FileWriter(f);
-                                    BufferedWriter bw = new BufferedWriter(writer);
-                                    for(String str : res){
-                                        bw.write(str + "\n");
+                                if(f.exists()){
+                                    Alert alert = DataUtil.showAlert(Alert.AlertType.CONFIRMATION, null, bundle.getString("SAVE_QUERY_FILE_EXISTS"));
+                                    alert.showAndWait();
+                                    ButtonType btn = alert.getResult();
+                                    if(btn.equals(ButtonType.OK)){
+                                        callback.setProjectName(project_name.getText());
+                                        saveQueryToFile(res, f);
+                                    }else{
+                                        e.consume();
                                     }
-                                    bw.close();
-                                    writer.close();
-                                    DataUtil.showAlert(Alert.AlertType.INFORMATION, null, bundle.getString("SAVE_QUERY_SAVE_SUCCESS")).showAndWait();
                                 }else{
-                                    DataUtil.showAlert(Alert.AlertType.WARNING, null, bundle.getString("SAVE_QUERY_FILE_EXISTS")).showAndWait();
-                                    e.consume();
+                                    f.createNewFile();
+                                    callback.setProjectName(project_name.getText());
+                                    saveQueryToFile(res, f);
                                 }
                             }catch (IOException ex){
                                 Logger.error(ex);
@@ -151,6 +156,17 @@ public class SaveOptionsController {
                 }
             });
         }
+    }
+
+    private void saveQueryToFile(List<String> res, File f) throws IOException {
+        FileWriter writer = new FileWriter(f);
+        BufferedWriter bw = new BufferedWriter(writer);
+        for(String str : res){
+            bw.write(str + "\n");
+        }
+        bw.close();
+        writer.close();
+        DataUtil.showAlert(Alert.AlertType.INFORMATION, null, bundle.getString("SAVE_QUERY_SAVE_SUCCESS")).showAndWait();
     }
 
     @FXML

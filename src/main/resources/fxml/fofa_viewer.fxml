@@ -15,6 +15,7 @@
 <VBox fx:id="rootLayout" fx:controller="org.fofaviewer.controllers.MainController" prefHeight="700" prefWidth="1100" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
     <MenuBar prefHeight="0.0" prefWidth="106.0" VBox.vgrow="NEVER">
         <Menu fx:id="help" mnemonicParsing="false">
+            <MenuItem fx:id="query_api" mnemonicParsing="false" onAction="#getQueryAPI"/>
             <MenuItem fx:id="about" mnemonicParsing="false" onAction="#showAbout"/>
         </Menu>
         <Menu fx:id="config" mnemonicParsing="false">

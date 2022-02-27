@@ -1,4 +1,4 @@
-package org.fofaviewer.request;
+package org.fofaviewer.callback;
 
 import javafx.scene.control.Tab;
 import javafx.scene.layout.BorderPane;

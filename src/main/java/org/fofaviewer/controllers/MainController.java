@@ -6,8 +6,6 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -22,19 +20,22 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.Stage;
+import javafx.stage.FileChooser;
 import org.controlsfx.control.StatusBar;
 import org.controlsfx.dialog.CommandLinksDialog;
 import org.controlsfx.dialog.ProgressDialog;
 import org.fofaviewer.bean.*;
+import org.fofaviewer.callback.SaveOptionCallback;
 import org.fofaviewer.controls.*;
 import org.fofaviewer.main.FofaConfig;
-import org.fofaviewer.request.MainControllerCallback;
+import org.fofaviewer.callback.MainControllerCallback;
 import org.fofaviewer.request.Request;
-import org.fofaviewer.request.RequestCallback;
+import org.fofaviewer.callback.RequestCallback;
 import org.fofaviewer.utils.DataUtil;
 import org.fofaviewer.utils.RequestUtil;
 import org.controlsfx.control.textfield.TextFields;
@@ -43,16 +44,19 @@ import java.awt.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.URI;
-import java.sql.ResultSet;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import org.fofaviewer.utils.SQLiteUtils;
 import org.tinylog.Logger;
 
 public class MainController {
-    private boolean isProject;
+    private Map<String, Object> projectInfo;
+    private AutoHintTextField decoratedField;
+    private static final RequestUtil helper = RequestUtil.getInstance();
+    private FofaConfig client;
+    private final ResourceBundle resourceBundle;
+    private final HashMap<CheckBox, String> keyMap = new HashMap<>();
     @FXML
     private Menu help;
     @FXML
@@ -61,6 +65,8 @@ public class MainController {
     private Menu rule;
     @FXML
     private Menu config;
+    @FXML
+    private MenuItem query_api;
     @FXML
     private MenuItem createRule;
     @FXML
@@ -95,11 +101,6 @@ public class MainController {
     private CheckBox cert;
     @FXML
     private CloseableTabPane tabPane;
-    private AutoHintTextField decoratedField;
-    private static final RequestUtil helper = RequestUtil.getInstance();
-    private static FofaConfig client;
-    private final ResourceBundle resourceBundle;
-    private final HashMap<CheckBox, String> keyMap = new HashMap<>();
 
     public MainController(){
         this.resourceBundle = ResourceBundleUtil.getResource();
@@ -113,7 +114,9 @@ public class MainController {
         keyMap.put(withFid, "fid");
         keyMap.put(cert, "cert");
         keyMap.put(title, "title");
-        isProject = false;
+        projectInfo = new HashMap<>();
+        projectInfo.put("status", Boolean.FALSE);
+        projectInfo.put("name", "");
         title.setText(resourceBundle.getString("TITLE"));
         cert.setText(resourceBundle.getString("CERT"));
         about.setText(resourceBundle.getString("ABOUT"));
@@ -121,6 +124,7 @@ public class MainController {
         project.setText(resourceBundle.getString("PROJECT"));
         config.setText(resourceBundle.getString("CONFIG_PANEL"));
         rule.setText(resourceBundle.getString("RULE"));
+        query_api.setText(resourceBundle.getString("QUERY_API"));
         setConfig.setText(resourceBundle.getString("SET_CONFIG"));
         createRule.setText(resourceBundle.getString("CREATE_RULE"));
         exportRule.setText(resourceBundle.getString("EXPORT_RULE"));
@@ -133,7 +137,13 @@ public class MainController {
         withFid.setText(resourceBundle.getString("WITH_FID"));
         isAll.setText(resourceBundle.getString("IS_ALL"));
         decoratedField = new AutoHintTextField(queryTF);
-        client = DataUtil.loadConfigure();
+        this.client = DataUtil.loadConfigure();
+        this.tabPane.setCallback(new MainControllerCallback() {
+            @Override
+            public void queryCall(String queryTxt) {
+                query(queryTxt);
+            }
+        });
         //初始化起始页tab
         Tab tab = this.tabPane.getTab(resourceBundle.getString("HOMEPAGE"));
         Button queryCert = new Button(resourceBundle.getString("QUERY_BUTTON"));
@@ -207,6 +217,38 @@ public class MainController {
     }
 
     /**
+     * 通过命令行参数传递要打开的项目文件
+     */
+    public void openFile(String fileName){
+        try {
+            FileInputStream inputStream = new FileInputStream(fileName);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+            String str;
+            while((str = bufferedReader.readLine()) != null) {
+                if(!str.equals("")){
+                    query(str);
+                }
+            }
+        } catch (IOException e) {
+            Logger.error(e);
+        }
+    }
+
+    @FXML
+    private void getQueryAPI(){
+        Tab tab = this.tabPane.getCurrentTab();
+        if(tab.getText().equals(resourceBundle.getString("HOMEPAGE"))){
+            DataUtil.showAlert(Alert.AlertType.INFORMATION, null, resourceBundle.getString("COPY_QUERY_URL_FAILED")).showAndWait();
+        }else{
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            ClipboardContent content = new ClipboardContent();
+            content.putString(this.tabPane.getCurrentQuery(tab));
+            clipboard.setContent(content);
+            DataUtil.showAlert(Alert.AlertType.INFORMATION, null, resourceBundle.getString("COPY_QUERY_URL_SUCCESS")).showAndWait();
+        }
+    }
+
+    /**
      * 查询按钮点击事件，与fxml中命名绑定
      */
     @FXML
@@ -260,16 +302,46 @@ public class MainController {
      */
     @FXML
     private void openProject(){
-        if(isProject){
+        if((Boolean) projectInfo.get("status")){
             Alert dialog = DataUtil.showAlert(Alert.AlertType.CONFIRMATION, null, resourceBundle.getString("OPEN_NEW_PROCESS"));
             dialog.setOnCloseRequest(event -> {
                 ButtonType btn = dialog.getResult();
-                if(btn.equals(ButtonType.OK)){
+                if(btn.equals(ButtonType.OK)){//当前已打开一个项目点是
+                    FileChooser chooser = new FileChooser();
+                    chooser.setTitle(resourceBundle.getString("FILE_CHOOSER_TITLE"));
+                    File file = chooser.showOpenDialog(rootLayout.getScene().getWindow());
+                    if(file != null){
+                        String os = System.getProperty("os.name").toLowerCase();
+                        String javaPath = System.getProperty("java.home") + System.getProperty("file.separator") + "bin" + System.getProperty("file.separator");
+                        try {
+                            if(os.contains("windows")){
+                                String jarPath = this.getClass().getProtectionDomain().getCodeSource().getLocation().getFile().substring(1);
+                                javaPath += "java.exe";
+                                Runtime.getRuntime().exec(new String[]{"cmd", "/c", javaPath, "-jar", jarPath, "-f", file.getAbsolutePath()});
+                            }else{
+                                String jarPath = this.getClass().getProtectionDomain().getCodeSource().getLocation().getFile();
+                                System.out.println(jarPath);
+                                javaPath += "java";
+                                Runtime.getRuntime().exec(new String[]{"sh", "-c", "\"" + javaPath, "-jar", jarPath, "-f", file.getAbsolutePath(), "\""});
+                            }
+                        }catch (IOException e) {
+                            Logger.error(e);
+                        }
+                    }
+                }else{
+                    //当前已打开一个项目点否
 
                 }
             });
+            dialog.showAndWait();
+        }else{
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle(resourceBundle.getString("FILE_CHOOSER_TITLE"));
+            File file = chooser.showOpenDialog(rootLayout.getScene().getWindow());
+            if(file != null){
+                openFile(file.getAbsolutePath());
+            }
         }
-
     }
 
     /**
@@ -280,11 +352,21 @@ public class MainController {
         if(this.tabPane.getTabs().size() == 1){
             DataUtil.showAlert(Alert.AlertType.WARNING, null, resourceBundle.getString("SAVE_PROJECT_ERROR")).showAndWait();
         }else{
-            SaveOptionDialog sd = new SaveOptionDialog(this.tabPane, true);
+            SaveOptionCallback callback = new SaveOptionCallback() {
+                @Override
+                public void setProjectName(String name) {
+                    projectInfo.put("name", name);
+                }
+                @Override
+                public String getProjectName() {
+                    return projectInfo.get("name").toString();
+                }
+            };
+            SaveOptionDialog sd = new SaveOptionDialog(this.tabPane, true, callback);
             sd.setOnCloseRequest(event -> {
                 ButtonType rs = sd.getResult();
                 if(rs.equals(ButtonType.OK)){
-                    isProject = true;
+                    projectInfo.put("status", Boolean.TRUE);
                 }
             });
             sd.showAndWait();
@@ -299,7 +381,7 @@ public class MainController {
         if(this.tabPane.getTabs().size() == 1){
             DataUtil.showAlert(Alert.AlertType.WARNING, null, resourceBundle.getString("SAVE_RULE_ERROR")).showAndWait();
         }else{
-            SaveOptionDialog sd = new SaveOptionDialog(this.tabPane, false);
+            SaveOptionDialog sd = new SaveOptionDialog(this.tabPane, false, null);
             sd.showAndWait();
         }
     }
@@ -316,21 +398,19 @@ public class MainController {
      * 导出查询数据到excel文件
      */
     @FXML
-    private void exportAction(ActionEvent e) {
+    private void exportAction() {
         Tab tab = tabPane.getCurrentTab();
         if(tab.getText().equals(resourceBundle.getString("HOMEPAGE"))) return;  // 首页无数据可导出
-        Stage stage = (Stage) rootLayout.getScene().getWindow();
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle(resourceBundle.getString("DIRECTORY_CHOOSER_TITLE"));
-        File file = directoryChooser.showDialog(stage);
+        File file = directoryChooser.showDialog(rootLayout.getScene().getWindow());
         if(file != null){
             TabDataBean bean = this.tabPane.getTabDataBean(tab);
-            HashMap<String,String> urlList = new HashMap<>();
+            HashSet<String> urlList = new HashSet<>();
             List<List<String>> urls = new ArrayList<>();
             TableView<TableBean> tableView = (TableView<TableBean>) ((BorderPane) tab.getContent()).getCenter();
-            HashMap<String, ExcelBean> totalData = new HashMap<>();
+            List<ExcelBean> totalData = new ArrayList<>();
             StringBuilder errorPage = new StringBuilder();
-
             if(bean.hasMoreData){ // 本地未完全加载时从网络请求进行加载
                 int maxCount = Math.min(bean.total, client.max);
                 int totalPage = (int)Math.ceil(maxCount/ Double.parseDouble(client.getSize()));
@@ -365,13 +445,13 @@ public class MainController {
                     protected Void call() {
                         try {
                             for (int i = 1; i <= finalTotalPage; i++) {
-                                Thread.sleep(500);
+                                Thread.sleep(300);
                                 String text = DataUtil.replaceString(tab.getText());
                                 HashMap<String, String> result = helper.getHTML(client.getParam(String.valueOf(i), isAll.isSelected())
                                         + helper.encode(text), 50000, 50000);
                                 if (result.get("code").equals("200")) {
                                     JSONObject obj = JSON.parseObject(result.get("msg"));
-                                    DataUtil.loadJsonData(null, obj, totalData, urlList, true, null);
+                                    DataUtil.loadJsonData(null, obj, totalData, urlList, true);
                                     updateMessage(resourceBundle.getString("LOADDATA_HINT1") + i + "/"
                                             + finalTotalPage + resourceBundle.getString("LOADDATA_HINT2"));
                                     updateProgress(i, finalTotalPage);
@@ -385,7 +465,7 @@ public class MainController {
                                         continue;
                                     }
                                     JSONObject obj = JSON.parseObject(result.get("msg"));
-                                    DataUtil.loadJsonData(null, obj, totalData, urlList, true, null);
+                                    DataUtil.loadJsonData(null, obj, totalData, urlList, true);
                                     updateMessage(resourceBundle.getString("LOADDATA_HINT1") + i + "/" + finalTotalPage
                                             + resourceBundle.getString("LOADDATA_HINT2"));
                                     updateProgress(i, finalTotalPage);
@@ -405,23 +485,18 @@ public class MainController {
                 new Thread(exportTask).start();
                 pd.showAndWait();
             }else{ // 从本地数据加载，不再进行网络请求
-                urlList.putAll(bean.dataList);
+                urlList.addAll(bean.dataList);
                 for(TableBean i : tableView.getItems()){
                     ExcelBean data = new ExcelBean(
                             i.host.getValue(), i.title.getValue(), i.ip.getValue(), i.domain.getValue(),
                             i.port.getValue(), i.protocol.getValue(), i.server.getValue(), i.fid.getValue(), i.certCN.getValue()
                     );
-                    totalData.put(i.host.getValue(), data);
+                    totalData.add(data);
                 }
             }
-            for(String i : urlList.keySet()){
+            for(String i : urlList){
                 List<String> item = new ArrayList<>();
-                String t = urlList.get(i);
-                if(!t.startsWith("http")){
-                    item.add("http://" + t);
-                }else{
-                    item.add(t);
-                }
+                item.add(i);
                 urls.add(item);
             }
             String fileName = file.getAbsolutePath() + System.getProperty("file.separator")
@@ -479,12 +554,12 @@ public class MainController {
         tab.setOnCloseRequest(event -> tabPane.closeTab(tab));
         tab.setText(tabTitle);
         tab.setTooltip(new Tooltip(tabTitle));
-        RequestBean bean = new RequestBean(client.getParam(null, isAll.isSelected())
-                + helper.encode(queryText), tabTitle, client.getSize());
+        String url = client.getParam(null, isAll.isSelected()) + helper.encode(queryText);
+        RequestBean bean = new RequestBean(url, tabTitle, client.getSize());
         new Request(new ArrayList<RequestBean>(){{add(bean);}}, new RequestCallback<Request>() {
             @Override
             public void before(TabDataBean tabDataBean) {
-                tabPane.addTab(tab, tabDataBean, queryText);
+                tabPane.addTab(tab, tabDataBean, url);
                 tabPane.setCurrentTab(tab);
                 LoadingPane ld = new LoadingPane();
                 tab.setContent(ld);
@@ -541,11 +616,11 @@ public class MainController {
                                     if (obj.getBoolean("error")) {
                                         return null;
                                     }
-                                    Map<String, TableBean> list = (Map<String, TableBean>) DataUtil.loadJsonData(bean, obj, null, null, false, tableView);
-                                    if (list.keySet().size() != 0) {
+                                    List<TableBean> list = (List<TableBean>) DataUtil.loadJsonData(bean, obj, null, null, false);
+                                    if (list.size() != 0) {
                                         ObservableList<TableBean> _tmp = tableView.getItems();
                                         TableBean b = _tmp.get(_tmp.size() - 5);
-                                        List<TableBean> tmp = list.values().stream().sorted(Comparator.comparing(TableBean::getIntNum)).collect(Collectors.toList());
+                                        List<TableBean> tmp = list.stream().sorted(Comparator.comparing(TableBean::getIntNum)).collect(Collectors.toList());
                                         Platform.runLater(() -> tableView.getItems().addAll(FXCollections.observableArrayList(tmp)));
                                         Platform.runLater(() -> tableView.scrollTo(b));
                                         StatusBar statusBar = tabPane.getBar(tab);

@@ -6,14 +6,16 @@ import com.alibaba.excel.annotation.write.style.ContentFontStyle;
 import com.alibaba.excel.annotation.write.style.HeadFontStyle;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import java.util.Objects;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
 @HeadFontStyle(fontHeightInPoints = 16)
 @ContentFontStyle(fontHeightInPoints = 14)
 public class ExcelBean extends BaseBean {
+
     @ColumnWidth(35)
-    @ExcelProperty(value="host", index=0)
+    @ExcelProperty(value="Host", index=0)
     private String host;
 
     @ColumnWidth(75)
@@ -56,5 +58,32 @@ public class ExcelBean extends BaseBean {
         this.server = server;
         this.fid = fid;
         this.certCN = certCN;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof ExcelBean))
+            return false;
+        if (this == obj)
+            return true;
+        ExcelBean instance = (ExcelBean) obj;
+        boolean port = this.port.equals(instance.port);
+        boolean host = this.host.equals(instance.host);
+        if(port){
+            if(this.port == 443 && (this.host.contains(":443") || instance.host.contains(":443"))){
+                host = true;
+            }
+            if(this.port == 80 && (this.host.contains(":80") || instance.host.contains(":80"))){
+                host = true;
+            }
+        }
+        boolean ip = this.ip.equals(instance.ip);
+
+        return host && ip && port;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(ip, port);
     }
 }

@@ -42,11 +42,11 @@ public class DataUtil {
         return alert;
     }
 
-    public static void exportToExcel(String fileName, String tabTitle, HashMap<String, ExcelBean> totalData, List<List<String>> urls, StringBuilder errorPage){
+    public static void exportToExcel(String fileName, String tabTitle, List<ExcelBean> totalData, List<List<String>> urls, StringBuilder errorPage){
         ExcelWriter excelWriter = null;
         try {
             excelWriter = EasyExcel.write(fileName).build();
-            OnceAbsoluteMergeStrategy strategy = new OnceAbsoluteMergeStrategy(0,1,0,6);
+            OnceAbsoluteMergeStrategy strategy = new OnceAbsoluteMergeStrategy(0,1,0,9);
             ArrayList<ArrayList<String>> head = new ArrayList<ArrayList<String>>(){{add(new ArrayList<String>(){{add(tabTitle);}});}};
             WriteCellStyle contentWriteCellStyle = new WriteCellStyle();
             WriteFont contentWriteFont = new WriteFont();
@@ -58,18 +58,18 @@ public class DataUtil {
             excelWriter.write(head, writeSheet0);
             WriteSheet writeSheet1 = EasyExcel.writerSheet(1, resourceBundle.getString("EXPORT_FILENAME_SHEET2"))
                     .head(ExcelBean.class).build();
-            excelWriter.write(new ArrayList<>(totalData.values()), writeSheet1);
+            excelWriter.write(totalData, writeSheet1);
             WriteSheet writeSheet2 = EasyExcel.writerSheet(2, resourceBundle.getString("EXPORT_FILENAME_SHEET3")).build();
             excelWriter.write(urls, writeSheet2);
             if(errorPage.length() == 0){
-                showAlert(Alert.AlertType.INFORMATION, null, resourceBundle.getString("EXPORT_MESSAGE1") + fileName);
+                showAlert(Alert.AlertType.INFORMATION, null, resourceBundle.getString("EXPORT_MESSAGE1") + fileName).showAndWait();
             }else{
                 showAlert(Alert.AlertType.INFORMATION, null, resourceBundle.getString("EXPORT_MESSAGE2_1")
-                        + errorPage + resourceBundle.getString("EXPORT_MESSAGE2_2") + " " + fileName);
+                        + errorPage + resourceBundle.getString("EXPORT_MESSAGE2_2") + " " + fileName).showAndWait();
             }
         }catch(Exception exception){
             Logger.error(exception);
-            showAlert(Alert.AlertType.INFORMATION, null, resourceBundle.getString("EXPORT_ERROR"));
+            showAlert(Alert.AlertType.INFORMATION, null, resourceBundle.getString("EXPORT_ERROR")).showAndWait();
         }finally {
             if (excelWriter != null) {
                 excelWriter.finish();
@@ -77,13 +77,27 @@ public class DataUtil {
         }
     }
 
-    public static Map<String, ? extends BaseBean> loadJsonData(TabDataBean bean,
-                                                               JSONObject obj, HashMap<String, ExcelBean> excelData,
-                                                               HashMap<String,String> urlList,
-                                                               boolean isExport,
-                                                               TableView<TableBean> view){
+    public static void exportAllDataToExcel(String fileName){
+        ExcelWriter excelWriter = null;
+        try {
+            excelWriter = EasyExcel.write(fileName).build();
+
+        } catch (Exception e){
+            Logger.error(e);
+        } finally {
+            if(excelWriter != null){
+                excelWriter.finish();
+            }
+        }
+    }
+
+    public static List<? extends BaseBean> loadJsonData(TabDataBean bean,
+                                                               JSONObject obj,
+                                                               List<ExcelBean> excelData,
+                                                               HashSet<String> urlList,
+                                                               boolean isExport){
         JSONArray array = obj.getJSONArray("results");
-        HashMap<String, TableBean> list = new HashMap<>();
+        List<TableBean>list = new ArrayList<>();
         if(array.size() == 0){
             return list;
         }
@@ -93,13 +107,12 @@ public class DataUtil {
             String host = _array.getString(config.fields.indexOf("host"));
             int port = Integer.parseInt(_array.getString(config.fields.indexOf("port")));
             String ip = _array.getString(config.fields.indexOf("ip"));
-            String _host = ip + ":" + port;
-            if((port==443 && host.equals("https://"+ _host) && list.containsKey("https://"+ip)) || (port == 80 && host.equals(_host) && list.containsKey(ip))){
+            String domain = _array.getString(config.fields.indexOf("domain"));
+            String protocol = _array.getString(config.fields.indexOf("protocol"));
+            if(port != 443 && port != 80 && (protocol.equals("http")||protocol.equals("https")) && !host.contains(":" + port)){
                 continue;
             }
 
-            String domain = _array.getString(config.fields.indexOf("domain"));
-            String protocol = _array.getString(config.fields.indexOf("protocol"));
             String server = _array.getString(config.fields.indexOf("server"));
             String cert = "";
             String fid = "";
@@ -117,78 +130,84 @@ public class DataUtil {
             if(!cert.isEmpty()){
                 certCN = helper.getCertSubjectDomainByFoFa(cert);
                 cert = helper.getCertSerialNumberByFoFa(cert);
+                if(domain.equals("") && !cert.equals("")){
+                    int i = cert.lastIndexOf(".");
+                    int j = cert.indexOf(".");
+                    domain = i==j ? cert.substring(3) : cert.substring(j+1);
+                }
             }
             if(isExport){ // 是否为导出数据
                 ExcelBean d = new ExcelBean(host, title, ip, domain, port, protocol, server, fid, certCN);
-                //去除443 的重复项
-                if(port==443 && excelData.containsKey("https://"+_host)){
-                    excelData.remove("https://"+_host);
-                }
-                // 去除80端口的重复项
-                if(port==80 && excelData.containsKey(_host)){
-                    excelData.remove(_host);
-                }
-                if(excelData.containsKey(host)){
-                    if(!d.getTitle().equals("")){
-                        excelData.put(host,d);
-                        continue;
-                    }else{
-                        continue;
+                if(excelData.contains(d)){
+                    ExcelBean d2 = excelData.get(excelData.indexOf(d));
+                    if(port == 443 || port == 80){
+                        if(d2.getHost().contains(":" + port)){
+                            excelData.remove(d2);
+                        }else if(d.getHost().contains(":" + port)){
+                            continue;
+                        }
+                        if(d2.getHost().equals(d.getHost())){
+                            excelData.remove(d2);
+                        }
                     }
+                    if(d2.getHost().equals(d.getHost())){
+                        if(!d2.getTitle().equals("")){
+                            continue;
+                        }else {
+                            excelData.remove(d);
+                            excelData.add(d);
+                        }
+                    }
+                    continue;
                 }
-                getUrlList(urlList, host, ip, port, protocol, _host);
-                excelData.put(host, d);
+                excelData.add(d);
+                getUrlList(urlList, host, protocol);
             }else{  // table 页更新数据
                 TableBean b = new TableBean(0, host, title, ip, domain, port, protocol, server, fid, cert, certCN);
-                //去除443 的重复项
-                if(port==443 && list.containsKey("https://"+_host)){
-                    b.num = list.get("https://"+_host).num;
-                    list.remove("https://"+_host);
-                }
-                // 去除80端口的重复项
-                if(port==80 && list.containsKey(_host)){
-                    b.num = list.get(_host).num;
-                    list.remove(_host);
-                }
-                // host相同时保留带有title的数据
-                if(list.containsKey(host)){
-                    if(!b.title.getValue().equals("")){
-                        b.num = list.get(host).num;
-                        list.put(host,b);
-                        continue;
-                    }else{
-                        continue;
+                if(list.contains(b)){
+                    TableBean b2 = list.get(list.indexOf(b));
+                    if(port == 443 || port == 80){
+                        // host 带有额外的 443 或 80
+                        if(b2.host.getValue().contains(":" + port)){
+                            b.num = b2.num;
+                            list.remove(b2);
+                        }else if(b.host.getValue().contains(":" + port)){
+                            continue;
+                        }
+                    }
+                    // host 相同时 去掉不带title的
+                    if(b2.host.getValue().equals(b.host.getValue())){
+                        if(!b2.title.getValue().equals("")){
+                            continue;
+                        }else{
+                            b.num = b2.num;
+                            list.remove(b2);
+                        }
                     }
                 }
                 if(b.num.getValue() == 0){ b.num.set(++bean.count);}
-                getUrlList(bean.dataList, host, ip, port, protocol, _host);
-                list.put(host, b);
+                getUrlList(bean.dataList, host, protocol);
+                list.add(b);
             }
         }
-        try {
-            CertRequestUtil util = new CertRequestUtil(view);
-            if (isExport) {
-                util.getCertDomain(excelData, true);
-            } else {
-                util.getCertDomain(list, false);
-            }
-        }catch (InterruptedException e){
-            Logger.error(e);
-        }
+//        try {
+//            CertRequestUtil util = new CertRequestUtil(view);
+//            if (isExport) {
+//                util.getCertDomain(excelData, true);
+//            } else {
+//                util.getCertDomain(list, false);
+//            }
+//        }catch (InterruptedException e){
+//            Logger.error(e);
+//        }
         return list;
     }
 
-    public static void getUrlList(HashMap<String, String> urlList, String host, String ip, int port, String protocol, String _host) {
-        if (protocol.isEmpty() && host.endsWith("443") && !host.startsWith("http")){
-            urlList.put("https://" + host, "https://" + host);
-        }else if(port == 80 && protocol.equals("http")){
-            urlList.put("http://" + ip, "http://" + ip);
-        } else if (protocol.equals("http") && !urlList.containsKey(_host)) {
-            urlList.put("http://" + host, "http://" + host);
-        } else if (port == 443 && protocol.equals("https") && !urlList.containsKey("https://" + ip)) {
-            urlList.put("https://" + ip, "https://" + ip);
-        } else if (port != 443 && protocol.equals("https") && !urlList.containsKey("https://" + _host)) {
-            urlList.put("https://" + _host, "https://" + _host);
+    public static void getUrlList(HashSet<String> urlList, String host, String protocol) {
+        if(host.startsWith("http://") || host.startsWith("https://")){
+            urlList.add(host);
+        }else if(protocol.equals("http") ){
+            urlList.add(protocol+ "://" + host);
         }
     }
 
@@ -241,6 +260,7 @@ public class DataUtil {
             }
         } catch (IOException | NullPointerException e){
             setConfigDialog();
+            client = FofaConfig.getInstance();
         }
         return client;
     }

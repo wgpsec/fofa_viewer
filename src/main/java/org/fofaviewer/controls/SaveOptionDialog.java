@@ -5,13 +5,14 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.layout.Pane;
+import org.fofaviewer.callback.SaveOptionCallback;
 import org.fofaviewer.controllers.SaveOptionsController;
 import org.tinylog.Logger;
 import java.io.IOException;
 
 public class SaveOptionDialog extends Dialog<ButtonType> {
 
-    public SaveOptionDialog(CloseableTabPane tablePane, boolean isProject)  {
+    public SaveOptionDialog(CloseableTabPane tablePane, boolean isProject, SaveOptionCallback callback)  {
         try{
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/SaveOptionsDialog.fxml"));
             Pane pane = loader.load();
@@ -19,7 +20,7 @@ public class SaveOptionDialog extends Dialog<ButtonType> {
             dialogPane.setContent(pane);
             SaveOptionsController controller = loader.getController();
             dialogPane.getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-            controller.setProject(isProject, dialogPane);
+            controller.setProject(isProject, dialogPane, callback);
             controller.setTabs(tablePane);
         }catch (IOException e){
             Logger.error(e);

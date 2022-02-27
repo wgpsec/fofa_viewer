@@ -1,5 +1,5 @@
 package org.fofaviewer.bean;
-import java.util.HashMap;
+import java.util.HashSet;
 
 public class TabDataBean {
     /**
@@ -13,7 +13,7 @@ public class TabDataBean {
     /**
      * 导出查询条件对应tab页中的url，用于后续扫描
      */
-    public HashMap<String, String> dataList;
+    public HashSet<String> dataList;
     /**
      * 是否还有未加载的数据
      */
@@ -23,12 +23,12 @@ public class TabDataBean {
      */
     public int page = 1;
 
-    public TabDataBean(int count, HashMap<String, String> dataList) {
+    public TabDataBean(int count, HashSet<String> dataList) {
         this.count = count;
         this.dataList = dataList;
     }
     public TabDataBean(){
         this.count = 0;
-        this.dataList = new HashMap<>();
+        this.dataList = new HashSet<>();
     }
 }

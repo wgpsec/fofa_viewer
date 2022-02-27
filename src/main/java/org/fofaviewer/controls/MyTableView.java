@@ -6,7 +6,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import org.fofaviewer.bean.TableBean;
-import org.fofaviewer.request.MainControllerCallback;
+import org.fofaviewer.callback.MainControllerCallback;
 import org.fofaviewer.utils.DataUtil;
 import org.fofaviewer.utils.RequestUtil;
 import org.fofaviewer.utils.ResourceBundleUtil;
@@ -113,18 +113,18 @@ public class MyTableView {
                 }
                 if(res != null){
                     if(res.get("code").equals("error")){
-                        DataUtil.showAlert(Alert.AlertType.ERROR, null, res.get("msg"));return;
+                        DataUtil.showAlert(Alert.AlertType.ERROR, null, res.get("msg")).showAndWait();return;
                     }
                     mainControllerCallback.queryCall(res.get("msg"));
                     return;
                 }
-                DataUtil.showAlert(Alert.AlertType.ERROR, null, resourceBundle.getString("QUERY_FAVICON_ERROR"));
+                DataUtil.showAlert(Alert.AlertType.ERROR, null, resourceBundle.getString("QUERY_FAVICON_ERROR")).showAndWait();
             });
             MenuItem queryCert = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_CERT"));
             queryCert.setOnAction(event -> {
                 String sn = row.getItem().cert.getValue();
                 if(sn.isEmpty()){
-                    DataUtil.showAlert(Alert.AlertType.WARNING, null, resourceBundle.getString("QUERY_CERT_ERROR"));
+                    DataUtil.showAlert(Alert.AlertType.WARNING, null, resourceBundle.getString("QUERY_CERT_ERROR")).showAndWait();
                 }else{
                     mainControllerCallback.queryCall("cert=" + sn);
                 }
@@ -135,7 +135,7 @@ public class MyTableView {
                 if(!_fid.isEmpty()){
                     mainControllerCallback.queryCall("fid=\""+_fid+"\"");
                 }else{
-                    DataUtil.showAlert(Alert.AlertType.WARNING, null, resourceBundle.getString("QUERY_FID_ERROR"));
+                    DataUtil.showAlert(Alert.AlertType.WARNING, null, resourceBundle.getString("QUERY_FID_ERROR")).showAndWait();
                 }
             });
             rowMenu.getItems().addAll(copyLink, copyIP, queryIp, queryCSet, querySubdomain, queryFavicon, queryCert, fidMenu);

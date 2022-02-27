@@ -3,6 +3,8 @@ package org.fofaviewer.bean;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 
+import java.util.Objects;
+
 public class TableBean extends BaseBean{
     public SimpleIntegerProperty num = new SimpleIntegerProperty();
     public SimpleStringProperty host = new SimpleStringProperty();
@@ -85,5 +87,31 @@ public class TableBean extends BaseBean{
 
     public SimpleStringProperty getCertCN() {
         return certCN;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof TableBean))
+            return false;
+        if (this == obj)
+            return true;
+        TableBean instance = (TableBean) obj;
+        boolean bool_host = this.host.getValue().equals(instance.host.getValue());
+        boolean bool_port = this.port.getValue().equals(instance.port.getValue());
+        if(bool_port){
+            if(this.port.getValue() == 443 && (this.host.getValue().contains(":443") || instance.host.getValue().contains(":443"))){
+                bool_host = true;
+            }
+            if(this.port.getValue() == 80 && (this.host.getValue().contains(":80") || instance.host.getValue().contains(":80"))){
+                bool_host = true;
+            }
+        }
+        boolean bool_ip = this.ip.getValue().equals(instance.ip.getValue());
+        return bool_host && bool_ip && bool_port;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(ip.getValue(), port.getValue());
     }
 }

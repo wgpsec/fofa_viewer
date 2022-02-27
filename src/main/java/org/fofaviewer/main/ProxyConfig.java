@@ -38,6 +38,8 @@ public class ProxyConfig {
                     return (new PasswordAuthentication(proxy_user, proxy_password.toCharArray()));
                 }
             });
+        }else{
+            Authenticator.setDefault(null);
         }
         switch (this.proxy_type){
             case HTTP: return Proxies.httpProxy(this.proxy_ip, Integer.parseInt(this.proxy_port));

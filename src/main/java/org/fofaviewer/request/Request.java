@@ -12,15 +12,13 @@ import org.controlsfx.control.StatusBar;
 import org.fofaviewer.bean.RequestBean;
 import org.fofaviewer.bean.TabDataBean;
 import org.fofaviewer.bean.TableBean;
+import org.fofaviewer.callback.MainControllerCallback;
+import org.fofaviewer.callback.RequestCallback;
 import org.fofaviewer.controls.MyTableView;
 import org.fofaviewer.utils.*;
 import org.tinylog.Logger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -31,7 +29,6 @@ public class Request {
     private AtomicInteger succeeded;
     private Semaphore semaphore; // 设置线程最大数量
     private CountDownLatch latch;
-    private Future<Void> future;
 
     public Request(ArrayList<RequestBean> queryList, RequestCallback<Request> callback, MainControllerCallback mainControllerCallback){
         this.callback = Objects.requireNonNull(callback);
@@ -44,18 +41,19 @@ public class Request {
         semaphore = new Semaphore(10);
         succeeded = new AtomicInteger();
         latch = new CountDownLatch(queryList.size());
-        future = (Future<Void>) ThreadPoolUtil.submit(() -> {
-            try{
+        // 设置延时任务在滚动条界面渲染结束后进行事件绑定
+        ThreadPoolUtil.submit(() -> {
+            try {
                 launchRequest(queryList, bean -> {
                     bean.setRequestStatus(RequestStatus.RUNNING);
                     TabDataBean _tmp = new TabDataBean();
                     Platform.runLater(() -> this.callback.before(_tmp));
                     HashMap<String, String> res = RequestUtil.getInstance().getHTML(bean.getRequestUrl(), 10000, 10000);
                     bean.setResult(res);
-                    if(res.get("code").equals("error") || !res.get("code").equals("200")){
+                    if (res.get("code").equals("error") || !res.get("code").equals("200")) {
                         bean.setRequestStatus(RequestStatus.FAILED);
                         Platform.runLater(() -> this.callback.failed(res.get("msg")));
-                    }else {
+                    } else {
                         JSONObject obj = JSON.parseObject(bean.getResult().get("msg"));
                         if (obj.getBoolean("error")) {
                             Platform.runLater(() -> this.callback.failed(obj.getString("errmsg")));
@@ -79,8 +77,8 @@ public class Request {
                         }});
                         BorderPane tablePane = new BorderPane();
                         TableView<TableBean> view = new TableView<>();
-                        Map<String, TableBean> values = (Map<String, TableBean>) DataUtil.loadJsonData(_tmp, obj, null, null, false, view);
-                        view.setItems(FXCollections.observableArrayList(values.values()));
+                        List<TableBean> values = (List<TableBean>) DataUtil.loadJsonData(_tmp, obj, null, null, false);
+                        view.setItems(FXCollections.observableArrayList(values));
                         new MyTableView(view, mainControllerCallback);
                         tablePane.setCenter(view);
                         tablePane.setBottom(bar);
@@ -93,7 +91,7 @@ public class Request {
                     semaphore.release();
                     succeeded.incrementAndGet();
                 });
-            }catch (InterruptedException e){
+            } catch (InterruptedException e) {
                 Logger.error(e);
             }
         });
