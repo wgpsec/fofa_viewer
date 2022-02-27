@@ -209,11 +209,7 @@ public class MainController {
         imageBox.setPadding(new Insets(5,0,10,0));
         faviconBox.getChildren().addAll(faviconLabel, favionTF, queryFavicon);
         vb.getChildren().addAll(hb, faviconBox, imageBox);
-        //VBox.setMargin(res, new Insets(0, 100, 0 ,100));
         tab.setContent(vb);
-//        tabPane.addTab(new Tab("test"), new TabDataBean(), "test");
-//        tabPane.addTab(new Tab("test"), new TabDataBean(), "test");
-//        tabPane.addTab(new Tab("test"), new TabDataBean(), "test");
     }
 
     /**
