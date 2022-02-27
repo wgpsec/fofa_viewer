@@ -30,7 +30,7 @@ Mac 用户可通过 [自动化操作创建应用程序](docs/mac.md) 建立快�
 
 **若下载速度太慢可以使用**
 
-https://hub.fastgit.org/wgpsec/fofa_viewer (推荐)
+https://hub.fastgit.xyz/wgpsec/fofa_viewer (推荐)
 
 https://gitee.com/wgpsec/fofa_viewer （镜像）
 
