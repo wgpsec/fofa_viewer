@@ -1,5 +1,6 @@
 package org.fofaviewer.bean;
 
+import javafx.scene.control.Tab;
 import org.fofaviewer.request.RequestStatus;
 
 import java.util.HashMap;
@@ -8,6 +9,7 @@ public class RequestBean {
     private String requestUrl;
     private String tabTitle;
     private String size;
+    private Tab tab;
     private RequestStatus requestStatus = RequestStatus.READY;
     private HashMap<String, String> result;
 
@@ -15,6 +17,14 @@ public class RequestBean {
         this.requestUrl = requestUrl;
         this.tabTitle = tabTitle;
         this.size = size;
+    }
+
+    public Tab getTab() {
+        return tab;
+    }
+
+    public void setTab(Tab tab) {
+        this.tab = tab;
     }
 
     public String getRequestUrl() {

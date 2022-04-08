@@ -31,8 +31,8 @@ public class RequestUtil {
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0",
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.41 Safari/537.36 Edg/88.0.705.22"
     };
-    Pattern cnPattern = Pattern.compile("CommonName: ([\\w|\\.]+)\n\n");
-    Pattern snPattern = Pattern.compile("Serial Number: (\\d+)\n");
+    Pattern cnPattern = Pattern.compile("CommonName:\\s([-|\\*|\\w|\\.|\\s]+)\n");
+    Pattern snPattern = Pattern.compile("Serial Number:\\s(\\d+)\n");
 
     private RequestUtil() {
         config = ProxyConfig.getInstance();
@@ -177,7 +177,7 @@ public class RequestUtil {
      * @param f favicon的文件对象
      * @return favicon hash值
      */
-    private String getIconHash(String f) {
+    public String getIconHash(String f) {
         int murmu = Hashing
                 .murmur3_32()
                 .hashString(f.replaceAll("\r","" )+"\n", StandardCharsets.UTF_8)

@@ -37,8 +37,8 @@ public class Request {
     }
 
     @SuppressWarnings("unchecked")
-    public void query(){
-        semaphore = new Semaphore(10);
+    public void query(int connection){
+        semaphore = new Semaphore(connection);
         succeeded = new AtomicInteger();
         latch = new CountDownLatch(queryList.size());
         // 设置延时任务在滚动条界面渲染结束后进行事件绑定
@@ -47,18 +47,19 @@ public class Request {
                 launchRequest(queryList, bean -> {
                     bean.setRequestStatus(RequestStatus.RUNNING);
                     TabDataBean _tmp = new TabDataBean();
-                    Platform.runLater(() -> this.callback.before(_tmp));
+                    Platform.runLater(() -> this.callback.before(_tmp, bean));
                     HashMap<String, String> res = RequestUtil.getInstance().getHTML(bean.getRequestUrl(), 10000, 10000);
                     bean.setResult(res);
                     if (res.get("code").equals("error") || !res.get("code").equals("200")) {
                         bean.setRequestStatus(RequestStatus.FAILED);
-                        Platform.runLater(() -> this.callback.failed(res.get("msg")));
+                        Platform.runLater(() -> this.callback.failed(res.get("msg"), bean));
                     } else {
                         JSONObject obj = JSON.parseObject(bean.getResult().get("msg"));
                         if (obj.getBoolean("error")) {
-                            Platform.runLater(() -> this.callback.failed(obj.getString("errmsg")));
+                            Platform.runLater(() -> this.callback.failed(obj.getString("errmsg"), bean));
                             semaphore.release();
                             succeeded.incrementAndGet();
+                            latch.countDown();
                             return;
                         }
                         bean.setRequestStatus(RequestStatus.SUCCEEDED);
@@ -86,10 +87,11 @@ public class Request {
                         PauseTransition pause = new PauseTransition(Duration.seconds(0.5));
                         pause.setOnFinished(event -> mainControllerCallback.addSBListener(view));
                         pause.playFromStart();
-                        Platform.runLater(() -> this.callback.succeeded(tablePane, bar));
+                        Platform.runLater(() -> this.callback.succeeded(tablePane, bar, bean));
                     }
                     semaphore.release();
                     succeeded.incrementAndGet();
+                    latch.countDown();
                 });
             } catch (InterruptedException e) {
                 Logger.error(e);

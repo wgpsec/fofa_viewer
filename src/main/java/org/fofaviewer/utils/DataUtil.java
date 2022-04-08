@@ -131,9 +131,13 @@ public class DataUtil {
                 certCN = helper.getCertSubjectDomainByFoFa(cert);
                 cert = helper.getCertSerialNumberByFoFa(cert);
                 if(domain.equals("") && !cert.equals("")){
-                    int i = cert.lastIndexOf(".");
-                    int j = cert.indexOf(".");
-                    domain = i==j ? cert.substring(3) : cert.substring(j+1);
+                    int i = certCN.lastIndexOf(".");
+                    int j = certCN.indexOf(".");
+                    if(i > 0){
+                        domain = i==j ? certCN : ( Character.isDigit(certCN.charAt(0)) ? "" : certCN.substring(j+1));
+                    }else{
+                        domain = "";
+                    }
                 }
             }
             if(isExport){ // 是否为导出数据
@@ -154,14 +158,12 @@ public class DataUtil {
                         if(!d2.getTitle().equals("")){
                             continue;
                         }else {
-                            excelData.remove(d);
-                            excelData.add(d);
+                            excelData.remove(d2);
                         }
                     }
-                    continue;
                 }
                 excelData.add(d);
-                getUrlList(urlList, host, protocol);
+                getUrlList(urlList, host, protocol, port);
             }else{  // table 页更新数据
                 TableBean b = new TableBean(0, host, title, ip, domain, port, protocol, server, fid, cert, certCN);
                 if(list.contains(b)){
@@ -186,7 +188,7 @@ public class DataUtil {
                     }
                 }
                 if(b.num.getValue() == 0){ b.num.set(++bean.count);}
-                getUrlList(bean.dataList, host, protocol);
+                getUrlList(bean.dataList, host, protocol, port);
                 list.add(b);
             }
         }
@@ -203,11 +205,13 @@ public class DataUtil {
         return list;
     }
 
-    public static void getUrlList(HashSet<String> urlList, String host, String protocol) {
+    public static void getUrlList(HashSet<String> urlList, String host, String protocol, int port) {
         if(host.startsWith("http://") || host.startsWith("https://")){
             urlList.add(host);
-        }else if(protocol.equals("http") ){
-            urlList.add(protocol+ "://" + host);
+        }else if(host.contains(":80")){
+            urlList.add(protocol + "://" + host.substring(0, host.indexOf(":80")));
+        }else if(host.contains(":443")){
+            urlList.add(protocol + "://" + host.substring(0, host.indexOf(":443")));
         }
     }
 

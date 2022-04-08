@@ -1,23 +1,3 @@
-import com.alibaba.excel.EasyExcel;
-import com.alibaba.excel.ExcelWriter;
-import com.alibaba.excel.annotation.ExcelProperty;
-import com.alibaba.excel.write.merge.OnceAbsoluteMergeStrategy;
-import com.alibaba.excel.write.metadata.WriteSheet;
-import com.alibaba.excel.write.style.HorizontalCellStyleStrategy;
-import org.apache.commons.collections4.ListUtils;
-import org.fofaviewer.bean.ExcelBean;
-import org.fofaviewer.bean.TableBean;
-import org.fofaviewer.main.FofaConfig;
-import org.fofaviewer.main.ProxyConfig;
-import org.fofaviewer.utils.RequestUtil;
-import org.tinylog.Logger;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
-import java.lang.reflect.Field;
-import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

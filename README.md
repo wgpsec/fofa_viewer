@@ -1,21 +1,22 @@
-<h1 align="center">Fofa_Viewer 🔗 </h1>
-<p align="center"> 
-<img src="https://img.shields.io/badge/JDK-1.8-green">
-<img src="https://img.shields.io/badge/JDK-11-green">
-<img src="https://img.shields.io/badge/version-1.1.5-brightgreen">
-<img src="https://img.shields.io/badge/author-f1ashine-orange">
-<img src="https://img.shields.io/badge/WgpSec-%E7%8B%BC%E7%BB%84%E5%AE%89%E5%85%A8%E5%9B%A2%E9%98%9F-blue">
-</p>
 
+<img src="https://socialify.git.ci/wgpsec/fofa_viewer/image?font=Bitter&forks=1&issues=1&language=1&logo=https%3A%2F%2Fwww.wgpsec.org%2F_nuxt%2Fimg%2Fbanner.91d92b1.svg&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Light">
+
+  <p align="center">
+    <a href="https://github.com/wgpsec/fofa_viewer/releases">release下载</a>
+    ·
+    <a href="https://github.com/wgpsec/fofa_viewer/issues">反馈Bug</a>
+    ·
+    <a href="https://github.com/wgpsec/fofa_viewer/issues">提交需求</a>
+  </p>
 
 中文 | [EN](README.en.md)
 
 ##  简介
 
-Fofa_Viewer： 一个简单易用的fofa客户端，由 WgpSec狼组安全团队 [**f1ashine**](https://github.com/f1ashine) 师傅主要开发。程序使用 JavaFX 编写，便于跨平台使用
+Fofa_Viewer： 一个简单易用的fofa客户端，由 WgpSec狼组安全团队 [**f1ashine**](https://github.com/f1ashine) 师傅主要开发。程序使用 JavaFX 编写，便于跨平台使用。
 
 ##  使用说明
-本工具基于 FoFa 的 API 进行封装，使用时需要高级会员或者普通会员的 API key。使用注册用户的 API key 会提示账户需要充值F币。
+本工具基于 FoFa 的 API 进行封装，使用时需要高级会员或者普通会员的 API key，使用注册用户的 API key 会提示账户需要充值F币。
 
 点击 https://github.com/wgpsec/fofa_viewer/releases 下载
 
@@ -75,7 +76,13 @@ VIP说明：https://fofa.info/static_pages/vip
     本工具使用的是`jsoup`对网页进行解析，对于使用Vue一类构建的网站只能通过chrome进行js解析后获取link标签然后获取favicon地址，对于这种情况目前只能将favicon的链接粘贴到首页进行查询。
    
 4. IP和端口两个一起排序？  
-    先点击IP或者端口这一列的header进行排序，然后按住shift点击另一列就可以一起排序了
+    先点击IP或者端口这一列的header进行排序，然后按住shift点击另一列就可以一起排序了。
+
+5. 为什么勾选title后查不到数据？  
+    目前部分fofa数据较为敏感，因此在查询数据较多且敏感数据也在查到的数据中时可能就会因为数据敏感导致所有数据都不显示了，建议可以设置`maxsize=100`再勾选title进行查询，另外同时勾选title和证书查询可能也会存在查不到数据的情况，建议两者只勾选一个。  
+
+6. 为什么使用普通会员的API查询会报错？  
+    因为fofa官方限制了普通会员单次查询的最大数量为100，因此当maxsize超过100时就会报错，显示`401 Unauthorized`。
 
 ## :rocket: 二次开发
 ```

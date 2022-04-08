@@ -13,16 +13,16 @@ public interface RequestCallback<T> {
     /**
      * 请求之前先添加tab
      */
-    default void before(TabDataBean tabDataBean){}
+    default void before(TabDataBean tabDataBean, RequestBean bean){}
     /**
      * 请求成功
      */
-    default void succeeded(BorderPane tablePane, StatusBar bar){}
+    default void succeeded(BorderPane tablePane, StatusBar bar, RequestBean bean){}
 
     /**
      * 请求失败
      */
-    default void failed(String  text){}
+    default void failed(String  text, RequestBean bean){}
 
     /**
      * 暂停线程

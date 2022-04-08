@@ -13,7 +13,7 @@ public class ThreadPoolUtil {
         if(pool == null){
             synchronized (ThreadPoolUtil.class){
                 if(pool == null){
-                    pool = new ThreadPoolExecutor(2, 10, 1, TimeUnit.MINUTES, new SynchronousQueue<>(),
+                    pool = new ThreadPoolExecutor(3, 16, 1, TimeUnit.MINUTES, new SynchronousQueue<>(),
                             new ThreadFactory() {
                                 private final AtomicInteger integer = new AtomicInteger();
                                 @Override

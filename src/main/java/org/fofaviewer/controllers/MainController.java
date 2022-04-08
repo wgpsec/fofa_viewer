@@ -20,8 +20,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.stage.DirectoryChooser;
@@ -44,6 +43,8 @@ import java.awt.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -140,8 +141,8 @@ public class MainController {
         this.client = DataUtil.loadConfigure();
         this.tabPane.setCallback(new MainControllerCallback() {
             @Override
-            public void queryCall(String queryTxt) {
-                query(queryTxt);
+            public void queryCall(List<String> strList) {
+                query(strList);
             }
         });
         //初始化起始页tab
@@ -152,6 +153,25 @@ public class MainController {
         Label faviconLabel = new Label(resourceBundle.getString("FAVICON_LABEL"));
         TextField tf = TextFields.createClearableTextField();
         TextField favionTF = TextFields.createClearableTextField();
+        // 设置从文件导入favicon
+        favionTF.setOnDragOver(event -> {
+            if (event.getGestureSource() != favionTF){
+                event.acceptTransferModes(TransferMode.ANY);
+            }
+        });
+        favionTF.setOnDragDropped(event -> {
+            Dragboard dragboard = event.getDragboard();
+            if (dragboard.hasFiles()){
+                try {
+                    File file = dragboard.getFiles().get(0);
+                    if (file != null && file.exists()) {
+                        favionTF.setText(file.getAbsolutePath());
+                    }
+                }catch (Exception e){
+                    Logger.error(e.toString());
+                }
+            }
+        });
 //        Image image = new Image("api_doc_en.png");
         ImageView view = new ImageView(new Image(Locale.getDefault().getLanguage().equals(Locale.CHINESE.getLanguage()) ? "/images/api_doc_cn.png" : "/images/api_doc_en.png"));
         ScrollPane scrollPane = new ScrollPane();
@@ -171,21 +191,36 @@ public class MainController {
             if(!txt.isEmpty()){
                 String serialnumber = txt.replaceAll(" ", "");
                 BigInteger i = new BigInteger(serialnumber, 16);
-                query("cert=\"" + i + "\"");
+                query(new ArrayList<String>(){{add("cert=\"" + i + "\"");}});
             }
         });
         queryFavicon.setOnAction(event -> {
-            String url = favionTF.getText().trim();
-            if(!url.isEmpty()){
-                if(!url.startsWith("http")){
-                    DataUtil.showAlert(Alert.AlertType.ERROR, null, resourceBundle.getString("ERROR_URL")).showAndWait();
-                }else {
-                    HashMap<String,String> res = helper.getImageFavicon(url);
+            String text = favionTF.getText().trim();
+            if(!text.isEmpty()){
+                if(!text.startsWith("http")){ // 文件导入
+                    String suffix = text.substring(text.lastIndexOf(".")+1).toLowerCase();
+                    try {
+                        byte[] content = Files.readAllBytes(Paths.get(text));
+                        switch (suffix){
+                            case "jpg": case "png": case "ico": case "svg":
+                                String encode = java.util.Base64.getMimeEncoder().encodeToString(content);
+                                query(new ArrayList<String>(){{add("icon_hash=\"" + helper.getIconHash(encode) + "\"");}});
+                                break;
+                            default:
+                                DataUtil.showAlert(Alert.AlertType.ERROR, null, resourceBundle.getString("ERROR_FILE")).showAndWait();
+                                break;
+                        }
+                    } catch (IOException e) {
+                        DataUtil.showAlert(Alert.AlertType.ERROR, null, resourceBundle.getString("ERROR_FILE")).showAndWait();
+                        Logger.error(e);
+                    }
+                }else { // url导入
+                    HashMap<String,String> res = helper.getImageFavicon(text);
                     if(res != null){
                         if(res.get("code").equals("error")){
                             DataUtil.showAlert(Alert.AlertType.ERROR, null, res.get("msg")).showAndWait();return;
                         }
-                        query(res.get("msg"));
+                        query(new ArrayList<String>(){{add(res.get("msg"));}});
                     }
                 }
             }
@@ -219,12 +254,14 @@ public class MainController {
         try {
             FileInputStream inputStream = new FileInputStream(fileName);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+            List<String> list = new ArrayList<>();
             String str;
             while((str = bufferedReader.readLine()) != null) {
                 if(!str.equals("")){
-                    query(str);
+                    list.add(str);
                 }
             }
+            query(list);
         } catch (IOException e) {
             Logger.error(e);
         }
@@ -250,7 +287,7 @@ public class MainController {
     @FXML
     private void queryAction(){
         if(queryTF.getText() != null){
-            query(queryTF.getText());
+            query(new ArrayList<String>(){{add(queryTF.getText());}});
         }
     }
 
@@ -504,31 +541,46 @@ public class MainController {
     /**
      * 处理查询结果
      */
-    public void query(String text){
-        String tabTitle = text.trim();
-        if(text.startsWith("(*)")){
-            tabTitle = text;
-            text = text.substring(3);
-            text = "(" + text + ") && (is_honeypot=false && is_fraud=false)";
-        }
-        if(checkHoneyPot.isSelected() && !text.contains("(is_honeypot=false && is_fraud=false)")){
-            tabTitle = "(*)" + text;
-            text = "(" + text + ") && (is_honeypot=false && is_fraud=false)";
-        }
-        final String queryText = text;
-        if(this.tabPane.isExistTab(tabTitle)){ // 若已存在同名Tab 则直接跳转，不查询
-            this.tabPane.setCurrentTab(this.tabPane.getTab(tabTitle));
-            return;
-        }
-        for(CheckBox box : keyMap.keySet()){
-            String name = keyMap.get(box);
-            if(box.isSelected()){
-                if(!client.fields.contains(name)){
-                    client.fields.add(name);
-                }
-            }else{
-                client.fields.remove(name);
+    public void query(List<String> strList){
+        ArrayList<RequestBean> beans = new ArrayList<>();
+        for(String text:strList) {
+            String tabTitle = text.trim();
+            if (text.startsWith("(*)")) {
+                tabTitle = text;
+                text = text.substring(3);
+                text = "(" + text + ") && (is_honeypot=false && is_fraud=false)";
             }
+            if (checkHoneyPot.isSelected() && !text.contains("(is_honeypot=false && is_fraud=false)")) {
+                tabTitle = "(*)" + text;
+                text = "(" + text + ") && (is_honeypot=false && is_fraud=false)";
+            }
+            final String queryText = text;
+            if (this.tabPane.isExistTab(tabTitle)) { // 若已存在同名Tab 则直接跳转，不查询
+                if(strList.size() == 1){
+                    this.tabPane.setCurrentTab(this.tabPane.getTab(tabTitle));
+                    return;
+                }else{
+                    continue;
+                }
+            }
+            for (CheckBox box : keyMap.keySet()) {
+                String name = keyMap.get(box);
+                if (box.isSelected()) {
+                    if (!client.fields.contains(name)) {
+                        client.fields.add(name);
+                    }
+                } else {
+                    client.fields.remove(name);
+                }
+            }
+            Tab tab = new Tab();
+            tab.setOnCloseRequest(event -> tabPane.closeTab(tab));
+            tab.setText(tabTitle);
+            tab.setTooltip(new Tooltip(tabTitle));
+            String url = client.getParam(null, isAll.isSelected()) + helper.encode(queryText);
+            RequestBean bean = new RequestBean(url, tabTitle, client.getSize());
+            bean.setTab(tab);
+            beans.add(bean);
         }
         MainControllerCallback mCallback = new MainControllerCallback() {
             @Override
@@ -537,8 +589,8 @@ public class MainController {
             }
 
             @Override
-            public void queryCall(String queryTxt) {
-                query(queryTxt);
+            public void queryCall(List<String> strList) {
+                query(strList);
             }
 
             @Override
@@ -546,37 +598,32 @@ public class MainController {
                 addScrollBarListener(view);
             }
         };
-        Tab tab = new Tab();
-        tab.setOnCloseRequest(event -> tabPane.closeTab(tab));
-        tab.setText(tabTitle);
-        tab.setTooltip(new Tooltip(tabTitle));
-        String url = client.getParam(null, isAll.isSelected()) + helper.encode(queryText);
-        RequestBean bean = new RequestBean(url, tabTitle, client.getSize());
-        new Request(new ArrayList<RequestBean>(){{add(bean);}}, new RequestCallback<Request>() {
+
+        new Request(beans, new RequestCallback<Request>() {
             @Override
-            public void before(TabDataBean tabDataBean) {
-                tabPane.addTab(tab, tabDataBean, url);
-                tabPane.setCurrentTab(tab);
+            public void before(TabDataBean tabDataBean, RequestBean bean) {
+                tabPane.addTab(bean.getTab(), tabDataBean, bean.getRequestUrl());
+                tabPane.setCurrentTab(bean.getTab());
                 LoadingPane ld = new LoadingPane();
-                tab.setContent(ld);
+                bean.getTab().setContent(ld);
             }
 
             @Override
-            public void succeeded(BorderPane tablePane, StatusBar bar) {
+            public void succeeded(BorderPane tablePane, StatusBar bar, RequestBean bean) {
                 if (bean.getResult().get("code").equals("200")) {
-                    tab.setContent(tablePane);
+                    bean.getTab().setContent(tablePane);
                     decoratedField.addLog(bean.getTabTitle());
-                    tabPane.addBar(tab, bar);
+                    tabPane.addBar(bean.getTab(), bar);
                 } else {
-                    ((LoadingPane)tab.getContent()).setErrorText("请求状态码："+bean.getResult().get("code")+ bean.getResult().get("msg"));
+                    ((LoadingPane)bean.getTab().getContent()).setErrorText("请求状态码："+bean.getResult().get("code")+ bean.getResult().get("msg"));
                 }
             }
 
             @Override
-            public void failed(String text) { // 网络问题请求失败
-                ((LoadingPane)tab.getContent()).setErrorText(text);
+            public void failed(String text, RequestBean bean) { // 网络问题请求失败
+                ((LoadingPane) bean.getTab().getContent()).setErrorText(text);
             }
-        }, mCallback).query();
+        }, mCallback).query(beans.size());
     }
 
     /**

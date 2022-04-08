@@ -70,13 +70,17 @@ public class CloseableTabPane extends BorderPane {
             dataMap.clear();
             tabPane.getTabs().add(tab);
         });
+        //重新加载tab
         MenuItem reload = new MenuItem(ResourceBundleUtil.getResource().getString("RELOAD_TAB"));
         reload.setOnAction(e->{
             Tab tab = this.tabPane.getSelectionModel().getSelectedItem();
+            if(tab.getText().equals(homepage)){
+                return;
+            }
             String queryTxT = this.queryMap.get(tab);
             this.tabPane.getTabs().remove(tab);
             closeTab(tab);
-            callback.queryCall(queryTxT);
+            callback.queryCall(new ArrayList<String>(){{add(queryTxT);}});
         });
         menuButton.getItems().addAll(closeOthers, closeSelected, closeAll, reload);
         sp.getChildren().add(menuButton);

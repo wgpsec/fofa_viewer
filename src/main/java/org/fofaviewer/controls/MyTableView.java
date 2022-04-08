@@ -66,33 +66,43 @@ public class MyTableView {
             MenuItem copyLink = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_COPYLINK"));
             copyLink.setOnAction(event -> {
                 //设置剪贴板
-                Clipboard clipboard = Clipboard.getSystemClipboard();
                 ClipboardContent content = new ClipboardContent();
                 content.putString(row.getItem().host.getValue());
-                clipboard.setContent(content);
+                Clipboard.getSystemClipboard().setContent(content);
             });
             MenuItem copyIP = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_COPYIP"));
             copyIP.setOnAction(event -> {
-                Clipboard clipboard = Clipboard.getSystemClipboard();
                 ClipboardContent content = new ClipboardContent();
                 content.putString(row.getItem().ip.getValue());
-                clipboard.setContent(content);
+                Clipboard.getSystemClipboard().setContent(content);
+            });
+            MenuItem copyDomain = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_COPYDOMAIN"));
+            copyDomain.setOnAction(event -> {
+                ClipboardContent content = new ClipboardContent();
+                content.putString(row.getItem().domain.getValue());
+                Clipboard.getSystemClipboard().setContent(content);
+            });
+            MenuItem copyCN = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_COPYCERTCN"));
+            copyCN.setOnAction(event -> {
+                ClipboardContent content = new ClipboardContent();
+                content.putString(row.getItem().certCN.getValue());
+                Clipboard.getSystemClipboard().setContent(content);
             });
             MenuItem queryIp = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_QUERY_IP"));
             queryIp.setOnAction(event -> {
                 String _ip = row.getItem().ip.getValue();
-                mainControllerCallback.queryCall("ip=\"" + _ip + "/32" + "\"");
+                mainControllerCallback.queryCall(new ArrayList<String>(){{add("ip=\"" + _ip + "/32" + "\"");}});
             });
             MenuItem queryCSet = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_QUERY_C-CLASS"));
             queryCSet.setOnAction(event -> {
                 String _ip = row.getItem().ip.getValue();
-                mainControllerCallback.queryCall("ip=\""+ _ip.substring(0, _ip.lastIndexOf('.')) + ".0/24" + "\"");
+                mainControllerCallback.queryCall(new ArrayList<String>(){{add("ip=\""+ _ip.substring(0, _ip.lastIndexOf('.')) + ".0/24" + "\"");}});
             });
             MenuItem querySubdomain = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_QUERY_DOAMIN"));
             querySubdomain.setOnAction(event -> {
                 String domain1 = row.getItem().domain.getValue();
                 if(!domain1.isEmpty()){
-                    mainControllerCallback.queryCall("domain=\""+ domain1 + "\"");
+                    mainControllerCallback.queryCall(new ArrayList<String>(){{add("domain=\""+ domain1 + "\"");}});
                 }
             });
             MenuItem queryFavicon = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_QUERY_FAVICON"));
@@ -115,7 +125,7 @@ public class MyTableView {
                     if(res.get("code").equals("error")){
                         DataUtil.showAlert(Alert.AlertType.ERROR, null, res.get("msg")).showAndWait();return;
                     }
-                    mainControllerCallback.queryCall(res.get("msg"));
+                    mainControllerCallback.queryCall(new ArrayList<String>(){{add(res.get("msg"));}});
                     return;
                 }
                 DataUtil.showAlert(Alert.AlertType.ERROR, null, resourceBundle.getString("QUERY_FAVICON_ERROR")).showAndWait();
@@ -126,14 +136,14 @@ public class MyTableView {
                 if(sn.isEmpty()){
                     DataUtil.showAlert(Alert.AlertType.WARNING, null, resourceBundle.getString("QUERY_CERT_ERROR")).showAndWait();
                 }else{
-                    mainControllerCallback.queryCall("cert=" + sn);
+                    mainControllerCallback.queryCall(new ArrayList<String>(){{add("cert=" + sn);}});
                 }
             });
             MenuItem fidMenu = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_FID"));
             fidMenu.setOnAction(event -> {
                 String _fid = row.getItem().fid.getValue();
                 if(!_fid.isEmpty()){
-                    mainControllerCallback.queryCall("fid=\""+_fid+"\"");
+                    mainControllerCallback.queryCall(new ArrayList<String>(){{add("fid=\""+_fid+"\"");}});
                 }else{
                     DataUtil.showAlert(Alert.AlertType.WARNING, null, resourceBundle.getString("QUERY_FID_ERROR")).showAndWait();
                 }
