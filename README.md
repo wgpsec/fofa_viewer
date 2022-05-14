@@ -9,7 +9,7 @@
     <a href="https://github.com/wgpsec/fofa_viewer/issues">提交需求</a>
   </p>
 
-中文 | [EN](README.en.md)
+<p align="center"> <a href="https://github.com/wgpsec/fofa_viewer/README.md">中文</a> | <a href="https://github.com/wgpsec/fofa_viewer/README.en.md">EN</a> </p>
 
 ##  简介
 

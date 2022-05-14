@@ -23,10 +23,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DataUtil {
     private static final RequestUtil helper = RequestUtil.getInstance();
     private static final ResourceBundle resourceBundle = ResourceBundleUtil.getResource();
+    private static Pattern portPattern1 = Pattern.compile(":443$");
+    private static Pattern portPattern2 = Pattern.compile(":80$");
 
     /**
      * 对话框配置
@@ -206,12 +210,18 @@ public class DataUtil {
     }
 
     public static void getUrlList(HashSet<String> urlList, String host, String protocol, int port) {
-        if(host.startsWith("http://") || host.startsWith("https://")){
-            urlList.add(host);
-        }else if(host.contains(":80")){
-            urlList.add(protocol + "://" + host.substring(0, host.indexOf(":80")));
-        }else if(host.contains(":443")){
-            urlList.add(protocol + "://" + host.substring(0, host.indexOf(":443")));
+        if(protocol.equals("http") || protocol.equals("https")){
+            Matcher m1 = portPattern1.matcher(host);
+            Matcher m2 = portPattern2.matcher(host);
+            if(host.startsWith("http://") || host.startsWith("https://")){
+                urlList.add(host);
+            }else if(m1.find()){
+                urlList.add(protocol + "://" + host.substring(0, host.indexOf(":443")));
+            }else if(m2.find()){
+                urlList.add(protocol + "://" + host.substring(0, host.indexOf(":80")));
+            }else{
+                urlList.add(protocol + "://" + host);
+            }
         }
     }
 

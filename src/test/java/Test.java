@@ -1,3 +1,10 @@
+import org.fofaviewer.main.FofaConfig;
+import org.fofaviewer.utils.RequestUtil;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,22 +29,22 @@ public class Test {
         }
     }
 
-    public static void main(String[] args) {
-//        Properties properties = new Properties();
-//        properties.load(new FileInputStream("config.properties"));
-//        FofaConfig client = FofaConfig.getInstance();
-//        client.setKey(properties.getProperty("key").trim());
-//        client.setEmail(properties.getProperty("email").trim());
-//        client.setAPI(properties.getProperty("api"));
-//        client.setSize(properties.getProperty("max_size"));
-//        RequestUtil helper = RequestUtil.getInstance();
-//        String a = "domain=\"baidu.com\"";
-//        System.out.println(a);
-//        String requestUrl = client.getParam("1", false) + helper.encode(a);
-//        System.out.println(requestUrl);
-//        System.out.println(helper.getHTML(requestUrl, 3000,5000));
-//        Test test = new Test();
-//        test.getCommonName();
-//        test.getSerialNumber();
+    public static void main(String[] args) throws IOException {
+        Properties properties = new Properties();
+        properties.load(new FileInputStream("config.properties"));
+        FofaConfig client = FofaConfig.getInstance();
+        client.setKey(properties.getProperty("key").trim());
+        client.setEmail(properties.getProperty("email").trim());
+        client.setAPI(properties.getProperty("api"));
+        client.setSize(properties.getProperty("max_size"));
+        RequestUtil helper = RequestUtil.getInstance();
+        String a = "ip=\"123.139.243.0/24\"";
+        System.out.println(a);
+        String requestUrl = client.getParam("1", false) + helper.encode(a);
+        System.out.println(requestUrl);
+        System.out.println(helper.getHTML(requestUrl, 3000,5000));
+        Test test = new Test();
+        test.getCommonName();
+        test.getSerialNumber();
     }
 }

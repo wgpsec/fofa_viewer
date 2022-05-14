@@ -133,10 +133,13 @@ public class MyTableView {
             MenuItem queryCert = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_CERT"));
             queryCert.setOnAction(event -> {
                 String sn = row.getItem().cert.getValue();
-                if(sn.isEmpty()){
-                    DataUtil.showAlert(Alert.AlertType.WARNING, null, resourceBundle.getString("QUERY_CERT_ERROR")).showAndWait();
-                }else{
-                    mainControllerCallback.queryCall(new ArrayList<String>(){{add("cert=" + sn);}});
+                String _protocol = row.getItem().protocol.getValue();
+                if(_protocol.equals("https")){
+                    if(sn.isEmpty()){
+                        DataUtil.showAlert(Alert.AlertType.WARNING, null, resourceBundle.getString("QUERY_CERT_ERROR")).showAndWait();
+                    }else{
+                        mainControllerCallback.queryCall(new ArrayList<String>(){{add("cert=" + sn);}});
+                    }
                 }
             });
             MenuItem fidMenu = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_FID"));
@@ -148,7 +151,7 @@ public class MyTableView {
                     DataUtil.showAlert(Alert.AlertType.WARNING, null, resourceBundle.getString("QUERY_FID_ERROR")).showAndWait();
                 }
             });
-            rowMenu.getItems().addAll(copyLink, copyIP, queryIp, queryCSet, querySubdomain, queryFavicon, queryCert, fidMenu);
+            rowMenu.getItems().addAll(copyLink, copyIP, copyDomain, copyCN,queryIp, queryCSet, querySubdomain, queryFavicon, queryCert, fidMenu);
             row.contextMenuProperty().bind(Bindings.when(row.emptyProperty()).then((ContextMenu) null).otherwise(rowMenu));
             // 双击行时使用默认浏览器打开
             row.setOnMouseClicked(event -> {
