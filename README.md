@@ -1,5 +1,5 @@
 
-<img src="https://socialify.git.ci/wgpsec/fofa_viewer/image?font=Bitter&forks=1&issues=1&language=1&logo=https%3A%2F%2Fwww.wgpsec.org%2F_nuxt%2Fimg%2Fbanner.91d92b1.svg&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Light">
+![fofa_viewer](https://socialify.git.ci/wgpsec/fofa_viewer/image?font=Bitter&forks=1&issues=1&language=1&logo=https%3A%2F%2Fwww.wgpsec.org%2F_nuxt%2Fimg%2Fnew_logo.91d92b1.svg&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Light)
 
   <p align="center">
     <a href="https://github.com/wgpsec/fofa_viewer/releases">release下载</a>
