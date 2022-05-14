@@ -196,16 +196,6 @@ public class DataUtil {
                 list.add(b);
             }
         }
-//        try {
-//            CertRequestUtil util = new CertRequestUtil(view);
-//            if (isExport) {
-//                util.getCertDomain(excelData, true);
-//            } else {
-//                util.getCertDomain(list, false);
-//            }
-//        }catch (InterruptedException e){
-//            Logger.error(e);
-//        }
         return list;
     }
 
