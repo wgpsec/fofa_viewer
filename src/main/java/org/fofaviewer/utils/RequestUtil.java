@@ -13,10 +13,16 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import javax.net.ssl.*;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
 import java.security.SecureRandom;
+import java.security.Signature;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,7 +37,9 @@ public class RequestUtil {
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0",
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.41 Safari/537.36 Edg/88.0.705.22"
     };
-    Pattern cnPattern = Pattern.compile("CommonName:\\s([-|\\*|\\w|\\.|\\s]+)\n");
+    private final String appId = "9e9fb94330d97833acfbc041ee1a76793f1bc691";
+    private final String privateKey = "MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQC/TGN5+4FMXo7H3jRmostQUUEO1NwH10B8ONaDJnYDnkr5V0ZzUvkuola7JGSFgYVOUjgrmFGITG+Ne7AgR53Weiunlwp15MsnCa8/IWBoSHs7DX1O72xNHmEfFOGNPyJ4CsHaQ0B2nxeijs7wqKGYGa1snW6ZG/ZfEb6abYHI9kWVN1ZEVTfygI+QYqWuX9HM4kpFgy/XSzUxYE9jqhiRGI5f8SwBRVp7rMpGo1HZDgfMlXyA5gw++qRq7yHA3yLqvTPSOQMYJElJb12NaTcHKLdHahJ1nQihL73UwW0q9Zh2c0fZRuGWe7U/7Bt64gV2na7tlA62A9fSa1Dbrd7lAgMBAAECggEAPrsbB95MyTFc2vfn8RxDVcQ/dFCjEsMod1PgLEPJgWhAJ8HR7XFxGzTLAjVt7UXK5CMcHlelrO97yUadPAigHrwTYrKqEH0FjXikiiw0xB24o2XKCL+EoUlsCdg8GqhwcjL83Mke84c6Jel0vQBfdVQ+RZbetMCxqv1TpqpwW+iswlDY0+OKNxcDSnUyVkBko4M7bCqJ19DjzuHHLRmSuJhWLjX2PzdrVwIrRChxeJRR5AzrNE2BC/ssKasWjZfgkTOW6MS96q+wMLgwFGCQraU0f4AW5HA4Svg8iWT2uukcDg7VXXc/eEmkfmDGzmgsszUJZYb1hYsvjgbMP1ObwQKBgQDw1K0xfICYctiZ3aHS7mOk0Zt6B/3rP2z9GcJVs0eYiqH+lteLNy+Yx4tHtrQEuz16IKmM1/2Ghv8kIlOazpKaonk3JEwm1mCEXpgm4JI7UxPGQj/pFTCavKBBOIXxHJVSUSg0nKFkJVaoJiNy0CKwQNoFGdROk2fSYu8ReB/WlQKBgQDLWQR3RioaH/Phz8PT1ytAytH+W9M4P4tEx/2Uf5KRJxPQbN00hPnK6xxHAqycTpKkLkbJIkVWEKcIGxCqr6iGyte3xr30bt49MxIAYrdC0LtBLeWIOa88GTqYmIusqJEBmiy+A+DudM/xW4XRkgrOR1ZsagzI3FUVlei9DwFjEQKBgG8JH3EZfhDLoqIOVXXzA24SViTFWoUEETQAlGD+75udD2NaGLbPEtrV5ZmC2yzzRzzvojyVuQY1Z505VmKhq2YwUsLhsVqWrJlbI7uI/uLrQsq98Ml+Q5KUNS7c6KRqEU6KrIbVUHPj4zhTnTRqUhQBUoPXjNNNkyilBKSBReyhAoGAd3xGCIPdB17RIlW/3sFnM/o5bDmuojWMcw0ErvZLPCl3Fhhx3oNod9iw0/T5UhtFRV2/0D3n+gts6nFk2LbA0vtryBvq0C85PUK+CCX5QzR9Y25Bmksy8aBtcu7n27ttAUEDm1+SEuvmqA68Ugl7efwnBytFed0lzbo5eKXRjdECgYAk6pg3YIPi86zoId2dC/KfsgJzjWKVr8fj1+OyInvRFQPVoPydi6iw6ePBsbr55Z6TItnVFUTDd5EX5ow4QU1orrEqNcYyG5aPcD3FXD0Vq6/xrYoFTjZWZx23gdHJoE8JBCwigSt0KFmPyDsN3FaF66Iqg3iBt8rhbUA8Jy6FQA==";
+    Pattern cnPattern = Pattern.compile("CommonName:\\s([-|\\*|\\w|\\.|\\s]+)\n\nSubject Public");
     Pattern snPattern = Pattern.compile("Serial Number:\\s(\\d+)\n");
 
     private RequestUtil() {
@@ -239,11 +247,13 @@ public class RequestUtil {
      */
     public Map<String,String> getTips(String key) {
         try {
-            key = java.net.URLEncoder.encode(key, "UTF-8");
-            HashMap<String, String> result = getHTML(FofaConfig.TIP_API + key, 3000, 5000);
+            String ts = String.valueOf((new Timestamp(System.currentTimeMillis())).getTime());
+            String singParam = "q" + key + "ts" + ts;
+            String params = URLEncoder.encode(key,"UTF-8") + "&ts=" + ts + "&sign=" + URLEncoder.encode(getInputSign(singParam), "utf-8") + "&app_id=" + this.appId;
+            HashMap<String, String> result = getHTML(FofaConfig.TIP_API + params, 3000, 5000);
             if (result.get("code").equals("200")) {
                 JSONObject obj = JSON.parseObject(result.get("msg"));
-                if(obj.getString("message").equals("ok")){
+                if(obj.getInteger("code") == 0){
                     Map<String,String> data = new HashMap();
                     JSONArray objs = obj.getJSONArray("data");
                     for (Object o : objs) {
@@ -291,5 +301,25 @@ public class RequestUtil {
             return matcher.group(1);
         }
         return "";
+    }
+
+    /**
+     * 设置SHA256withRSA签名
+     * @param inputString 签名字符串 q + 查询字符串 + ts + 时间戳
+     */
+    private String getInputSign(String inputString){
+        try {
+            byte[] data = inputString.getBytes();
+            byte[] keyBytes = Base64.getDecoder().decode(this.privateKey);
+            PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(keyBytes);
+            PrivateKey priKey = KeyFactory.getInstance("RSA").generatePrivate(pkcs8KeySpec);
+            Signature signature = Signature.getInstance("SHA256withRSA");
+            signature.initSign(priKey);
+            signature.update(data);
+            return Base64.getEncoder().encodeToString(signature.sign());
+        } catch (Exception e) {
+            Logger.error(e);
+            return "";
+        }
     }
 }

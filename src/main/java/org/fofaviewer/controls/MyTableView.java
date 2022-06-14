@@ -142,6 +142,14 @@ public class MyTableView {
                     }
                 }
             });
+            MenuItem queryTitle = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_QUERY_TITLE"));
+            queryTitle.setOnAction(event -> {
+                String _title = row.getItem().title.getValue();
+                if(!_title.isEmpty()){
+                    mainControllerCallback.queryCall(new ArrayList<String>(){{add("title=\""+ _title + "\"");}});
+                }
+            });
+
             MenuItem fidMenu = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_FID"));
             fidMenu.setOnAction(event -> {
                 String _fid = row.getItem().fid.getValue();
@@ -151,7 +159,7 @@ public class MyTableView {
                     DataUtil.showAlert(Alert.AlertType.WARNING, null, resourceBundle.getString("QUERY_FID_ERROR")).showAndWait();
                 }
             });
-            rowMenu.getItems().addAll(copyLink, copyIP, copyDomain, copyCN,queryIp, queryCSet, querySubdomain, queryFavicon, queryCert, fidMenu);
+            rowMenu.getItems().addAll(copyLink, copyIP, copyDomain, copyCN,queryIp,queryTitle, queryCSet, querySubdomain, queryFavicon, queryCert, fidMenu);
             row.contextMenuProperty().bind(Bindings.when(row.emptyProperty()).then((ContextMenu) null).otherwise(rowMenu));
             // 双击行时使用默认浏览器打开
             row.setOnMouseClicked(event -> {
