@@ -76,7 +76,7 @@ public class RequestUtil {
                     .socksTimeout(socksTimeout)
                     .send();
         }catch (Exception e){
-            Logger.warn(e);
+            Logger.warn(url + e.getMessage());
             result.put("code", "error");
             result.put("msg", e.getMessage());
             return result;
@@ -155,7 +155,7 @@ public class RequestUtil {
     }
 
     public String getLinkIcon(String url) {
-        HashMap<String, String> result = getHTML(url, 10000,10000);
+        HashMap<String, String> result = getHTML(url, 60000,60000);
         if (result.get("code").equals("200")) {
             Document document = Jsoup.parse(result.get("msg"));
             Elements elements = document.getElementsByTag("link");
@@ -250,7 +250,7 @@ public class RequestUtil {
             String ts = String.valueOf((new Timestamp(System.currentTimeMillis())).getTime());
             String singParam = "q" + key + "ts" + ts;
             String params = URLEncoder.encode(key,"UTF-8") + "&ts=" + ts + "&sign=" + URLEncoder.encode(getInputSign(singParam), "utf-8") + "&app_id=" + this.appId;
-            HashMap<String, String> result = getHTML(FofaConfig.TIP_API + params, 3000, 5000);
+            HashMap<String, String> result = getHTML(FofaConfig.TIP_API + params, 5000, 10000);
             if (result.get("code").equals("200")) {
                 JSONObject obj = JSON.parseObject(result.get("msg"));
                 if(obj.getInteger("code") == 0){

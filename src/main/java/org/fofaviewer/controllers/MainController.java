@@ -652,7 +652,7 @@ public class MainController {
                             @Override
                             protected Void call() {
                                 HashMap<String, String> result = helper.getHTML(client.getParam(String.valueOf(bean.page),
-                                        isAll.isSelected()) + helper.encode(text), 10000, 10000);
+                                        isAll.isSelected()) + helper.encode(text), 120000, 120000);
                                 TableView<TableBean> tableView = (TableView<TableBean>) ((BorderPane) tab.getContent()).getCenter();
                                 if (result.get("code").equals("200")) {
                                     JSONObject obj = JSON.parseObject(result.get("msg"));

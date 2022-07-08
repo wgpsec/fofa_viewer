@@ -48,7 +48,7 @@ public class Request {
                     bean.setRequestStatus(RequestStatus.RUNNING);
                     TabDataBean _tmp = new TabDataBean();
                     Platform.runLater(() -> this.callback.before(_tmp, bean));
-                    HashMap<String, String> res = RequestUtil.getInstance().getHTML(bean.getRequestUrl(), 10000, 10000);
+                    HashMap<String, String> res = RequestUtil.getInstance().getHTML(bean.getRequestUrl(), 120000, 120000);
                     bean.setResult(res);
                     if (res.get("code").equals("error") || !res.get("code").equals("200")) {
                         bean.setRequestStatus(RequestStatus.FAILED);
