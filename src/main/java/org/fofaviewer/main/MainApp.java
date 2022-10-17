@@ -7,7 +7,7 @@ import javafx.stage.Stage;
 import org.fofaviewer.controllers.MainController;
 
 public class MainApp extends Application {
-    private final String version = "1.1.10";
+    private final String version = "1.1.11";
 
     @Override
     public void start(Stage stage) throws Exception {

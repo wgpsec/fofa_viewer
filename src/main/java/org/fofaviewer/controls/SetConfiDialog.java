@@ -7,7 +7,6 @@ import javafx.scene.control.DialogPane;
 import javafx.scene.layout.Pane;
 import org.fofaviewer.controllers.SetConfigDialogController;
 import org.tinylog.Logger;
-
 import java.io.IOException;
 
 public class SetConfiDialog extends Dialog<ButtonType> {

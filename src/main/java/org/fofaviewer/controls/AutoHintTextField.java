@@ -153,9 +153,12 @@ public class AutoHintTextField {
                 Map<String,String> ruleData = SQLiteUtils.matchRule(newValue);
                 Map<String,String> tipData = helper.getTips(newValue);
                 tipMap.putAll(ruleData);
-                tipMap.putAll(tipData);
                 List<String> rdata = new ArrayList<>(ruleData.keySet());
-                List<String> tdata = new ArrayList<>(tipData.keySet());
+                List<String> tdata = new ArrayList<>();
+                if(tipData != null) {
+                    tipMap.putAll(tipData);
+                    tdata.addAll(tipData.keySet());
+                }
                 List<String> data;
                 if(rdata.size() != 0){
                     rdata.addAll(tdata);

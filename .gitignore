@@ -3,6 +3,7 @@
 # Compiled class file
 *.class
 *.jar
+*.db
 
 # BlueJ files
 *.ctxt

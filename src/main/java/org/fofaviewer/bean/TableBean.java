@@ -2,7 +2,6 @@ package org.fofaviewer.bean;
 
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
-
 import java.util.Objects;
 
 public class TableBean extends BaseBean{

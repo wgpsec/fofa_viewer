@@ -8,7 +8,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.GridPane?>
 <VBox fx:id="window" fx:controller="org.fofaviewer.controllers.SaveOptionsController" prefHeight="92.0" prefWidth="360.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1">
-   <HBox spacing="10" prefHeight="200.0" prefWidth="200.0" fx:id="root">
+   <HBox spacing="10" prefHeight="200.0" prefWidth="200.0">
       <Label fx:id="title">
          <HBox.margin><Insets top="4"/></HBox.margin>
          <font><Font size="14.0"/></font>
@@ -40,9 +40,9 @@
       <padding>
          <Insets top="10.0D" left="10.0D" right="10.0D"/>
       </padding>
-      <Label fx:id="label_rule_name" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-      <TextField fx:id="rule_name" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="240"/>
-      <Label fx:id="label_rule_description" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-      <TextField fx:id="rule_description" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+      <Label fx:id="labelRuleName" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+      <TextField fx:id="ruleName" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="240"/>
+      <Label fx:id="labelRuleDescription" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+      <TextField fx:id="ruleDescription" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
    </GridPane>
 </VBox>

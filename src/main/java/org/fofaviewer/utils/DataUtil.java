@@ -2,11 +2,7 @@ package org.fofaviewer.utils;
 
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.ExcelWriter;
-import com.alibaba.excel.write.merge.OnceAbsoluteMergeStrategy;
 import com.alibaba.excel.write.metadata.WriteSheet;
-import com.alibaba.excel.write.metadata.style.WriteCellStyle;
-import com.alibaba.excel.write.metadata.style.WriteFont;
-import com.alibaba.excel.write.style.HorizontalCellStyleStrategy;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import javafx.application.Platform;
@@ -29,8 +25,8 @@ import java.util.regex.Pattern;
 public class DataUtil {
     private static final RequestUtil helper = RequestUtil.getInstance();
     private static final ResourceBundle resourceBundle = ResourceBundleUtil.getResource();
-    private static Pattern portPattern1 = Pattern.compile(":443$");
-    private static Pattern portPattern2 = Pattern.compile(":80$");
+    private static final Pattern portPattern1 = Pattern.compile(":443$");
+    private static final Pattern portPattern2 = Pattern.compile(":80$");
 
     /**
      * 对话框配置
@@ -46,25 +42,17 @@ public class DataUtil {
         return alert;
     }
 
-    public static void exportToExcel(String fileName, String tabTitle, List<ExcelBean> totalData, List<List<String>> urls, StringBuilder errorPage){
+    public static void exportToExcel(String fileName, String tabTitle, List<ExcelBean> totalData, List<List<String>> urls, StringBuilder errorPage) {
         ExcelWriter excelWriter = null;
-        try {
-            excelWriter = EasyExcel.write(fileName).build();
-            OnceAbsoluteMergeStrategy strategy = new OnceAbsoluteMergeStrategy(0,1,0,9);
-            ArrayList<ArrayList<String>> head = new ArrayList<ArrayList<String>>(){{add(new ArrayList<String>(){{add(tabTitle);}});}};
-            WriteCellStyle contentWriteCellStyle = new WriteCellStyle();
-            WriteFont contentWriteFont = new WriteFont();
-            contentWriteFont.setFontHeightInPoints((short)16);
-            contentWriteCellStyle.setWriteFont(contentWriteFont);
-            WriteSheet writeSheet0 = EasyExcel.writerSheet(0, resourceBundle.getString("EXPORT_FILENAME_SHEET1"))
-                    .registerWriteHandler(strategy)
-                    .registerWriteHandler(new HorizontalCellStyleStrategy(null, contentWriteCellStyle)).build();
-            excelWriter.write(head, writeSheet0);
-            WriteSheet writeSheet1 = EasyExcel.writerSheet(1, resourceBundle.getString("EXPORT_FILENAME_SHEET2"))
-                    .head(ExcelBean.class).build();
-            excelWriter.write(totalData, writeSheet1);
-            WriteSheet writeSheet2 = EasyExcel.writerSheet(2, resourceBundle.getString("EXPORT_FILENAME_SHEET3")).build();
-            excelWriter.write(urls, writeSheet2);
+        try{
+            excelWriter = EasyExcel.write(fileName).withTemplate(DataUtil.class.getResourceAsStream("/template.xlsx")).build();
+            WriteSheet writeSheet0 = EasyExcel.writerSheet(resourceBundle.getString("EXPORT_FILENAME_SHEET1")).build();
+            Map<String, Object> map = new HashMap<>();
+            map.put("title", tabTitle);
+            excelWriter.fill(map, writeSheet0);
+            excelWriter.fill(totalData, writeSheet0);
+            WriteSheet writeSheet1 = EasyExcel.writerSheet(resourceBundle.getString("EXPORT_FILENAME_SHEET2")).build();
+            excelWriter.write(urls, writeSheet1);
             if(errorPage.length() == 0){
                 showAlert(Alert.AlertType.INFORMATION, null, resourceBundle.getString("EXPORT_MESSAGE1") + fileName).showAndWait();
             }else{

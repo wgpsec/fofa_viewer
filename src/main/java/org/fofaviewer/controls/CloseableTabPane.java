@@ -80,7 +80,8 @@ public class CloseableTabPane extends BorderPane {
             String queryTxT = this.queryMap.get(tab);
             this.tabPane.getTabs().remove(tab);
             closeTab(tab);
-            callback.queryCall(new ArrayList<String>(){{add(queryTxT);}});
+            String realQuery = new String(java.util.Base64.getDecoder().decode(queryTxT.substring(queryTxT.indexOf("qbase64=")+8)));
+            callback.queryCall(new ArrayList<String>(){{add(realQuery);}});
         });
         menuButton.getItems().addAll(closeOthers, closeSelected, closeAll, reload);
         sp.getChildren().add(menuButton);

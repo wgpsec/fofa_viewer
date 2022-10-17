@@ -1,6 +1,7 @@
 package org.fofaviewer.controls;
 
 import javafx.beans.binding.Bindings;
+import javafx.collections.ObservableList;
 import javafx.scene.control.*;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.Clipboard;
@@ -14,10 +15,7 @@ import org.tinylog.Logger;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.ResourceBundle;
+import java.util.*;
 
 /**
  * TableView装饰类
@@ -59,21 +57,40 @@ public class MyTableView {
         view.getColumns().addAll(new ArrayList<TableColumn<TableBean,String>>(){{ add(host);add(title);add(ip);}});
         view.getColumns().add(port);
         view.getColumns().addAll(new ArrayList<TableColumn<TableBean,String>>(){{add(domain);add(protocol);add(certCN);add(server);add(fid);add(cert);}});
+        view.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE); // 设置选择多行
         view.setRowFactory(param -> {
             final TableRow<TableBean> row = new TableRow<>();
             // 设置表格右键菜单
             ContextMenu rowMenu = new ContextMenu();
             MenuItem copyLink = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_COPYLINK"));
             copyLink.setOnAction(event -> {
-                //设置剪贴板
+                ObservableList<TableBean> items =  view.getSelectionModel().getSelectedItems();
                 ClipboardContent content = new ClipboardContent();
-                content.putString(row.getItem().host.getValue());
+                if(items.size() > 1){
+                    StringBuilder builder = new StringBuilder();
+                    for(TableBean bean : items){
+                        builder.append(bean.host.getValue()).append("\n");
+                    }
+                    content.putString(builder.toString());
+                }else{
+                    content.putString(items.get(0).host.getValue());
+                }
                 Clipboard.getSystemClipboard().setContent(content);
             });
             MenuItem copyIP = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_COPYIP"));
             copyIP.setOnAction(event -> {
+                ObservableList<TableBean> items =  view.getSelectionModel().getSelectedItems();
                 ClipboardContent content = new ClipboardContent();
-                content.putString(row.getItem().ip.getValue());
+                if(items.size() > 1){
+                    HashSet<TableBean> set = new HashSet<>(items);
+                    StringBuilder builder = new StringBuilder();
+                    for(TableBean bean : set){
+                        builder.append(bean.ip.getValue()).append("\n");
+                    }
+                    content.putString(builder.toString());
+                }else{
+                    content.putString(items.get(0).ip.getValue());
+                }
                 Clipboard.getSystemClipboard().setContent(content);
             });
             MenuItem copyDomain = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_COPYDOMAIN"));

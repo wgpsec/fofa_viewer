@@ -42,13 +42,13 @@ public class SaveOptionsController {
     @FXML
     private GridPane rule;
     @FXML
-    private Label label_rule_name;
+    private Label labelRuleName;
     @FXML
-    private Label label_rule_description;
+    private Label labelRuleDescription;
     @FXML
-    private TextField rule_name;
+    private TextField ruleName;
     @FXML
-    private TextField rule_description;
+    private TextField ruleDescription;
     @FXML
     private void initialize(){
         bundle = ResourceBundleUtil.getResource();
@@ -57,15 +57,15 @@ public class SaveOptionsController {
         selectAll.setText(bundle.getString("SAVE_QUERY_SELECT_ALL"));
         unselect.setText(bundle.getString("SAVE_QUERY_REVERSE_SELECTED"));
         label_project_name.setText(bundle.getString("SAVE_QUERY_PROJECT_NAME"));
-        label_rule_name.setText(bundle.getString("SAVE_QUERY_RULE_NAME"));
-        label_rule_description.setText(bundle.getString("SAVE_QUERY_RULE_DESCRIPTION"));
+        labelRuleName.setText(bundle.getString("SAVE_QUERY_RULE_NAME"));
+        labelRuleDescription.setText(bundle.getString("SAVE_QUERY_RULE_DESCRIPTION"));
     }
 
     public void setTabs(CloseableTabPane tabPane){
         if(isProject){
             for(String queryTxt : tabPane.getTabsTxt()){
                 if(queryTxt != null){
-                    CheckBox box = new CheckBox(queryTxt);
+                    CheckBox box = new CheckBox(getQueryText(queryTxt));
                     box.setFont(Font.font(14));
                     boxes.add(box);
                     vbox.getChildren().add(box);
@@ -76,7 +76,7 @@ public class SaveOptionsController {
             ToggleGroup group = new ToggleGroup();
             for(String queryTxt : tabPane.getTabsTxt()){
                 if(queryTxt != null){
-                    RadioButton rbtn = new RadioButton(queryTxt);
+                    RadioButton rbtn = new RadioButton(getQueryText(queryTxt));
                     rbtn.setFont(Font.font(14));
                     rbtn.setToggleGroup(group);
                     rbtn.setUserData(queryTxt);
@@ -147,15 +147,19 @@ public class SaveOptionsController {
             unselect.setVisible(false);
             window.getChildren().remove(project);
             dialogPane.lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, e -> {
-                if(!rule_name.getText().equals("") && ruleMap.containsKey("query_text")){
-                    ruleMap.put("rule_name", rule_name.getText());
-                    ruleMap.put("rule_description", rule_description.getText());
+                if(!ruleName.getText().equals("") && ruleMap.containsKey("query_text")){
+                    ruleMap.put("rule_name", ruleName.getText());
+                    ruleMap.put("rule_description", ruleDescription.getText());
                     if(SQLiteUtils.insertRule(ruleMap)){
                         DataUtil.showAlert(Alert.AlertType.INFORMATION, null, bundle.getString("SAVE_QUERY_ADD_RULE_SUCCESS")).showAndWait();
                     }
                 }
             });
         }
+    }
+
+    private String getQueryText(String queryTxt){
+        return new String(Base64.getDecoder().decode(queryTxt.substring(queryTxt.indexOf("qbase64=") + 8)));
     }
 
     private void saveQueryToFile(List<String> res, File f) throws IOException {
