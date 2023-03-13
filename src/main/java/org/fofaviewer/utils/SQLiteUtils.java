@@ -15,7 +15,7 @@ public class SQLiteUtils {
             System.out.println("db文件不存在，程序将自动创建！");
             try {
                 Class.forName("org.sqlite.JDBC");
-                connection = DriverManager.getConnection("jdbc:sqlite:rules.db");
+                connection = DriverManager.getConnection("jdbc:sqlite:" + getPath() + "rules.db");
                 // 创建表
                 setTable(connection);
                 connection.close();
@@ -25,8 +25,19 @@ public class SQLiteUtils {
         }
     }
 
+    public static String getPath() {
+        try{
+            String jarPath = System.getProperty("user.dir") + System.getProperty("file.separator");
+//            String jarPath = java.net.URLDecoder.decode(DataUtil.class.getProtectionDomain().getCodeSource().getLocation().getFile(), String.valueOf(StandardCharsets.UTF_8));
+            return jarPath.substring(0, jarPath.lastIndexOf(System.getProperty("file.separator")) + 1);
+        }catch (Exception e){
+            Logger.error(e);
+        }
+        return "";
+    }
+
     public static boolean checkDbFile(){
-        return (new File(System.getProperty("user.dir") + System.getProperty("file.separator") + "rules.db")).exists();
+        return (new File( getPath() + "rules.db")).exists();
     }
 
     /**
@@ -76,7 +87,7 @@ public class SQLiteUtils {
         HashMap<String,String> res = new HashMap<>();
         try{
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:rules.db");
+            connection = DriverManager.getConnection("jdbc:sqlite:" + getPath() + "rules.db");
             String sql = "select rule_name,query_text from rules where rule_name like ?";
             stmt = connection.prepareStatement(sql);
             stmt.setString(1, "%" + queryTxt + "%");
@@ -98,7 +109,7 @@ public class SQLiteUtils {
         PreparedStatement stmt;
         try{
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:rules.db");
+            connection = DriverManager.getConnection("jdbc:sqlite" + getPath() + "rules.db");
             String sql = "INSERT INTO \"rules\" (\"rule_name\", \"query_text\", \"description\") VALUES (?,?,?)";
             stmt = connection.prepareStatement(sql);
             stmt.setString(1, rule.get("rule_name"));

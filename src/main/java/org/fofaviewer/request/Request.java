@@ -12,6 +12,7 @@ import org.controlsfx.control.StatusBar;
 import org.fofaviewer.bean.RequestBean;
 import org.fofaviewer.bean.TabDataBean;
 import org.fofaviewer.bean.TableBean;
+import org.fofaviewer.callback.HttpCallback;
 import org.fofaviewer.callback.MainControllerCallback;
 import org.fofaviewer.callback.RequestCallback;
 import org.fofaviewer.controls.MyTableView;
@@ -68,14 +69,15 @@ public class Request {
                         }
                         StatusBar bar = new StatusBar();
                         _tmp.total = obj.getInteger("size");
-                        Label totalLabel = new Label(ResourceBundleUtil.getResource().getString("QUERY_TIPS1") + obj.getString("size"));
+                        Label totalLabel = new Label(ResourceBundleUtil.getResource().getString("QUERY_TIPS1") +
+                                obj.getString("size") + ResourceBundleUtil.getResource().getString("QUERY_TIPS2"));
                         Label countLabel = new Label(String.valueOf(obj.getJSONArray("results").size()));
                         bar.getRightItems().addAll(new ArrayList<Label>() {{
                             add(totalLabel);
-                            add(new Label(ResourceBundleUtil.getResource().getString("QUERY_TIPS2")));
                             add(countLabel);
                             add(new Label(ResourceBundleUtil.getResource().getString("QUERY_TIPS3")));
                         }});
+                        bar.getLeftItems().add(new Label());
                         BorderPane tablePane = new BorderPane();
                         TableView<TableBean> view = new TableView<>();
                         List<TableBean> values = (List<TableBean>) DataUtil.loadJsonData(_tmp, obj, null, null, false);

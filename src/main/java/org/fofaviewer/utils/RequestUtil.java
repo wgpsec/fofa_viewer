@@ -53,8 +53,8 @@ public class RequestUtil {
         return request;
     }
 
-    private RequestBuilder getBuilder(String url){
-        return config.getStatus() ? Requests.get(url).proxy(config.getProxy()) : Requests.get(url);
+    private RequestBuilder getBuilder(String url, String m){
+        return config.getStatus() ? Requests.get(url).proxy(config.getProxy()) : m.equals("GET")?Requests.get(url):Requests.head(url);
     }
 
     /**
@@ -70,7 +70,7 @@ public class RequestUtil {
         RawResponse response;
         HashMap<String, String> result = new HashMap<>();
         try {
-            response = getBuilder(url)
+            response = getBuilder(url, "GET")
                     .headers(new HashMap<String, String>() {{ put("User-Agent", ua[(new SecureRandom()).nextInt(3)]); }})
                     .connectTimeout(connectTimeout)
                     .socksTimeout(socksTimeout)
@@ -106,6 +106,58 @@ public class RequestUtil {
         result.put("code", "error");
         return result;
     }
+    public HashMap<String, String> getLeftAmount(String url, int connectTimeout, int socksTimeout){
+        RawResponse response;
+        HashMap<String, String> result = new HashMap<>();
+        try {
+            response = getBuilder(url, "GET")
+                    .headers(new HashMap<String, String>() {{ put("User-Agent", ua[(new SecureRandom()).nextInt(3)]); }})
+                    .connectTimeout(connectTimeout)
+                    .socksTimeout(socksTimeout)
+                    .send();
+
+        }catch (Exception e){
+            Logger.warn(url + e.getMessage());
+            result.put("code", "error");
+            result.put("msg", e.getMessage());
+            return result;
+        }
+        if (response != null) {
+            int code = response.statusCode();
+            result.put("code", String.valueOf(code));
+            JSONObject obj = JSONObject.parseObject(response.readToText());
+            int remain_api_query = obj.getInteger("remain_api_query");
+            int remain_api_data = obj.getInteger("remain_api_data");
+            ResourceBundle bundle = ResourceBundleUtil.getResource();
+            result.put("msg", bundle.getString("REMAIN_API_QUERY") + remain_api_query +"  "+ bundle.getString("REMAIN_API_DATA") + remain_api_data);
+            return result;
+        }
+        result.put("code", "error");
+        return result;
+    }
+    public HashMap<String, String> getURLStatus(String url, int connectTimeout, int socksTimeout){
+        RawResponse response;
+        HashMap<String, String> result = new HashMap<>();
+        try {
+            response = getBuilder(url, "HEAD")
+                    .headers(new HashMap<String, String>() {{ put("User-Agent", ua[(new SecureRandom()).nextInt(3)]); }})
+                    .connectTimeout(connectTimeout)
+                    .socksTimeout(socksTimeout)
+                    .send();
+        }catch (Exception e){
+            Logger.warn(url + e.getMessage());
+            result.put("code", "error");
+            result.put("msg", e.getMessage());
+            return result;
+        }
+        if (response != null) {
+            int code = response.statusCode();
+            result.put("code", String.valueOf(code));
+            return result;
+        }
+        result.put("code", "error");
+        return result;
+    }
 
     /**
      * 提取网站favicon 需要两步：
@@ -117,7 +169,7 @@ public class RequestUtil {
         Response<byte[]> response = null;
         HashMap<String, String> result = new HashMap<>();
         try {
-            response = getBuilder(url)
+            response = getBuilder(url, "GET")
                     .headers(new HashMap<String, String>() {{
                         put("User-Agent", ua[(new SecureRandom()).nextInt(3)]);
                     }})

@@ -15,6 +15,11 @@
                 <TextField fx:id="fofa_key" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
                 <Label fx:id="label_fofa_max_size" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
                 <TextField fx:id="fofa_max_size" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                <Label fx:id="checkLeftAmount" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                <HBox spacing="10.0D" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                    <RadioButton fx:id="enableCheck" />
+                    <RadioButton fx:id="disableCheck" />
+                </HBox>
             </GridPane>
         </Tab>
         <Tab fx:id="proxy_tab" closable="false">

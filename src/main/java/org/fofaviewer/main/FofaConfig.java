@@ -4,12 +4,14 @@ import java.util.ArrayList;
 
 public class FofaConfig {
     private static FofaConfig config = null;
+    private boolean checkStatus;
     private String email;
     private String key;
     private final String page = "1";
     public final int max = 10000;
     private String size = "1000";
     public String API = "https://fofa.info";
+    public String personalInfoAPI = "https://fofa.info/api/v1/info/my?email=%s&key=%s";
     public final String path = "/api/v1/search/all";
     public static final String TIP_API = "https://api.fofa.info/v1/search/tip?q=";
     //public static final String TIP_API = Locale.getDefault()==Locale.CHINA ? "https://api.fofa.so/v1/search/tip?q="
@@ -72,5 +74,13 @@ public class FofaConfig {
         }
         String a = builder.toString();
         return a.substring(0,a.length()-1);
+    }
+
+    public boolean getCheckStatus() {
+        return checkStatus;
+    }
+
+    public void setCheckStatus(boolean checkStatus) {
+        this.checkStatus = checkStatus;
     }
 }

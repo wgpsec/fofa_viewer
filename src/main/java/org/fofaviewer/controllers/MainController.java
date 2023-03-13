@@ -8,9 +8,7 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -631,57 +629,52 @@ public class MainController {
      * @param view tableview
      */
     private void addScrollBarListener(TableView<?> view){
-        ScrollBar bar = null;
-        for(Node n : view.lookupAll(".scroll-bar")) {
-            if(n instanceof ScrollBar) {
-                ScrollBar _bar = (ScrollBar) n;
-                if(_bar.getOrientation().equals(Orientation.VERTICAL)) {
-                    bar = _bar;
-                }
-            }
-        }
-        if(bar != null) {
-            bar.valueProperty().addListener((observable, oldValue, newValue) -> {
-                if ((double) newValue == 1.0D) {
-                    Tab tab = tabPane.getCurrentTab();
-                    TabDataBean bean = tabPane.getTabDataBean(tab);
-                    if (bean.hasMoreData) {
-                        bean.page += 1;
-                        String text = DataUtil.replaceString(tab.getText());
-                        Task<Void> task = new Task<Void>() {
-                            @Override
-                            protected Void call() {
-                                HashMap<String, String> result = helper.getHTML(client.getParam(String.valueOf(bean.page),
-                                        isAll.isSelected()) + helper.encode(text), 120000, 120000);
-                                TableView<TableBean> tableView = (TableView<TableBean>) ((BorderPane) tab.getContent()).getCenter();
-                                if (result.get("code").equals("200")) {
-                                    JSONObject obj = JSON.parseObject(result.get("msg"));
-                                    if (obj.getBoolean("error")) {
-                                        return null;
-                                    }
-                                    List<TableBean> list = (List<TableBean>) DataUtil.loadJsonData(bean, obj, null, null, false);
-                                    if (list.size() != 0) {
-                                        ObservableList<TableBean> _tmp = tableView.getItems();
-                                        TableBean b = _tmp.get(_tmp.size() - 5);
-                                        List<TableBean> tmp = list.stream().sorted(Comparator.comparing(TableBean::getIntNum)).collect(Collectors.toList());
-                                        Platform.runLater(() -> tableView.getItems().addAll(FXCollections.observableArrayList(tmp)));
-                                        Platform.runLater(() -> tableView.scrollTo(b));
-                                        StatusBar statusBar = tabPane.getBar(tab);
-                                        Label countLabel = (Label) statusBar.getRightItems().get(2);
-                                        Platform.runLater(() -> countLabel.setText(String.valueOf(Integer.parseInt(countLabel.getText()) + obj.getJSONArray("results").size())));
-                                    }
-                                    if (bean.page * Integer.parseInt(client.getSize()) > obj.getInteger("size")) {
-                                        bean.hasMoreData = false;
+        ScrollBar bar = (ScrollBar) view.lookup(".scroll-bar:vertical");
+        bar.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if ((double) newValue == 1.0D) {
+                Tab tab = tabPane.getCurrentTab();
+                TabDataBean bean = tabPane.getTabDataBean(tab);
+                if (bean.hasMoreData) {
+                    bean.page += 1;
+                    String text = DataUtil.replaceString(tab.getText());
+                    Task<Void> task = new Task<Void>() {
+                        @Override
+                        protected Void call() {
+                            HashMap<String, String> result = helper.getHTML(client.getParam(String.valueOf(bean.page),
+                                    isAll.isSelected()) + helper.encode(text), 120000, 120000);
+                            TableView<TableBean> tableView = (TableView<TableBean>) ((BorderPane) tab.getContent()).getCenter();
+                            if (result.get("code").equals("200")) {
+                                JSONObject obj = JSON.parseObject(result.get("msg"));
+                                if (obj.getBoolean("error")) {
+                                    return null;
+                                }
+                                List<TableBean> list = (List<TableBean>) DataUtil.loadJsonData(bean, obj, null, null, false);
+                                if (list.size() != 0) {
+                                    List<TableBean> tmp = list.stream().sorted(Comparator.comparing(TableBean::getIntNum)).collect(Collectors.toList());
+                                    Platform.runLater(() -> tableView.getItems().addAll(FXCollections.observableArrayList(tmp)));
+                                    Platform.runLater(() -> tableView.scrollTo(tableView.getItems().size()-Integer.parseInt(client.getSize())));
+                                    StatusBar statusBar = tabPane.getBar(tab);
+                                    Label countLabel = (Label) statusBar.getRightItems().get(1);
+                                    Platform.runLater(() -> countLabel.setText(String.valueOf(Integer.parseInt(countLabel.getText()) + obj.getJSONArray("results").size())));
+                                    if(client.getCheckStatus()){
+                                        result = helper.getLeftAmount(String.format(client.personalInfoAPI, client.getEmail(), client.getKey()), 120000, 120000);
+                                        if (result.get("code").equals("200")) {
+                                            Label infoLabel = (Label)statusBar.getLeftItems().get(0);
+                                            String msg = result.get("msg");
+                                            Platform.runLater(() -> {statusBar.setText("");infoLabel.setText(msg);});
+                                        }
                                     }
                                 }
-                                return null;
+                                if (bean.page * Integer.parseInt(client.getSize()) > obj.getInteger("size")) {
+                                    bean.hasMoreData = false;
+                                }
                             }
-                        };
-                        new Thread(task).start();
-                    }
+                            return null;
+                        }
+                    };
+                    new Thread(task).start();
                 }
-            });
-        }
+            }
+        });
     }
-
 }

@@ -3,13 +3,12 @@ package org.fofaviewer.controllers;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
 import org.fofaviewer.main.FofaConfig;
 import org.fofaviewer.main.ProxyConfig;
 import org.fofaviewer.utils.DataUtil;
 import org.fofaviewer.utils.ResourceBundleUtil;
+import org.fofaviewer.utils.SQLiteUtils;
 import org.tinylog.Logger;
 import java.io.*;
 import java.util.*;
@@ -65,11 +64,20 @@ public class SetConfigDialogController {
     @FXML
     private RadioButton disable;
     @FXML
+    private Label checkLeftAmount;
+    @FXML
+    private RadioButton enableCheck;
+    @FXML
+    private RadioButton disableCheck;
+    @FXML
     private void initialize(){
         bundle = ResourceBundleUtil.getResource();
         fofa_tab.setText(bundle.getString("FOFA_CONFIG"));
         proxy_tab.setText(bundle.getString("PROXY_CONFIG"));
         enable.setText(bundle.getString("ENABLE_RADIO"));
+        checkLeftAmount.setText(bundle.getString("CHECK_LEFT_AMOUNT"));
+        enableCheck.setText(bundle.getString("ENABLE_RADIO"));
+        disableCheck.setText(bundle.getString("DISABLE_RADIO"));
         disable.setText(bundle.getString("DISABLE_RADIO"));
         label_fofa_api.setText(bundle.getString("FOFA_API"));
         label_fofa_email.setText(bundle.getString("FOFA_EMAIL"));
@@ -94,6 +102,10 @@ public class SetConfigDialogController {
         enable.setToggleGroup(statusGroup);
         disable.setToggleGroup(statusGroup);
         statusGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> proxyConfig.setStatus(statusGroup.getSelectedToggle().equals(enable)));
+        ToggleGroup checkStatusGroup = new ToggleGroup();
+        enableCheck.setToggleGroup(checkStatusGroup);
+        disableCheck.setToggleGroup(checkStatusGroup);
+        checkStatusGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> fofaConfig.setCheckStatus(checkStatusGroup.getSelectedToggle().equals(enableCheck)));
         fofaConfig = FofaConfig.getInstance();
         proxyConfig = ProxyConfig.getInstance();
         typeCombo.setItems(FXCollections.observableArrayList(ProxyConfig.ProxyType.HTTP, ProxyConfig.ProxyType.SOCKS5));
@@ -115,6 +127,7 @@ public class SetConfigDialogController {
                     fofaConfig.API = fofa_api.getText();
                     fofaConfig.setSize(fofa_max_size.getText());
                     fofaConfig.setKey(fofa_key.getText());
+                    fofaConfig.setCheckStatus(enableCheck.isSelected());
                     proxyConfig.setStatus(enable.isSelected());
                     proxyConfig.setProxy_ip(proxy_ip.getText());
                     proxyConfig.setProxy_port(proxy_port.getText());
@@ -124,11 +137,8 @@ public class SetConfigDialogController {
                     for(TextField tf : propertiesMap.keySet()){
                         properties.setProperty(propertiesMap.get(tf), tf.getText());
                     }
-                    if(proxyConfig.getStatus()){
-                        properties.setProperty("proxy_status", "on");
-                    }else{
-                        properties.setProperty("proxy_status", "off");
-                    }
+                    properties.setProperty("proxy_status", proxyConfig.getStatus() ? "on" : "off");
+                    properties.setProperty("check_status", fofaConfig.getCheckStatus() ? "on" : "off");
                     ProxyConfig.ProxyType type = (ProxyConfig.ProxyType) typeCombo.getSelectionModel().getSelectedItem();
                     switch (type){
                         case HTTP: properties.setProperty("proxy_type", "HTTP");break;
@@ -144,7 +154,7 @@ public class SetConfigDialogController {
     }
 
     private void createConfigFile(){
-        String filePath = System.getProperty("user.dir") + System.getProperty("file.separator") + "config.properties";
+        String filePath = SQLiteUtils.getPath() + "config.properties";
         try{
             File f = new File(filePath);
             this.configFile = f;
@@ -165,6 +175,11 @@ public class SetConfigDialogController {
             enable.setSelected(true);
         }else{
             disable.setSelected(true);
+        }
+        if(fofaConfig.getCheckStatus()){
+            enableCheck.setSelected(true);
+        }else{
+            disableCheck.setSelected(true);
         }
         this.proxy_ip.setText(proxyConfig.getProxy_ip());
         this.proxy_port.setText(proxyConfig.getProxy_port());

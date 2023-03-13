@@ -15,7 +15,7 @@ import org.fofaviewer.controls.SetConfiDialog;
 import org.fofaviewer.main.FofaConfig;
 import org.fofaviewer.main.ProxyConfig;
 import org.tinylog.Logger;
-import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
@@ -155,7 +155,7 @@ public class DataUtil {
                     }
                 }
                 excelData.add(d);
-                getUrlList(urlList, host, protocol, port);
+                getUrlList(urlList, host, protocol);
             }else{  // table 页更新数据
                 TableBean b = new TableBean(0, host, title, ip, domain, port, protocol, server, fid, cert, certCN);
                 if(list.contains(b)){
@@ -180,19 +180,21 @@ public class DataUtil {
                     }
                 }
                 if(b.num.getValue() == 0){ b.num.set(++bean.count);}
-                getUrlList(bean.dataList, host, protocol, port);
+                getUrlList(bean.dataList, host, protocol);
                 list.add(b);
             }
         }
         return list;
     }
 
-    public static void getUrlList(HashSet<String> urlList, String host, String protocol, int port) {
-        if(protocol.equals("http") || protocol.equals("https")){
+    public static void getUrlList(HashSet<String> urlList, String host, String protocol) {
+        if(protocol.startsWith("http") || protocol.equals("tls")){
             Matcher m1 = portPattern1.matcher(host);
             Matcher m2 = portPattern2.matcher(host);
-            if(host.startsWith("http://") || host.startsWith("https://")){
+            if(host.startsWith("http://") || host.startsWith("https://")) {
                 urlList.add(host);
+            }else if(protocol.equals("tls")){
+                urlList.add("https://" + host);
             }else if(m1.find()){
                 urlList.add(protocol + "://" + host.substring(0, host.indexOf(":443")));
             }else if(m2.find()){
@@ -227,15 +229,16 @@ public class DataUtil {
      */
     public static FofaConfig loadConfigure(){
         Properties properties = new Properties();
-        FofaConfig client = null;
-        ProxyConfig proxyConfig = null;
+        FofaConfig client;
+        ProxyConfig proxyConfig;
         try {
-            properties.load(new FileInputStream(System.getProperty("user.dir") + System.getProperty("file.separator") + "config.properties"));
+            properties.load(new FileReader(SQLiteUtils.getPath() + "config.properties"));
             client = FofaConfig.getInstance();
             client.setEmail(properties.getProperty("email").trim());
             client.setKey(properties.getProperty("key").trim());
             client.setAPI(properties.getProperty("api").trim());
             client.setSize(properties.getProperty("max_size"));
+            client.setCheckStatus(properties.getProperty("check_status").equals("on"));
             proxyConfig = ProxyConfig.getInstance();
             if(properties.getProperty("proxy_status").equals("on")){
                 proxyConfig.setStatus(true);

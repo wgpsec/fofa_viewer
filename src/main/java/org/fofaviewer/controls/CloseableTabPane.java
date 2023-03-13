@@ -77,11 +77,8 @@ public class CloseableTabPane extends BorderPane {
             if(tab.getText().equals(homepage)){
                 return;
             }
-            String queryTxT = this.queryMap.get(tab);
             this.tabPane.getTabs().remove(tab);
-            closeTab(tab);
-            String realQuery = new String(java.util.Base64.getDecoder().decode(queryTxT.substring(queryTxT.indexOf("qbase64=")+8)));
-            callback.queryCall(new ArrayList<String>(){{add(realQuery);}});
+            callback.queryCall(new ArrayList<String>(){{add(tab.getText());}});
         });
         menuButton.getItems().addAll(closeOthers, closeSelected, closeAll, reload);
         sp.getChildren().add(menuButton);

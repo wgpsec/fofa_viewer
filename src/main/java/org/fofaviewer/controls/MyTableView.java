@@ -184,12 +184,13 @@ public class MyTableView {
                     String url = row.getItem().host.getValue();
                     String protocol1 = row.getItem().protocol.getValue();
                     String domain1 = row.getItem().domain.getValue();
-                    if(!domain1.isEmpty() || url.startsWith("http") || protocol1.isEmpty() || protocol1.startsWith("http")){
+                    if(!domain1.isEmpty() || url.startsWith("http") || protocol1.startsWith("http") || protocol1.equals("tls")){
                         if(!url.startsWith("http")){
                             if(url.endsWith("443")){
                                 url = "https://" + url.substring(0, url.length()-4);
+                            }else{
+                                url = "http://" + url;
                             }
-                            url = "http://" + url;
                         }
                         URI uri = URI.create(url);
                         Desktop dp = Desktop.getDesktop();

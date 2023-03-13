@@ -1,4 +1,4 @@
-package org.fofaviewer.utils;
+package org.fofaviewer.callback;
 
 import org.fofaviewer.bean.RequestBean;
 

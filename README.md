@@ -50,6 +50,7 @@ VIP说明：https://fofa.info/static_pages/vip
 8. 支持Fid查询（注：需要高级会员，查询时需要勾选）
 9. 支持full查询(查询全部数据)
 10. 显示fofa官网的查询语法
+11. 滚动条移动到末端时自动加载下一页，可在配置中设置否自动检查账号剩余可查询量。
 
 ![](docs/cn/ui.png)
 ![](docs/cn/search.jpg)
@@ -106,6 +107,15 @@ idea打开项目，等待依赖包下载完毕后直接双击Plugins-assembly-as
 - 关注公众号回复 “加群” 即可加入官方交流群
 
 ![](https://assets.wgpsec.org/www/images/wechat.png)
+
+## 🙏Thanks
+- [FOFA共创者计划](https://fofa.info/development)
+
+
+##  JetBrains OS licenses
+``fofa_viewer`` had been being developed with `IDEA` IDE under the **free JetBrains Open Source license(s)** granted by JetBrains s.r.o., hence I would like to express my thanks here.
+
+<a href="https://www.jetbrains.com/?from=wgpsec" target="_blank"><img src="https://raw.githubusercontent.com/wgpsec/.github/master/jetbrains/jetbrains-variant-4.png" width="256" align="middle"/></a>
 
 [![Stargazers over time](https://starchart.cc/wgpsec/fofa_viewer.svg)](https://starchart.cc/wgpsec/fofa_viewer)
 
