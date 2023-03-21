@@ -12,9 +12,7 @@
 <p align="center"> <a href="https://github.com/wgpsec/fofa_viewer/blob/master/README.md">中文</a> | <a href="https://github.com/wgpsec/fofa_viewer/blob/master/README.en.md">EN</a> </p>
 
 ##  简介
-
-Fofa_Viewer： 一个简单易用的fofa客户端，由 WgpSec狼组安全团队 [**f1ashine**](https://github.com/f1ashine) 师傅主要开发。程序使用 JavaFX 编写，便于跨平台使用。
-
+Fofa Viewer 是一个用 JavaFX 编写的用户友好的 FOFA 客户端，属于 WgpSec 社区，主要由 f1ashine 维护。 利用强大的互联网搜索引擎FoFa，将众多常用的API封装到简洁的UI中，让网络安全专业人士更容易在目标网站上寻找漏洞。 凭借其开箱即用的功能，Fofa Viewer 简化了搜索过程，帮助渗透测试人员快速获取所需信息。
 ##  使用说明
 本工具基于 FoFa 的 API 进行封装，使用时需要高级会员或者普通会员的 API key，使用注册用户的 API key 会提示账户需要充值F币。
 
