@@ -60,7 +60,7 @@ jobs:
 
   release:
     needs: [build]
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - name: Build Changelog
         id: github_release
