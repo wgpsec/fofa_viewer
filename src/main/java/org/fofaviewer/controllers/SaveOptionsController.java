@@ -76,10 +76,11 @@ public class SaveOptionsController {
             ToggleGroup group = new ToggleGroup();
             for(String queryTxt : tabPane.getTabsTxt()){
                 if(queryTxt != null){
-                    RadioButton rbtn = new RadioButton(getQueryText(queryTxt));
+                    String txt = getQueryText(queryTxt);
+                    RadioButton rbtn = new RadioButton(txt);
                     rbtn.setFont(Font.font(14));
                     rbtn.setToggleGroup(group);
-                    rbtn.setUserData(queryTxt);
+                    rbtn.setUserData(txt);
                     vbox.getChildren().add(rbtn);
                 }
             }
