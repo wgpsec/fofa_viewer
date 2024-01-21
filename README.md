@@ -21,8 +21,12 @@ Fofa Viewer 是一个用 JavaFX 编写的用户友好的 FOFA 客户端，属于
 - 如果你使用的是 JDK11 以及更高的 Java 版本，请选择不带版本号的zip包使用
 - 如果你使用的是 **JDK8** 版本，请选择下载 FoFaViewer_JDK8
 
+**导出失败问题**
+
 JDK16+ 在导出 Excel 时会报错，可在命令行添加 JVM 参数 `--illegal-access=permit` 以导出。
 JDK17+ `--illegal-access=permit`参数被移除，可在命令后添加JVM参数`--add-opens java.base/java.lang=ALL-UNNAMED`以导出。
+`java -jar --add-opens java.base/java.lang=ALL-UNNAMED fofaviewer.jar  `
+
 下载后修改 `config.properties`即可开始使用，api参数默认为`https://fofa.info`，若fofa官方更换域名可修改该参数后再使用。
 
 Mac 用户可通过 [自动化操作创建应用程序](docs/mac.md) 建立快速启动 Fofa_Viewer 的快捷图标
