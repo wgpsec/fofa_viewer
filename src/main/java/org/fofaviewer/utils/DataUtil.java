@@ -1,12 +1,15 @@
 package org.fofaviewer.utils;
 
-import com.alibaba.excel.EasyExcel;
-import com.alibaba.excel.ExcelWriter;
-import com.alibaba.excel.write.metadata.WriteSheet;
+import cn.hutool.poi.excel.ExcelUtil;
+import cn.hutool.poi.excel.ExcelWriter;
+import cn.hutool.poi.excel.StyleSet;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import javafx.application.Platform;
 import javafx.scene.control.*;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.fofaviewer.bean.BaseBean;
 import org.fofaviewer.bean.ExcelBean;
 import org.fofaviewer.bean.TabDataBean;
@@ -43,43 +46,67 @@ public class DataUtil {
     }
 
     public static void exportToExcel(String fileName, String tabTitle, List<ExcelBean> totalData, List<List<String>> urls, StringBuilder errorPage) {
-        ExcelWriter excelWriter = null;
-        try{
-            excelWriter = EasyExcel.write(fileName).withTemplate(DataUtil.class.getResourceAsStream("/template.xlsx")).build();
-            WriteSheet writeSheet0 = EasyExcel.writerSheet(resourceBundle.getString("EXPORT_FILENAME_SHEET1")).build();
-            Map<String, Object> map = new HashMap<>();
-            map.put("title", tabTitle);
-            excelWriter.fill(map, writeSheet0);
-            excelWriter.fill(totalData, writeSheet0);
-            WriteSheet writeSheet1 = EasyExcel.writerSheet(resourceBundle.getString("EXPORT_FILENAME_SHEET2")).build();
-            excelWriter.write(urls, writeSheet1);
+        FofaConfig config = FofaConfig.getInstance();
+        try (ExcelWriter excelWriter = ExcelUtil.getWriter(fileName, "查询结果")) {
+            excelWriter.addHeaderAlias("host", "HOST");
+            excelWriter.addHeaderAlias("title", "标题");
+            excelWriter.addHeaderAlias("domain", "域名");
+            excelWriter.addHeaderAlias("ip", "IP");
+            excelWriter.addHeaderAlias("port", "端口");
+            excelWriter.addHeaderAlias("protocol", "协议");
+            excelWriter.addHeaderAlias("server", "server指纹");
+            excelWriter.addHeaderAlias("lastupdatetime", "最近更新时间");
+            if (config.additionalField.contains("os")) {
+                excelWriter.addHeaderAlias("os", "操作系统");
+            }
+            if (config.additionalField.contains("icp")) {
+                excelWriter.addHeaderAlias("icp", "ICP");
+            }
+            if (config.additionalField.contains("product")) {
+                excelWriter.addHeaderAlias("product", "产品指纹");
+            }
+            if (config.additionalField.contains("fid")) {
+                excelWriter.addHeaderAlias("fid", "fid");
+            }
+            if (config.additionalField.contains("certs_subject_cn")) {
+                excelWriter.addHeaderAlias("certs_subject_cn", "证书域名");
+            }
+            if (config.additionalField.contains("certs_subject_org")) {
+                excelWriter.addHeaderAlias("certs_subject_org", "证书持有者组织");
+            }
+            excelWriter.setOnlyAlias(true);
+            // 设置表格格式
+            excelWriter.autoSizeColumnAll();
+            excelWriter.setColumnWidth(0, 30);
+            excelWriter.setColumnWidth(1, 38);
+            excelWriter.setColumnWidth(2, 20);
+            excelWriter.setColumnWidth(3, 15);
+            excelWriter.setColumnWidth(6, 20);
+            excelWriter.setColumnWidth(7, 20);
+            StyleSet style = excelWriter.getStyleSet();
+            CellStyle cellStyle = style.getCellStyle();
+            cellStyle.setWrapText(true);
+            CellStyle headerStyle = style.getHeadCellStyle();
+            headerStyle.setAlignment(HorizontalAlignment.CENTER);
+            Font headerFont = excelWriter.createFont();
+            headerFont.setBold(true);
+            headerFont.setFontHeightInPoints((short) 14);
+            headerStyle.setFont(headerFont);
+            excelWriter.setStyleSet(style);
+
+            excelWriter.merge(7 + config.additionalField.size(), tabTitle, true);
+            excelWriter.write(totalData, true);
+            excelWriter.setSheet("urls");
+            excelWriter.write(urls);
             if(errorPage.length() == 0){
                 showAlert(Alert.AlertType.INFORMATION, null, resourceBundle.getString("EXPORT_MESSAGE1") + fileName).showAndWait();
             }else{
                 showAlert(Alert.AlertType.INFORMATION, null, resourceBundle.getString("EXPORT_MESSAGE2_1")
                         + errorPage + resourceBundle.getString("EXPORT_MESSAGE2_2") + " " + fileName).showAndWait();
             }
-        }catch(Exception exception){
+        } catch (Exception exception) {
             Logger.error(exception);
             showAlert(Alert.AlertType.INFORMATION, null, resourceBundle.getString("EXPORT_ERROR")).showAndWait();
-        }finally {
-            if (excelWriter != null) {
-                excelWriter.finish();
-            }
-        }
-    }
-
-    public static void exportAllDataToExcel(String fileName){
-        ExcelWriter excelWriter = null;
-        try {
-            excelWriter = EasyExcel.write(fileName).build();
-
-        } catch (Exception e){
-            Logger.error(e);
-        } finally {
-            if(excelWriter != null){
-                excelWriter.finish();
-            }
         }
     }
 
@@ -89,51 +116,42 @@ public class DataUtil {
                                                                HashSet<String> urlList,
                                                                boolean isExport){
         JSONArray array = obj.getJSONArray("results");
-        List<TableBean>list = new ArrayList<>();
-        if(array.size() == 0){
+        List<TableBean> list = new ArrayList<>();
+        if(array.isEmpty()){
             return list;
         }
         FofaConfig config = FofaConfig.getInstance();
+        ArrayList<String> fileds = config.additionalField;
         for(int index=0; index < array.size(); index ++){
             JSONArray _array = array.getJSONArray(index);
-            String host = _array.getString(config.fields.indexOf("host"));
-            int port = Integer.parseInt(_array.getString(config.fields.indexOf("port")));
-            String ip = _array.getString(config.fields.indexOf("ip"));
-            String domain = _array.getString(config.fields.indexOf("domain"));
-            String protocol = _array.getString(config.fields.indexOf("protocol"));
+            String host = _array.getString(0);
+            String title= _array.getString(1);
+            String ip = _array.getString(2);
+            String domain = _array.getString(3);
+            int port = Integer.parseInt(_array.getString(4));
+            String protocol = _array.getString(5);
             if(port != 443 && port != 80 && (protocol.equals("http")||protocol.equals("https")) && !host.contains(":" + port)){
                 continue;
             }
-
-            String server = _array.getString(config.fields.indexOf("server"));
-            String cert = "";
-            String fid = "";
-            String title = "";
-            if(config.fields.contains("cert")){
-                cert = _array.getString(config.fields.indexOf("cert"));
-            }
-            if(config.fields.contains("fid")){
-                fid = _array.getString(config.fields.indexOf("fid"));
-            }
-            if(config.fields.contains("title")){
-                title = _array.getString(config.fields.indexOf("title"));
-            }
-            String certCN = "";
-            if(!cert.isEmpty()){
-                certCN = helper.getCertSubjectDomainByFoFa(cert);
-                cert = helper.getCertSerialNumberByFoFa(cert);
-                if(domain.equals("") && !cert.equals("")){
-                    int i = certCN.lastIndexOf(".");
-                    int j = certCN.indexOf(".");
-                    if(i > 0){
-                        domain = i==j ? certCN : ( Character.isDigit(certCN.charAt(0)) ? "" : certCN.substring(j+1));
-                    }else{
-                        domain = "";
-                    }
+            String server = _array.getString(6);
+            String lastupdatetime = _array.getString(7);
+            String link = _array.getString(8);
+            HashMap<String, String> map = new HashMap<String, String>(){{
+                put("fid","");put("os","");put("icp", "");put("product","");put("certs_subject_cn","");put("certs_subject_org","");
+            }};
+            for(String item : map.keySet()){
+                if(fileds.contains(item)){
+                    map.put(item, _array.getString(9+fileds.indexOf(item)));
                 }
             }
             if(isExport){ // 是否为导出数据
-                ExcelBean d = new ExcelBean(host, title, ip, domain, port, protocol, server, fid, certCN);
+                ExcelBean d = new ExcelBean(host, title, ip, domain, port, protocol, server, lastupdatetime);
+                d.setFid(map.get("fid"));
+                d.setOs(map.get("os"));
+                d.setProduct(map.get("product"));
+                d.setIcp(map.get("icp"));
+                d.setCerts_subject_cn(map.get("certs_subject_cn"));
+                d.setCerts_subject_org(map.get("certs_subject_org"));
                 if(excelData.contains(d)){
                     ExcelBean d2 = excelData.get(excelData.indexOf(d));
                     if(port == 443 || port == 80){
@@ -155,9 +173,16 @@ public class DataUtil {
                     }
                 }
                 excelData.add(d);
-                getUrlList(urlList, host, protocol);
+                if(!link.isEmpty())
+                    urlList.add(link);
             }else{  // table 页更新数据
-                TableBean b = new TableBean(0, host, title, ip, domain, port, protocol, server, fid, cert, certCN);
+                TableBean b = new TableBean(0, host, title, ip, domain, port, protocol, server, lastupdatetime);
+                b.setFid(map.get("fid"));
+                b.setIcp(map.get("icp"));
+                b.setOs(map.get("os"));
+                b.setCertCN(map.get("certs_subject_cn"));
+                b.setProduct(map.get("product"));
+                b.setCertOrg(map.get("certs_subject_org"));
                 if(list.contains(b)){
                     TableBean b2 = list.get(list.indexOf(b));
                     if(port == 443 || port == 80){
@@ -180,7 +205,8 @@ public class DataUtil {
                     }
                 }
                 if(b.num.getValue() == 0){ b.num.set(++bean.count);}
-                getUrlList(bean.dataList, host, protocol);
+                if(!link.isEmpty())
+                    bean.dataList.add(link);
                 list.add(b);
             }
         }

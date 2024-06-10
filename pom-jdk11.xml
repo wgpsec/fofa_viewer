@@ -111,7 +111,7 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>2.0.15</version>
+            <version>1.2.83</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -119,9 +119,14 @@
             <version>30.1-jre</version>
         </dependency>
         <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>easyexcel</artifactId>
-            <version>2.2.10</version>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.5</version>
+        </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-poi</artifactId>
+            <version>5.8.28</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

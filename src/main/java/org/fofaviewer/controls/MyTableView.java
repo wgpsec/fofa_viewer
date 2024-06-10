@@ -33,8 +33,12 @@ public class MyTableView {
         TableColumn<TableBean, String> domain = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_DOMAIN"));
         TableColumn<TableBean, String> protocol = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_PROCOTOL"));
         TableColumn<TableBean, String> server = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_SERVER"));
+        TableColumn<TableBean, String> os = new TableColumn<>("os");
+        TableColumn<TableBean, String> icp = new TableColumn<>("icp");
+        TableColumn<TableBean, String> product = new TableColumn<>(resourceBundle.getString("PRODUCT_FINGER"));
+        TableColumn<TableBean, String> lastupdatetime = new TableColumn<>(resourceBundle.getString("LAST_UPDATE_TIME"));
         TableColumn<TableBean, String> fid = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_FID"));
-        TableColumn<TableBean, String> cert = new TableColumn<>();
+        TableColumn<TableBean, String> certOrg = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_CERTORG"));
         TableColumn<TableBean, String> certCN = new TableColumn<>(resourceBundle.getString("TABLE_HEADER_CERTCN"));
         num.setCellValueFactory(param -> param.getValue().getNum().asObject());
         host.setCellValueFactory(param -> param.getValue().getHost());
@@ -45,18 +49,29 @@ public class MyTableView {
         protocol.setCellValueFactory(param -> param.getValue().getProtocol());
         server.setCellValueFactory(param -> param.getValue().getServer());
         fid.setCellValueFactory(param -> param.getValue().getFid());
-        cert.setCellValueFactory(param -> param.getValue().getCert());
-        cert.setVisible(false); // 证书序列号太长默认不显示
+        certOrg.setCellValueFactory(param -> param.getValue().getCertOrg());
         certCN.setCellValueFactory(param -> param.getValue().getCertCN());
-        if(!mainControllerCallback.getFidStatus()){ // 未勾选fid时默认不显示
-            fid.setVisible(false);
-        }
+        product.setCellValueFactory(param -> param.getValue().getProduct());
+        lastupdatetime.setCellValueFactory(param -> param.getValue().getLastupdatetime());
+        HashMap<String, Boolean> result = mainControllerCallback.getCheckBoxStatus();
+        result.keySet().forEach(key -> {
+            switch (key){
+                case "fid" : fid.setVisible(false);break;
+                case "os"  : os.setVisible(false);break;
+                case "icp" : icp.setVisible(false);break;
+                case "product" : product.setVisible(false);break;
+                case "certs_subject_org" : certOrg.setVisible(false);break;
+                case "certs_subject_cn" : certCN.setVisible(false);break;
+            }
+        });
         // 修改ip的排序规则
         ip.setComparator(Comparator.comparing(DataUtil::getValueFromIP));
         view.getColumns().add(num);
         view.getColumns().addAll(new ArrayList<TableColumn<TableBean,String>>(){{ add(host);add(title);add(ip);}});
         view.getColumns().add(port);
-        view.getColumns().addAll(new ArrayList<TableColumn<TableBean,String>>(){{add(domain);add(protocol);add(certCN);add(server);add(fid);add(cert);}});
+        view.getColumns().addAll(new ArrayList<TableColumn<TableBean,String>>(){{
+            add(domain);add(protocol);add(os);add(icp);add(certCN);add(certOrg);add(server);add(product);add(fid);add(lastupdatetime);
+        }});
         view.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE); // 设置选择多行
         view.setRowFactory(param -> {
             final TableRow<TableBean> row = new TableRow<>();
@@ -149,7 +164,7 @@ public class MyTableView {
             });
             MenuItem queryCert = new MenuItem(resourceBundle.getString("TABLE_CONTEXTMENU_CERT"));
             queryCert.setOnAction(event -> {
-                String sn = row.getItem().cert.getValue();
+                String sn = row.getItem().certCN.getValue();
                 String _protocol = row.getItem().protocol.getValue();
                 if(_protocol.equals("https")){
                     if(sn.isEmpty()){

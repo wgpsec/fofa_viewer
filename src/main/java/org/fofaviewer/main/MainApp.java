@@ -7,7 +7,7 @@ import javafx.stage.Stage;
 import org.fofaviewer.controllers.MainController;
 
 public class MainApp extends Application {
-    private final String version = "1.1.13";
+    private final String version = "1.1.14";
 
     @Override
     public void start(Stage stage) throws Exception {
@@ -17,7 +17,7 @@ public class MainApp extends Application {
         stage.setTitle("Fofa_Viewer v" + this.version+ " By f1ashine@WgpSec");
         stage.show();
         stage.setMinWidth(1100);
-        stage.setMinHeight(800);
+        stage.setMinHeight(600);
         MainController controller = loader.getController();
         Parameters p = this.getParameters();
         if(p.getRaw().size() == 2 && p.getRaw().get(0).equals("-f")){

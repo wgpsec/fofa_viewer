@@ -2,24 +2,45 @@ package org.fofaviewer.bean;
 
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Objects;
 
 public class TableBean extends BaseBean{
+    @Setter
+    @Getter
     public SimpleIntegerProperty num = new SimpleIntegerProperty();
+    @Getter
     public SimpleStringProperty host = new SimpleStringProperty();
+    @Getter
     public SimpleStringProperty title = new SimpleStringProperty();
+    @Getter
     public SimpleStringProperty ip = new SimpleStringProperty();
+    @Getter
     public SimpleStringProperty domain = new SimpleStringProperty();
+    @Getter
     public SimpleIntegerProperty port = new SimpleIntegerProperty();
+    @Getter
     public SimpleStringProperty protocol = new SimpleStringProperty();
+    @Getter
     public SimpleStringProperty server = new SimpleStringProperty();
+    @Getter
+    public SimpleStringProperty lastupdatetime = new SimpleStringProperty();
+    @Getter
     public SimpleStringProperty fid = new SimpleStringProperty();
-    public SimpleStringProperty cert = new SimpleStringProperty();
+    public SimpleStringProperty os = new SimpleStringProperty();
+    public SimpleStringProperty icp = new SimpleStringProperty();
+    @Getter
+    public SimpleStringProperty product = new SimpleStringProperty();
+    @Getter
     public SimpleStringProperty certCN = new SimpleStringProperty();
+    @Getter
+    public SimpleStringProperty certOrg = new SimpleStringProperty();
+    @Getter
     public SimpleStringProperty status = new SimpleStringProperty();
 
-    public TableBean(int num, String host, String title, String ip, String domain, int port, String protocol,
-                     String server, String fid, String cert, String certCN) {
+    public TableBean(int num, String host, String title, String ip, String domain, int port, String protocol, String server, String lastupdatetime) {
         this.num.set(num);
         this.host.set(host);
         this.title.set(title);
@@ -28,14 +49,31 @@ public class TableBean extends BaseBean{
         this.port.set(port);
         this.protocol.set(protocol);
         this.server.set(server);
-        this.fid.set(fid);
-        this.cert.set(cert);
-        this.certCN.set(certCN);
-        this.status.set("");
+        this.lastupdatetime.set(lastupdatetime);
     }
 
-    public void setNum(SimpleIntegerProperty numValue){
-        this.num = numValue;
+    public void setFid(String fid) {
+        this.fid = new SimpleStringProperty(fid);
+    }
+
+    public void setOs(String os) {
+        this.os = new SimpleStringProperty(os);
+    }
+
+    public void setIcp(String icp) {
+        this.icp = new SimpleStringProperty(icp);
+    }
+
+    public void setProduct(String product) {
+        this.product = new SimpleStringProperty(product);
+    }
+
+    public void setCertCN(String certCN) {
+        this.certCN = new SimpleStringProperty(certCN);
+    }
+
+    public void setCertOrg(String certOrg) {
+        this.certOrg = new SimpleStringProperty(certOrg);
     }
 
     public void setDomain(String value){
@@ -46,57 +84,6 @@ public class TableBean extends BaseBean{
         return num.intValue();
     }
 
-    public SimpleIntegerProperty getNum() {
-        return num;
-    }
-
-    public SimpleStringProperty getHost() {
-        return host;
-    }
-
-    public SimpleStringProperty getTitle() {
-        return title;
-    }
-
-    public SimpleStringProperty getIp() {
-        return ip;
-    }
-
-    public SimpleStringProperty getDomain() {
-        return domain;
-    }
-
-    public SimpleIntegerProperty getPort() {
-        return port;
-    }
-
-    public SimpleStringProperty getProtocol() {
-        return protocol;
-    }
-
-    public SimpleStringProperty getServer(){
-        return server;
-    }
-
-    public SimpleStringProperty getFid() {
-        return fid;
-    }
-
-    public SimpleStringProperty getCert() {
-        return cert;
-    }
-
-    public SimpleStringProperty getCertCN() {
-        return certCN;
-    }
-
-    public SimpleStringProperty getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status.set(status);
-    }
 
     @Override
     public boolean equals(Object obj) {

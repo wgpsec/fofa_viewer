@@ -1,6 +1,8 @@
 package org.fofaviewer.callback;
 
 import javafx.scene.control.TableView;
+
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -8,7 +10,9 @@ import java.util.List;
  */
 public interface MainControllerCallback {
 
-    default boolean getFidStatus() {return false;}
+    default HashMap<String, Boolean> getCheckBoxStatus() {
+        return null;
+    }
 
     default void queryCall(List<String> strList){}
 

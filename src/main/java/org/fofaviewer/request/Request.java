@@ -49,6 +49,7 @@ public class Request {
                     bean.setRequestStatus(RequestStatus.RUNNING);
                     TabDataBean _tmp = new TabDataBean();
                     Platform.runLater(() -> this.callback.before(_tmp, bean));
+                    // 第一次请求无next
                     HashMap<String, String> res = RequestUtil.getInstance().getHTML(bean.getRequestUrl(), 120000, 120000);
                     bean.setResult(res);
                     if (res.get("code").equals("error") || !res.get("code").equals("200")) {
@@ -64,6 +65,9 @@ public class Request {
                             return;
                         }
                         bean.setRequestStatus(RequestStatus.SUCCEEDED);
+                        if(obj.getString("next") != null){
+                            _tmp.next = obj.getString("next");
+                        }
                         if (obj.getInteger("size") < Integer.parseInt(bean.getSize())) {
                             _tmp.hasMoreData = false;
                         }

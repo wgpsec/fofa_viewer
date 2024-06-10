@@ -22,6 +22,11 @@ public class TabDataBean {
      * 当前已加载的页数
      */
     public int page = 1;
+    /**
+     * 查询下一页携带的字符串
+     */
+    public String next;
+
 
     public TabDataBean(int count, HashSet<String> dataList) {
         this.count = count;

@@ -40,6 +40,7 @@ import java.awt.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.URI;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -92,11 +93,17 @@ public class MainController {
     @FXML
     private CheckBox withFid;
     @FXML
+    private CheckBox os;
+    @FXML
+    private CheckBox icp;
+    @FXML
+    private CheckBox product;
+    @FXML
+    private CheckBox certs_subject_cn;
+    @FXML
+    private CheckBox certs_subject_org;
+    @FXML
     private CheckBox isAll;
-    @FXML
-    private CheckBox title;
-    @FXML
-    private CheckBox cert;
     @FXML
     private CloseableTabPane tabPane;
 
@@ -110,13 +117,20 @@ public class MainController {
     private void initialize() {
         SQLiteUtils.init();
         keyMap.put(withFid, "fid");
-        keyMap.put(cert, "cert");
-        keyMap.put(title, "title");
+        keyMap.put(os, "os");
+        keyMap.put(icp, "icp");
+        keyMap.put(product, "product");
+        keyMap.put(certs_subject_cn, "certs_subject_cn");
+        keyMap.put(certs_subject_org,"certs_subject_org");
         projectInfo = new HashMap<>();
         projectInfo.put("status", Boolean.FALSE);
         projectInfo.put("name", "");
-        title.setText(resourceBundle.getString("TITLE"));
-        cert.setText(resourceBundle.getString("CERT"));
+        withFid.setText(resourceBundle.getString("WITH_FID"));
+        certs_subject_cn.setText(resourceBundle.getString("CERT_CN"));
+        os.setText("os");
+        icp.setText("icp");
+        product.setText(resourceBundle.getString("PRODUCT_FINGER"));
+        certs_subject_org.setText(resourceBundle.getString("CERT_ORG"));
         about.setText(resourceBundle.getString("ABOUT"));
         help.setText(resourceBundle.getString("HELP"));
         project.setText(resourceBundle.getString("PROJECT"));
@@ -131,9 +145,8 @@ public class MainController {
         searchBtn.setText(resourceBundle.getString("SEARCH"));
         exportDataBtn.setText(resourceBundle.getString("EXPORT_BUTTON"));
         queryString.setText(resourceBundle.getString("QUERY_CONTENT"));
-        checkHoneyPot.setText(resourceBundle.getString("REMOVE_HONEYPOTS"));
-        withFid.setText(resourceBundle.getString("WITH_FID"));
         isAll.setText(resourceBundle.getString("IS_ALL"));
+        checkHoneyPot.setText(resourceBundle.getString("REMOVE_HONEYPOTS"));
         decoratedField = new AutoHintTextField(queryTF);
         this.client = DataUtil.loadConfigure();
         this.tabPane.setCallback(new MainControllerCallback() {
@@ -254,7 +267,7 @@ public class MainController {
             List<String> list = new ArrayList<>();
             String str;
             while((str = bufferedReader.readLine()) != null) {
-                if(!str.equals("")){
+                if(!str.isEmpty()){
                     list.add(str);
                 }
             }
@@ -342,7 +355,7 @@ public class MainController {
                     File file = chooser.showOpenDialog(rootLayout.getScene().getWindow());
                     if(file != null){
                         String os = System.getProperty("os.name").toLowerCase();
-                        String javaPath = System.getProperty("java.home") + System.getProperty("file.separator") + "bin" + System.getProperty("file.separator");
+                        String javaPath = System.getProperty("java.home") + FileSystems.getDefault().getSeparator() + "bin" + FileSystems.getDefault().getSeparator();
                         try {
                             if(os.contains("windows")){
                                 String jarPath = this.getClass().getProtectionDomain().getCodeSource().getLocation().getFile().substring(1);
@@ -442,17 +455,21 @@ public class MainController {
             List<ExcelBean> totalData = new ArrayList<>();
             StringBuilder errorPage = new StringBuilder();
             if(bean.hasMoreData){ // 本地未完全加载时从网络请求进行加载
-                int maxCount = Math.min(bean.total, client.max);
+                int maxCount = bean.total;
                 int totalPage = (int)Math.ceil(maxCount/ Double.parseDouble(client.getSize()));
+                int freeCount = Math.min(bean.total, client.max);
+                int freePage = (int)Math.ceil(freeCount/ Double.parseDouble(client.getSize()));
+
                 TextInputDialog td = new TextInputDialog();
                 td.setTitle(resourceBundle.getString("EXPORT_CONFIRM"));
                 td.setHeaderText(resourceBundle.getString("EXPORT_HINT1") + bean.total + resourceBundle.getString("EXPORT_HINT2")
-                        + maxCount + resourceBundle.getString("EXPORT_HINT3") + totalPage + resourceBundle.getString("EXPORT_HINT4"));
+                        + client.max + resourceBundle.getString("EXPORT_HINT3") + totalPage + resourceBundle.getString("EXPORT_HINT4")
+                        + freePage + resourceBundle.getString("EXPORT_HINT5"));
                 td.setContentText(resourceBundle.getString("EXPORT_CONTENT"));
                 Optional<String> result = td.showAndWait();
+                int inputPage = -1;
                 if (result.isPresent()){
                     if(!result.get().isEmpty()){
-                        int inputPage = -1;
                         try{
                             inputPage = Integer.parseInt(result.get());
                             if(inputPage <= 0 || inputPage > totalPage){
@@ -477,10 +494,13 @@ public class MainController {
                             for (int i = 1; i <= finalTotalPage; i++) {
                                 Thread.sleep(300);
                                 String text = DataUtil.replaceString(tab.getText());
-                                HashMap<String, String> result = helper.getHTML(client.getParam(String.valueOf(i), isAll.isSelected())
-                                        + helper.encode(text), 50000, 50000);
+                                HashMap<String, String> result = helper.getHTML(client.getParam(isAll.isSelected())
+                                        + helper.encode(text) + "&next=" + bean.next, 50000, 50000);
                                 if (result.get("code").equals("200")) {
                                     JSONObject obj = JSON.parseObject(result.get("msg"));
+                                    if(obj.getString("next") != null){
+                                        bean.next = obj.getString("next");
+                                    }
                                     DataUtil.loadJsonData(null, obj, totalData, urlList, true);
                                     updateMessage(resourceBundle.getString("LOADDATA_HINT1") + i + "/"
                                             + finalTotalPage + resourceBundle.getString("LOADDATA_HINT2"));
@@ -488,8 +508,8 @@ public class MainController {
                                 } else if (result.get("code").equals("error")) {
                                     // 请求失败时 等待1s再次请求
                                     Thread.sleep(1000);
-                                    result = helper.getHTML(client.getParam(String.valueOf(i), isAll.isSelected())
-                                            + helper.encode(text), 50000, 50000);
+                                    result = helper.getHTML(client.getParam(isAll.isSelected())
+                                            + helper.encode(text) + "&next=" + bean.next, 50000, 50000);
                                     if (result.get("code").equals("error")) {
                                         errorPage.append(i).append(" ");
                                         continue;
@@ -501,7 +521,7 @@ public class MainController {
                                     updateProgress(i, finalTotalPage);
                                 }
                             }
-                        }catch (InterruptedException e){
+                        }catch (Exception e){
                             Logger.error(e);
                         }
                         return null;
@@ -509,7 +529,7 @@ public class MainController {
                 };
                 ProgressDialog pd = new ProgressDialog(exportTask);
                 pd.setTitle(resourceBundle.getString("EXPORT_TITLE"));
-                pd.setHeaderText(resourceBundle.getString("EXPORT_HEADER1") + maxCount
+                pd.setHeaderText(resourceBundle.getString("EXPORT_HEADER1") + inputPage * Integer.parseInt(client.getSize())
                         + resourceBundle.getString("EXPORT_HEADER2")
                         + finalTotalPage + resourceBundle.getString("EXPORT_HEADER3"));
                 new Thread(exportTask).start();
@@ -519,8 +539,14 @@ public class MainController {
                 for(TableBean i : tableView.getItems()){
                     ExcelBean data = new ExcelBean(
                             i.host.getValue(), i.title.getValue(), i.ip.getValue(), i.domain.getValue(),
-                            i.port.getValue(), i.protocol.getValue(), i.server.getValue(), i.fid.getValue(), i.certCN.getValue()
+                            i.port.getValue(), i.protocol.getValue(), i.server.getValue(), i.lastupdatetime.getValue()
                     );
+                    data.setFid(i.fid.getValue());
+                    data.setProduct(i.product.getValue());
+                    data.setOs(i.os.getValue());
+                    data.setCerts_subject_org(i.certOrg.getValue());
+                    data.setCerts_subject_cn(i.certCN.getValue());
+                    data.setIcp(i.icp.getValue());
                     totalData.add(data);
                 }
             }
@@ -529,7 +555,7 @@ public class MainController {
                 item.add(i);
                 urls.add(item);
             }
-            String fileName = file.getAbsolutePath() + System.getProperty("file.separator")
+            String fileName = file.getAbsolutePath() + FileSystems.getDefault().getSeparator()
                     + resourceBundle.getString("EXPORT_FILENAME") + System.currentTimeMillis() + ".xlsx";
             DataUtil.exportToExcel(fileName, tab.getText(), totalData, urls, errorPage);
         }
@@ -560,29 +586,33 @@ public class MainController {
                     continue;
                 }
             }
+            ArrayList<String> additionalField = new ArrayList<>();
             for (CheckBox box : keyMap.keySet()) {
                 String name = keyMap.get(box);
                 if (box.isSelected()) {
-                    if (!client.fields.contains(name)) {
-                        client.fields.add(name);
-                    }
-                } else {
-                    client.fields.remove(name);
+                    additionalField.add(name);
                 }
             }
+            client.additionalField = additionalField;
             Tab tab = new Tab();
             tab.setOnCloseRequest(event -> tabPane.closeTab(tab));
             tab.setText(tabTitle);
             tab.setTooltip(new Tooltip(tabTitle));
-            String url = client.getParam(null, isAll.isSelected()) + helper.encode(queryText);
+            String url = client.getParam(isAll.isSelected()) + helper.encode(queryText);
             RequestBean bean = new RequestBean(url, tabTitle, client.getSize());
             bean.setTab(tab);
             beans.add(bean);
         }
         MainControllerCallback mCallback = new MainControllerCallback() {
             @Override
-            public boolean getFidStatus() {
-                return withFid.isSelected();
+            public HashMap<String, Boolean> getCheckBoxStatus() {
+                HashMap<String, Boolean> result = new HashMap<>();
+                for (CheckBox box :keyMap.keySet()){
+                    if (!box.isSelected()){
+                        result.put(keyMap.get(box), true);
+                    }
+                }
+                return result;
             }
 
             @Override
@@ -639,16 +669,21 @@ public class MainController {
                     Task<Void> task = new Task<Void>() {
                         @Override
                         protected Void call() {
-                            HashMap<String, String> result = helper.getHTML(client.getParam(String.valueOf(bean.page),
-                                    isAll.isSelected()) + helper.encode(text), 120000, 120000);
+                            HashMap<String, String> result = helper.getHTML(
+                                    client.getParam(isAll.isSelected()) + helper.encode(text) + "&next=" + bean.next,
+                                    120000,
+                                    120000);
                             TableView<TableBean> tableView = (TableView<TableBean>) ((BorderPane) tab.getContent()).getCenter();
                             if (result.get("code").equals("200")) {
                                 JSONObject obj = JSON.parseObject(result.get("msg"));
                                 if (obj.getBoolean("error")) {
                                     return null;
                                 }
+                                if(obj.getString("next") != null){
+                                    bean.next = obj.getString("next");
+                                }
                                 List<TableBean> list = (List<TableBean>) DataUtil.loadJsonData(bean, obj, null, null, false);
-                                if (list.size() != 0) {
+                                if (!list.isEmpty()) {
                                     List<TableBean> tmp = list.stream().sorted(Comparator.comparing(TableBean::getIntNum)).collect(Collectors.toList());
                                     Platform.runLater(() -> tableView.getItems().addAll(FXCollections.observableArrayList(tmp)));
                                     Platform.runLater(() -> tableView.scrollTo(tableView.getItems().size()-Integer.parseInt(client.getSize())));

@@ -1,9 +1,11 @@
 package org.fofaviewer.main;
 
+import lombok.Setter;
 import java.util.ArrayList;
 
 public class FofaConfig {
     private static FofaConfig config = null;
+    @Setter
     private boolean checkStatus;
     private String email;
     private String key;
@@ -12,10 +14,11 @@ public class FofaConfig {
     private String size = "1000";
     public String API = "https://fofa.info";
     public String personalInfoAPI = "https://fofa.info/api/v1/info/my?email=%s&key=%s";
-    public final String path = "/api/v1/search/all";
+    // 改用连续翻页接口
+    public final String path = "/api/v1/search/next";
     public static final String TIP_API = "https://api.fofa.info/v1/search/tip?q=";
-    //public static final String TIP_API = Locale.getDefault()==Locale.CHINA ? "https://api.fofa.so/v1/search/tip?q="
-    public ArrayList<String> fields = new ArrayList<String>(){{add("host");add("ip");add("domain");add("port");add("protocol");add("server");}};//title,cert";
+    private final String[] fields = new String[]{"host","title","ip","domain","port","protocol","server","lastupdatetime","link"};
+    public ArrayList<String> additionalField;
 
     private FofaConfig(){
         this.email = "";
@@ -57,19 +60,17 @@ public class FofaConfig {
         this.size = size;
     }
 
-    public String getParam(String page, boolean isAll) {
-        String all = isAll ? "&full=true" : "";
-        StringBuilder builder = new StringBuilder(API).append(path).append("?email=").append(email).append("&key=").append(key).append(all).append("&page=");
-        if(page != null) {
-            return builder.append(page).append("&size=").append(size).append("&fields=").append(getFields()).append("&qbase64=").toString();
-        }else{
-            return builder.append(this.page).append("&size=").append(size).append("&fields=").append(getFields()).append("&qbase64=").toString();
-        }
+    public String getParam(boolean isAll) {
+        return API + path + "?email=" + email + "&key=" + key + (isAll ? "&full=true" : "") + "&page=" +
+                this.page + "&size=" + size + "&fields=" + getFields() + "&qbase64=";
     }
 
     public String getFields(){
         StringBuilder builder = new StringBuilder();
         for(String i : this.fields){
+            builder.append(i).append(",");
+        }
+        for (String i : this.additionalField){
             builder.append(i).append(",");
         }
         String a = builder.toString();
@@ -80,7 +81,4 @@ public class FofaConfig {
         return checkStatus;
     }
 
-    public void setCheckStatus(boolean checkStatus) {
-        this.checkStatus = checkStatus;
-    }
 }

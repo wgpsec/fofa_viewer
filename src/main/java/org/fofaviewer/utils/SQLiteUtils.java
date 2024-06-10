@@ -29,7 +29,10 @@ public class SQLiteUtils {
     public static String getPath() {
         try{
             String jarPath = java.net.URLDecoder.decode(DataUtil.class.getProtectionDomain().getCodeSource().getLocation().getFile(), String.valueOf(StandardCharsets.UTF_8));
-            return jarPath.substring(0, jarPath.lastIndexOf(System.getProperty("file.separator")) + 1);
+            if(System.getProperty("os.name").toLowerCase().contains("window")){
+                jarPath = jarPath.substring(1);
+            }
+            return jarPath.substring(0, jarPath.lastIndexOf("/") + 1);
         }catch (Exception e){
             Logger.error(e);
         }

@@ -6,7 +6,6 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
 <?import org.fofaviewer.controls.CloseableTabPane?>
 <?import org.controlsfx.control.textfield.TextFields?>
 <?import javafx.scene.control.CheckBox?>
@@ -37,7 +36,6 @@
                 <padding><Insets top="12" right="22" left="22"/></padding>
                 <Label fx:id="queryString" alignment="CENTER">
                     <HBox.margin><Insets top="4"/></HBox.margin>
-                    <font><Font size="14.0"/></font>
                 </Label>
                 <TextFields HBox.hgrow="ALWAYS" fx:factory="createClearableTextField" fx:id="queryTF" prefHeight="27.0" prefWidth="400" />
                 <Button fx:id="searchBtn" mnemonicParsing="false" onAction="#queryAction"/>
@@ -45,25 +43,33 @@
             <Button fx:id="exportDataBtn" AnchorPane.rightAnchor="10.0" layoutY="10" mnemonicParsing="false" alignment="CENTER_RIGHT" onAction="#exportAction"/>
             <HBox spacing="10.0D" AnchorPane.leftAnchor="22" AnchorPane.topAnchor="50">
                 <CheckBox fx:id="checkHoneyPot" mnemonicParsing="false">
-                    <HBox.margin><Insets top="4" /></HBox.margin>
-                    <font><Font size="14.0"/></font>
+                    <HBox.margin><Insets top="4"/></HBox.margin>
                 </CheckBox>
                 <CheckBox fx:id="isAll" mnemonicParsing="false">
                     <HBox.margin><Insets top="4"/></HBox.margin>
-                    <font><Font size="14.0"/></font>
                 </CheckBox>
                 <CheckBox fx:id="withFid" mnemonicParsing="false">
                     <HBox.margin><Insets top="4"/></HBox.margin>
-                    <font><Font size="14.0"/></font>
                 </CheckBox>
-                <CheckBox fx:id="title">
+                <CheckBox fx:id="os" mnemonicParsing="false">
                     <HBox.margin><Insets top="4"/></HBox.margin>
-                    <font><Font size="14.0"/></font>
                 </CheckBox>
-                <CheckBox fx:id="cert">
+                <CheckBox fx:id="icp" mnemonicParsing="false">
                     <HBox.margin><Insets top="4"/></HBox.margin>
-                    <font><Font size="14.0"/></font>
                 </CheckBox>
+                <CheckBox fx:id="product" mnemonicParsing="false">
+                    <HBox.margin><Insets top="4"/></HBox.margin>
+                </CheckBox>
+                <CheckBox fx:id="certs_subject_cn" mnemonicParsing="false" selected="true">
+                    <HBox.margin><Insets top="4"/></HBox.margin>
+                </CheckBox>
+                <CheckBox fx:id="certs_subject_org" mnemonicParsing="false" selected="true">
+                    <HBox.margin><Insets top="4"/></HBox.margin>
+                </CheckBox>
+
+<!--                <CheckBox fx:id="cert">-->
+<!--                    <HBox.margin><Insets top="4"/></HBox.margin>-->
+<!--                </CheckBox>-->
             </HBox>
         </AnchorPane>
         <CloseableTabPane fx:id="tabPane" prefHeight="560" prefWidth="1000" AnchorPane.topAnchor="86" AnchorPane.rightAnchor="0.0"

@@ -1,31 +1,35 @@
 package org.fofaviewer.bean;
 
-import lombok.EqualsAndHashCode;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import java.util.Objects;
 
 @Getter
-@Setter
-@EqualsAndHashCode
+@Data
 public class ExcelBean extends BaseBean {
     private String host;
     private String title;
     private String domain;
-
-    private String certCN;
-
     private String ip;
-
     private Integer port;
-
     private String protocol;
-
     private String server;
-
+    private String lastupdatetime;
+    @Setter
     private String fid;
+    @Setter
+    private String os;
+    @Setter
+    private String icp;
+    @Setter
+    private String product;
+    @Setter
+    private String certs_subject_org;
+    @Setter
+    private String certs_subject_cn;
 
-    public ExcelBean(String host, String title, String ip, String domain, Integer port, String protocol, String server, String fid, String certCN) {
+    public ExcelBean(String host, String title, String ip, String domain, Integer port, String protocol, String server, String lastupdatetime) {
         this.host = host;
         this.title = title;
         this.ip = ip;
@@ -33,8 +37,7 @@ public class ExcelBean extends BaseBean {
         this.port = port;
         this.protocol = protocol;
         this.server = server;
-        this.fid = fid;
-        this.certCN = certCN;
+        this.lastupdatetime = lastupdatetime;
     }
 
     @Override
