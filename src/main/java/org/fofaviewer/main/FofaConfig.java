@@ -7,21 +7,19 @@ public class FofaConfig {
     private static FofaConfig config = null;
     @Setter
     private boolean checkStatus;
-    private String email;
     private String key;
-    private final String page = "1";
+//    private final String page = "1";
     public final int max = 10000;
     private String size = "1000";
     public String API = "https://fofa.info";
-    public String personalInfoAPI = "https://fofa.info/api/v1/info/my?email=%s&key=%s";
+    public String personalInfoAPI = "https://fofa.info/api/v1/info/my?key=%s";
     // 改用连续翻页接口
     public final String path = "/api/v1/search/next";
     public static final String TIP_API = "https://api.fofa.info/v1/search/tip?q=";
-    private final String[] fields = new String[]{"host","title","ip","domain","port","protocol","server","lastupdatetime","link"};
+    private final String[] fields = new String[]{"host","title","ip","domain","port","protocol","server","link"};
     public ArrayList<String> additionalField;
 
     private FofaConfig(){
-        this.email = "";
         this.key = "";
     }
 
@@ -32,16 +30,8 @@ public class FofaConfig {
         return config;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
     public String getKey() {
         return key;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public void setKey(String key) {
@@ -61,8 +51,7 @@ public class FofaConfig {
     }
 
     public String getParam(boolean isAll) {
-        return API + path + "?email=" + email + "&key=" + key + (isAll ? "&full=true" : "") + "&page=" +
-                this.page + "&size=" + size + "&fields=" + getFields() + "&qbase64=";
+        return API + path + "?key=" + key + (isAll ? "&full=true" : "") + "&size=" + size + "&fields=" + getFields() + "&qbase64=";
     }
 
     public String getFields(){

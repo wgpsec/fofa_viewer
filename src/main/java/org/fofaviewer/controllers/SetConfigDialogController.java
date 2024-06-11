@@ -26,8 +26,6 @@ public class SetConfigDialogController {
     @FXML
     private Label label_fofa_api;
     @FXML
-    private Label label_fofa_email;
-    @FXML
     private Label label_fofa_key;
     @FXML
     private Label label_fofa_max_size;
@@ -43,8 +41,6 @@ public class SetConfigDialogController {
     private Label label_proxy_password;
     @FXML
     private TextField fofa_api;
-    @FXML
-    private TextField fofa_email;
     @FXML
     private TextField fofa_key;
     @FXML
@@ -80,7 +76,6 @@ public class SetConfigDialogController {
         disableCheck.setText(bundle.getString("DISABLE_RADIO"));
         disable.setText(bundle.getString("DISABLE_RADIO"));
         label_fofa_api.setText(bundle.getString("FOFA_API"));
-        label_fofa_email.setText(bundle.getString("FOFA_EMAIL"));
         label_fofa_key.setText(bundle.getString("FOFA_KEY"));
         label_fofa_max_size.setText(bundle.getString("FOFA_MAX_SIZE"));
         label_proxy_ip.setText(bundle.getString("PROXY_IP_ADDRESS"));
@@ -90,7 +85,6 @@ public class SetConfigDialogController {
         labelCombo.setText(bundle.getString("PROXY_TYPE"));
         propertiesMap = new HashMap<TextField, String>(){{
             put(fofa_api, "api");
-            put(fofa_email, "email");
             put(fofa_key, "key");
             put(fofa_max_size, "max_size");
             put(proxy_ip, "proxy_ip");
@@ -117,13 +111,12 @@ public class SetConfigDialogController {
     public void setAction(DialogPane dialogPane){
         dialogPane.lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, e -> {
             createConfigFile();
-            if(enable.isSelected() && (proxy_ip.getText().equals("") || proxy_port.getText().equals(""))){
+            if(enable.isSelected() && (proxy_ip.getText().isEmpty() || proxy_port.getText().isEmpty())){
                 DataUtil.showAlert(Alert.AlertType.WARNING, null, bundle.getString("PROXY_SET_ERROR")).showAndWait();
                 e.consume();
             }else{
                 Properties properties = new Properties();
                 try {
-                    fofaConfig.setEmail(fofa_email.getText());
                     fofaConfig.API = fofa_api.getText();
                     fofaConfig.setSize(fofa_max_size.getText());
                     fofaConfig.setKey(fofa_key.getText());
@@ -168,7 +161,6 @@ public class SetConfigDialogController {
 
     private void loadConfigFile(){
         this.fofa_api.setText(fofaConfig.API);
-        this.fofa_email.setText(fofaConfig.getEmail());
         this.fofa_key.setText(fofaConfig.getKey());
         this.fofa_max_size.setText(fofaConfig.getSize());
         if(proxyConfig.getStatus()){

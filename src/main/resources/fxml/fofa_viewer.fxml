@@ -51,13 +51,16 @@
                 <CheckBox fx:id="withFid" mnemonicParsing="false">
                     <HBox.margin><Insets top="4"/></HBox.margin>
                 </CheckBox>
+                <CheckBox fx:id="lastUpdateTime" mnemonicParsing="false">
+                    <HBox.margin><Insets top="4"/></HBox.margin>
+                </CheckBox>
+                <CheckBox fx:id="product" mnemonicParsing="false">
+                    <HBox.margin><Insets top="4"/></HBox.margin>
+                </CheckBox>
                 <CheckBox fx:id="os" mnemonicParsing="false">
                     <HBox.margin><Insets top="4"/></HBox.margin>
                 </CheckBox>
                 <CheckBox fx:id="icp" mnemonicParsing="false">
-                    <HBox.margin><Insets top="4"/></HBox.margin>
-                </CheckBox>
-                <CheckBox fx:id="product" mnemonicParsing="false">
                     <HBox.margin><Insets top="4"/></HBox.margin>
                 </CheckBox>
                 <CheckBox fx:id="certs_subject_cn" mnemonicParsing="false" selected="true">

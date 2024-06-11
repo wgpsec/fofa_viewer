@@ -9,14 +9,12 @@
                 <padding><Insets right="10.0D" left="10.0D"/></padding>
                 <Label fx:id="label_fofa_api" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
                 <TextField fx:id="fofa_api" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="250"/>
-                <Label fx:id="label_fofa_email" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                <TextField fx:id="fofa_email" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-                <Label fx:id="label_fofa_key" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-                <TextField fx:id="fofa_key" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-                <Label fx:id="label_fofa_max_size" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-                <TextField fx:id="fofa_max_size" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-                <Label fx:id="checkLeftAmount" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
-                <HBox spacing="10.0D" GridPane.columnIndex="1" GridPane.rowIndex="4">
+                <Label fx:id="label_fofa_key" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <TextField fx:id="fofa_key" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                <Label fx:id="label_fofa_max_size" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <TextField fx:id="fofa_max_size" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                <Label fx:id="checkLeftAmount" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                <HBox spacing="10.0D" GridPane.columnIndex="1" GridPane.rowIndex="3">
                     <RadioButton fx:id="enableCheck" />
                     <RadioButton fx:id="disableCheck" />
                 </HBox>

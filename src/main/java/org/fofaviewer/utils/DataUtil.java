@@ -55,7 +55,9 @@ public class DataUtil {
             excelWriter.addHeaderAlias("port", "端口");
             excelWriter.addHeaderAlias("protocol", "协议");
             excelWriter.addHeaderAlias("server", "server指纹");
-            excelWriter.addHeaderAlias("lastupdatetime", "最近更新时间");
+            if(config.additionalField.contains("lastupdatetime")){
+                excelWriter.addHeaderAlias("lastupdatetime", "最近更新时间");
+            }
             if (config.additionalField.contains("os")) {
                 excelWriter.addHeaderAlias("os", "操作系统");
             }
@@ -94,10 +96,11 @@ public class DataUtil {
             headerStyle.setFont(headerFont);
             excelWriter.setStyleSet(style);
 
-            excelWriter.merge(7 + config.additionalField.size(), tabTitle, true);
+            excelWriter.merge(6 + config.additionalField.size(), tabTitle, true);
             excelWriter.write(totalData, true);
             excelWriter.setSheet("urls");
             excelWriter.write(urls);
+            excelWriter.setColumnWidth(0, 40);
             if(errorPage.length() == 0){
                 showAlert(Alert.AlertType.INFORMATION, null, resourceBundle.getString("EXPORT_MESSAGE1") + fileName).showAndWait();
             }else{
@@ -134,18 +137,18 @@ public class DataUtil {
                 continue;
             }
             String server = _array.getString(6);
-            String lastupdatetime = _array.getString(7);
-            String link = _array.getString(8);
+            String link = _array.getString(7);
             HashMap<String, String> map = new HashMap<String, String>(){{
-                put("fid","");put("os","");put("icp", "");put("product","");put("certs_subject_cn","");put("certs_subject_org","");
+                put("fid","");put("os","");put("icp", "");put("product","");put("certs_subject_cn","");put("certs_subject_org","");put("lastupdatetime","");
             }};
             for(String item : map.keySet()){
                 if(fileds.contains(item)){
-                    map.put(item, _array.getString(9+fileds.indexOf(item)));
+                    map.put(item, _array.getString(8+fileds.indexOf(item)));
                 }
             }
             if(isExport){ // 是否为导出数据
-                ExcelBean d = new ExcelBean(host, title, ip, domain, port, protocol, server, lastupdatetime);
+                ExcelBean d = new ExcelBean(host, title, ip, domain, port, protocol, server);
+                d.setLastupdatetime(map.get("lastupdatetime"));
                 d.setFid(map.get("fid"));
                 d.setOs(map.get("os"));
                 d.setProduct(map.get("product"));
@@ -165,7 +168,7 @@ public class DataUtil {
                         }
                     }
                     if(d2.getHost().equals(d.getHost())){
-                        if(!d2.getTitle().equals("")){
+                        if(!d2.getTitle().isEmpty()){
                             continue;
                         }else {
                             excelData.remove(d2);
@@ -176,13 +179,14 @@ public class DataUtil {
                 if(!link.isEmpty())
                     urlList.add(link);
             }else{  // table 页更新数据
-                TableBean b = new TableBean(0, host, title, ip, domain, port, protocol, server, lastupdatetime);
+                TableBean b = new TableBean(0, host, title, ip, domain, port, protocol, server);
                 b.setFid(map.get("fid"));
                 b.setIcp(map.get("icp"));
                 b.setOs(map.get("os"));
                 b.setCertCN(map.get("certs_subject_cn"));
                 b.setProduct(map.get("product"));
                 b.setCertOrg(map.get("certs_subject_org"));
+                b.setLastUpdateTime(map.get("lastupdatetime"));
                 if(list.contains(b)){
                     TableBean b2 = list.get(list.indexOf(b));
                     if(port == 443 || port == 80){
@@ -196,7 +200,7 @@ public class DataUtil {
                     }
                     // host 相同时 去掉不带title的
                     if(b2.host.getValue().equals(b.host.getValue())){
-                        if(!b2.title.getValue().equals("")){
+                        if(!b2.title.getValue().isEmpty()){
                             continue;
                         }else{
                             b.num = b2.num;
@@ -260,7 +264,6 @@ public class DataUtil {
         try {
             properties.load(new FileReader(SQLiteUtils.getPath() + "config.properties"));
             client = FofaConfig.getInstance();
-            client.setEmail(properties.getProperty("email").trim());
             client.setKey(properties.getProperty("key").trim());
             client.setAPI(properties.getProperty("api").trim());
             client.setSize(properties.getProperty("max_size"));

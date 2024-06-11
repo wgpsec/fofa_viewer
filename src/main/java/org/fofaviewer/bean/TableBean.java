@@ -40,7 +40,7 @@ public class TableBean extends BaseBean{
     @Getter
     public SimpleStringProperty status = new SimpleStringProperty();
 
-    public TableBean(int num, String host, String title, String ip, String domain, int port, String protocol, String server, String lastupdatetime) {
+    public TableBean(int num, String host, String title, String ip, String domain, int port, String protocol, String server) {
         this.num.set(num);
         this.host.set(host);
         this.title.set(title);
@@ -49,7 +49,6 @@ public class TableBean extends BaseBean{
         this.port.set(port);
         this.protocol.set(protocol);
         this.server.set(server);
-        this.lastupdatetime.set(lastupdatetime);
     }
 
     public void setFid(String fid) {
@@ -80,9 +79,14 @@ public class TableBean extends BaseBean{
         this.domain = new SimpleStringProperty(value);
     }
 
+    public void setLastUpdateTime(String lastupdatetime) {
+        this.lastupdatetime = new SimpleStringProperty(lastupdatetime);
+    }
+
     public int getIntNum(){
         return num.intValue();
     }
+
 
 
     @Override

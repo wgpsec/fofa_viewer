@@ -103,6 +103,8 @@ public class MainController {
     @FXML
     private CheckBox certs_subject_org;
     @FXML
+    private CheckBox lastUpdateTime;
+    @FXML
     private CheckBox isAll;
     @FXML
     private CloseableTabPane tabPane;
@@ -122,6 +124,7 @@ public class MainController {
         keyMap.put(product, "product");
         keyMap.put(certs_subject_cn, "certs_subject_cn");
         keyMap.put(certs_subject_org,"certs_subject_org");
+        keyMap.put(lastUpdateTime, "lastupdatetime");
         projectInfo = new HashMap<>();
         projectInfo.put("status", Boolean.FALSE);
         projectInfo.put("name", "");
@@ -131,6 +134,7 @@ public class MainController {
         icp.setText("icp");
         product.setText(resourceBundle.getString("PRODUCT_FINGER"));
         certs_subject_org.setText(resourceBundle.getString("CERT_ORG"));
+        lastUpdateTime.setText(resourceBundle.getString("LAST_UPDATE_TIME"));
         about.setText(resourceBundle.getString("ABOUT"));
         help.setText(resourceBundle.getString("HELP"));
         project.setText(resourceBundle.getString("PROJECT"));
@@ -539,8 +543,9 @@ public class MainController {
                 for(TableBean i : tableView.getItems()){
                     ExcelBean data = new ExcelBean(
                             i.host.getValue(), i.title.getValue(), i.ip.getValue(), i.domain.getValue(),
-                            i.port.getValue(), i.protocol.getValue(), i.server.getValue(), i.lastupdatetime.getValue()
+                            i.port.getValue(), i.protocol.getValue(), i.server.getValue()
                     );
+                    data.setLastupdatetime(i.lastupdatetime.getValue());
                     data.setFid(i.fid.getValue());
                     data.setProduct(i.product.getValue());
                     data.setOs(i.os.getValue());
@@ -691,7 +696,7 @@ public class MainController {
                                     Label countLabel = (Label) statusBar.getRightItems().get(1);
                                     Platform.runLater(() -> countLabel.setText(String.valueOf(Integer.parseInt(countLabel.getText()) + obj.getJSONArray("results").size())));
                                     if(client.getCheckStatus()){
-                                        result = helper.getLeftAmount(String.format(client.personalInfoAPI, client.getEmail(), client.getKey()), 120000, 120000);
+                                        result = helper.getLeftAmount(String.format(client.personalInfoAPI, client.getKey()), 120000, 120000);
                                         if (result.get("code").equals("200")) {
                                             Label infoLabel = (Label)statusBar.getLeftItems().get(0);
                                             String msg = result.get("msg");

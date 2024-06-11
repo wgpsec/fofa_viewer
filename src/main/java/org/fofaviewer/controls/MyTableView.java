@@ -60,6 +60,7 @@ public class MyTableView {
                 case "os"  : os.setVisible(false);break;
                 case "icp" : icp.setVisible(false);break;
                 case "product" : product.setVisible(false);break;
+                case "lastupdatetime" : lastupdatetime.setVisible(false);break;
                 case "certs_subject_org" : certOrg.setVisible(false);break;
                 case "certs_subject_cn" : certCN.setVisible(false);break;
             }

@@ -15,6 +15,7 @@ public class ExcelBean extends BaseBean {
     private Integer port;
     private String protocol;
     private String server;
+    @Setter
     private String lastupdatetime;
     @Setter
     private String fid;
@@ -29,7 +30,7 @@ public class ExcelBean extends BaseBean {
     @Setter
     private String certs_subject_cn;
 
-    public ExcelBean(String host, String title, String ip, String domain, Integer port, String protocol, String server, String lastupdatetime) {
+    public ExcelBean(String host, String title, String ip, String domain, Integer port, String protocol, String server) {
         this.host = host;
         this.title = title;
         this.ip = ip;
@@ -37,7 +38,6 @@ public class ExcelBean extends BaseBean {
         this.port = port;
         this.protocol = protocol;
         this.server = server;
-        this.lastupdatetime = lastupdatetime;
     }
 
     @Override
