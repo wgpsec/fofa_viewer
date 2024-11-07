@@ -495,6 +495,7 @@ public class MainController {
                     @Override
                     protected Void call() {
                         try {
+                            bean.next = "";
                             for (int i = 1; i <= finalTotalPage; i++) {
                                 Thread.sleep(300);
                                 String text = DataUtil.replaceString(tab.getText());
