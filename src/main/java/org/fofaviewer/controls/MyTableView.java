@@ -171,7 +171,7 @@ public class MyTableView {
                     if(sn.isEmpty()){
                         DataUtil.showAlert(Alert.AlertType.WARNING, null, resourceBundle.getString("QUERY_CERT_ERROR")).showAndWait();
                     }else{
-                        mainControllerCallback.queryCall(new ArrayList<String>(){{add("cert=" + sn);}});
+                        mainControllerCallback.queryCall(new ArrayList<String>(){{add("cert=\"" + sn + "\"");}});
                     }
                 }
             });

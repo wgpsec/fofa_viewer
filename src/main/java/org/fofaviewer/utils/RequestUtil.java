@@ -69,6 +69,11 @@ public class RequestUtil {
     public HashMap<String, String> getHTML(String url, int connectTimeout, int socksTimeout) {
         RawResponse response;
         HashMap<String, String> result = new HashMap<>();
+        if(url.equals(FofaConfig.TIP_API)){ // 未登录请求响应code: -3000
+            result.put("code", "error");
+            result.put("msg", "由于爬虫风控限制，无法请求！");
+            return result;
+        }
         try {
             response = getBuilder(url, "GET")
                     .headers(new HashMap<String, String>() {{ put("User-Agent", ua[(new SecureRandom()).nextInt(3)]); }})
@@ -87,7 +92,13 @@ public class RequestUtil {
             try {
                 if (code == 200) {
                     String body = response.readToText(); // 默认使用utf-8编码
-                    result.put("msg", body);
+                    JSONObject obj = JSON.parseObject(body);
+                    if((obj.containsKey("error") && obj.getBoolean("error")) || (obj.containsKey("results") && obj.getJSONArray("results").isEmpty())){
+                        result.put("code", "error");
+                        result.put("msg", "请求响应内容异常");
+                    }else{
+                        result.put("msg", body);
+                    }
                 } else if (code == 401) {
                     result.put("msg", "请求错误状态码401，可能是没有在config中配置有效的key，或者您的账号权限不足无法使用api进行查询。");
                 } else if (code == 502) {
