@@ -31,7 +31,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-package: jdk+fx
-          java-version: '1.8'
+          java-version: '8'
           distribution: 'adopt'
 
       - if: ${{ matrix.version == '8' }}
