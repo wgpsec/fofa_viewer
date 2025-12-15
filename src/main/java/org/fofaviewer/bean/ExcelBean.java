@@ -32,7 +32,7 @@ public class ExcelBean extends BaseBean {
 
     public ExcelBean(String host, String title, String ip, String domain, Integer port, String protocol, String server) {
         this.host = host;
-        this.title = title;
+        this.title = title.length() > 32767 ? title.substring(0,200) + "......(标题长度超出限额，截断处理)" : title;
         this.ip = ip;
         this.domain = domain;
         this.port = port;

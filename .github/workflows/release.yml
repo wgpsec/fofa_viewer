@@ -31,7 +31,7 @@ jobs:
 
       - if: ${{ matrix.version == '8' }}
         name: Build fofa_viewer For JDK 8
-        run: mvn -DskipTests assembly:assembly -f pom.xml
+        run: mvn -DskipTests assembly:single -f pom.xml
 
       - if: ${{ matrix.version == '11' }}
         name: Set up JDK 11
@@ -43,7 +43,7 @@ jobs:
 
       - if: ${{ matrix.version == '11' }}
         name: Build FOR JDK11
-        run: mvn assembly:assembly -f pom-jdk11.xml
+        run: mvn assembly:single -f pom-jdk11.xml
 
       - name: Copy out packages fofa_viewer ${{ matrix.version }}
         run: |
