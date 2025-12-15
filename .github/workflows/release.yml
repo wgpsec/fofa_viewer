@@ -27,7 +27,6 @@ jobs:
         with:
           java-package: jdk+fx
           java-version: '1.8'
-          distribution: 'adopt'
 
       - if: ${{ matrix.version == '8' }}
         name: Build fofa_viewer For JDK 8
@@ -53,7 +52,7 @@ jobs:
           zip ${{ matrix.version }}.zip fofaviewer.jar config.properties
 
       - name: upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.version }}.zip
           path: ${{ matrix.version }}.zip

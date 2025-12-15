@@ -34,7 +34,6 @@ jobs:
       with:
         java-package: jdk+fx
         java-version: '1.8'
-        distribution: 'adopt'
 
     - if: ${{ matrix.version == '8' }}
       name: Add openjfx FOR JDK8
@@ -49,7 +48,7 @@ jobs:
         distribution: 'adopt'
 
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v2
+      uses: github/codeql-action/init@v3
       with:
         languages: ${{ matrix.language }}
 
@@ -62,6 +61,6 @@ jobs:
       run: mvn assembly:single -f pom-jdk11.xml
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+      uses: github/codeql-action/analyze@v3
       with:
         category: "/language:${{matrix.language}}"
