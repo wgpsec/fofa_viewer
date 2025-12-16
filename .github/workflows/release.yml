@@ -85,13 +85,13 @@ jobs:
           prerelease: false
 
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: 8.zip
           path: ./
 
       - name: Download artifacts11
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: 11.zip
           path: ./
