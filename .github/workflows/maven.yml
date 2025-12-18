@@ -61,7 +61,7 @@ jobs:
         run: |
           set -euxo pipefail
           mkdir -p dist
-          find . -type f -path "*/target/*" -name "*.jar" -print -exec cp -v {} dist/ \;
+          find . -type f -path "*/target/*" -name "fofaviewer-jar-with-dependencies.jar" -print -exec cp -v {} dist/ \;
           ls -lah dist
 
       - name: Upload jar artifacts
