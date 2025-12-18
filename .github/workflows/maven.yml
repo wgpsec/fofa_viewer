@@ -9,6 +9,7 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -24,7 +25,8 @@ jobs:
         run: |
           wget -q https://archive.apache.org/dist/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz
           tar xzf apache-maven-3.5.4-bin.tar.gz
-          echo "$PWD/apache-maven-3.8.8/bin" >> $GITHUB_PATH
+          echo "$PWD/apache-maven-3.5.4/bin" >> $GITHUB_PATH
+          mvn -v
 
       - if: ${{ matrix.version == '8' }}
         name: Set up JDK 8
@@ -40,7 +42,7 @@ jobs:
 
       - if: ${{ matrix.version == '8' }}
         name: Build FOR JDK8
-        run: mvn assembly:single -f pom.xml
+        run: mvn clean package -f pom.xml
 
       - if: ${{ matrix.version == '11' }}
         name: Set up JDK 11 ${{ matrix.version }}
@@ -52,4 +54,19 @@ jobs:
 
       - if: ${{ matrix.version == '11' }}
         name: Build FOR JDK11
-        run: mvn assembly:single -f pom-jdk11.xml
+        run: mvn clean package -f pom-jdk11.xml
+
+      - name: Collect jars
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p dist
+          find . -type f -path "*/target/*" -name "*.jar" -print -exec cp -v {} dist/ \;
+          ls -lah dist
+
+      - name: Upload jar artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fofa_viewer-jdk${{ matrix.version }}-jars
+          path: dist/*.jar
+          if-no-files-found: error
