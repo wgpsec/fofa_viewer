@@ -42,7 +42,7 @@ jobs:
 
       - if: ${{ matrix.version == '8' }}
         name: Build FOR JDK8
-        run: mvn clean package -f pom.xml
+        run: mvn assembly:single -f pom.xml
 
       - if: ${{ matrix.version == '11' }}
         name: Set up JDK 11 ${{ matrix.version }}
@@ -54,7 +54,7 @@ jobs:
 
       - if: ${{ matrix.version == '11' }}
         name: Build FOR JDK11
-        run: mvn clean package -f pom-jdk11.xml
+        run: mvn assembly:single -f pom-jdk11.xml
 
       - name: Collect jars
         shell: bash
